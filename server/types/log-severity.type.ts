@@ -1,0 +1,1 @@
+export type LogSeverity = 'debug' | 'info' | 'warning' | 'error' | 'critical'
