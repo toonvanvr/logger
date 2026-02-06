@@ -1,0 +1,10 @@
+/loki
+/grafana
+
+.git
+.gitignore
+
+compose.yml
+
+node_modules
+

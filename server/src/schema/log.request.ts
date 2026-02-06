@@ -1,8 +1,8 @@
 import z from 'zod'
-import { LogSeverity } from './severity.enum'
-import { ExceptionLog } from './exception-log.type'
 import { ApplicationLog } from './application-log.type'
+import { ExceptionLog } from './exception-log.type'
 import { RequestTimestamps } from './request-timestamps.type'
+import { LogSeverity } from './severity.enum'
 
 export const LogRequest = z.object({
   // Tracing
@@ -14,5 +14,7 @@ export const LogRequest = z.object({
 
   // Body
   payload: z.any(),
-  exception: ExceptionLog,
+  exception: ExceptionLog.optional(),
 })
+
+export type LogRequest = z.infer<typeof LogRequest>

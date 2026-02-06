@@ -2,7 +2,7 @@
   "name": "logger",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch server/main.ts"
+    "dev": "bun run --watch src/main.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
