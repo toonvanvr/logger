@@ -1,6 +1,9 @@
 {
   "name": "logger",
   "private": true,
+  "scripts": {
+    "dev": "bun run --watch server/main.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
