@@ -76,7 +76,7 @@ export class Logger {
     this._sessionId = options?.sessionId ?? crypto.randomUUID();
     this.app = options?.app ?? process.env.npm_package_name ?? 'unknown';
     this.environment = options?.environment ?? process.env.LOGGER_ENVIRONMENT ?? 'dev';
-    this.url = options?.url ?? 'ws://localhost:8080';
+    this.url = options?.url ?? process.env.LOGGER_URL ?? 'ws://localhost:8080';
     this.transportType = options?.transport ?? 'auto';
     this.queue = new LogQueue(options?.maxQueueSize);
     this.middlewares = options?.middleware ? [...options.middleware] : [];

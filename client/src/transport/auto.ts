@@ -22,14 +22,26 @@ export async function createTransport(options?: AutoTransportOptions): Promise<T
   const type = options?.type ?? 'auto';
 
   switch (type) {
-    case 'ws':
-      return new WsTransport({ url: options?.url });
-    case 'http':
-      return new HttpTransport({ url: options?.url });
-    case 'udp':
-      return new UdpTransport({ host: options?.host, port: options?.port });
-    case 'tcp':
-      return new TcpTransport({ host: options?.host, port: options?.port });
+    case 'ws': {
+      const ws = new WsTransport({ url: options?.url });
+      await ws.connect();
+      return ws;
+    }
+    case 'http': {
+      const http = new HttpTransport({ url: options?.url });
+      await http.connect();
+      return http;
+    }
+    case 'udp': {
+      const udp = new UdpTransport({ host: options?.host, port: options?.port });
+      await udp.connect();
+      return udp;
+    }
+    case 'tcp': {
+      const tcp = new TcpTransport({ host: options?.host, port: options?.port });
+      await tcp.connect();
+      return tcp;
+    }
     case 'auto': {
       const ws = new WsTransport({ url: options?.url });
       try {

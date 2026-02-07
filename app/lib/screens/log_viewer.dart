@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/server_message.dart';
+import '../models/viewer_message.dart';
 import '../services/log_connection.dart';
 import '../services/log_store.dart';
 import '../services/rpc_service.dart';
@@ -63,6 +64,12 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     connection.connect(url);
 
     _messageSub = connection.messages.listen(_handleMessage);
+
+    // Register subscription with server so we receive broadcasts
+    connection.subscribe();
+
+    // Request current session list
+    connection.send(const ViewerMessage(type: ViewerMessageType.sessionList));
   }
 
   void _handleMessage(ServerMessage msg) {

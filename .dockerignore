@@ -1,0 +1,30 @@
+# Dependencies (reinstalled in container)
+**/node_modules
+
+# Build outputs
+**/dist
+**/build
+app/build
+
+# Git & IDE
+.git
+.gitignore
+**/.vscode
+**/.idea
+
+# Flutter app (not needed in Docker)
+app/
+
+# Grafana/Loki configs are mounted, not COPYed
+grafana/
+loki/
+
+# MCP tool
+mcp/
+
+# AI scratch
+.ai/
+
+# Test files
+**/*.test.ts
+**/test/

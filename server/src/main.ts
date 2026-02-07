@@ -38,6 +38,25 @@ const fileStore = new FileStore({
 });
 const rpcBridge = new RpcBridge();
 
+// ─── Wire session events to WS broadcast ─────────────────────────────
+
+sessionManager.on((event, session) => {
+  if (event === 'session-start') {
+    wsHub.broadcast({
+      type: 'session_update',
+      session_id: session.sessionId,
+      session_action: 'start',
+      application: session.application,
+    });
+  } else if (event === 'session-end') {
+    wsHub.broadcast({
+      type: 'session_update',
+      session_id: session.sessionId,
+      session_action: 'end',
+    });
+  }
+});
+
 const deps = {
   config,
   pipeline: processPipeline,

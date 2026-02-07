@@ -1,17 +1,20 @@
 FROM oven/bun:1.3.8
 
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy package files
-COPY package.json ./
-COPY tsconfig.json ./
+# Copy shared package (server depends on @logger/shared via file:../shared)
+COPY shared/ ./shared/
 
-# Install dependencies
+# Copy server package files
+COPY server/package.json server/tsconfig.json ./server/
+
+# Install server dependencies
+WORKDIR /workspace/server
 RUN bun install
 
-# Copy source code (will be mounted as volume in development)
-# COPY ../server ./server
+# Copy server source (overridden by volume mount in development)
+COPY server/src/ ./src/
 
-EXPOSE 8080
+EXPOSE 8080 8081/udp 8082
 
-CMD ["bun", "run", "server/main.ts"]
+CMD ["bun", "run", "src/main.ts"]

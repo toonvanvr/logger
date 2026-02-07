@@ -57,6 +57,21 @@ export function setupWebSocket(deps: ServerDeps) {
       open(ws: ServerWebSocket<WsData>) {
         if (ws.data.role === 'viewer') {
           wsHub.addViewer(ws);
+
+          // Send current session list to newly connected viewer
+          const sessions = deps.sessionManager.getSessions();
+          ws.send(JSON.stringify({
+            type: 'session_list',
+            sessions: sessions.map(s => ({
+              session_id: s.sessionId,
+              application: s.application,
+              started_at: s.startedAt,
+              last_heartbeat: s.lastHeartbeat,
+              is_active: s.isActive,
+              log_count: s.logCount,
+              color_index: s.colorIndex,
+            })),
+          }));
         } else if (ws.data.role === 'client' && ws.data.sessionId) {
           clientSockets.set(ws.data.sessionId, ws);
         }
@@ -140,6 +155,44 @@ export function setupWebSocket(deps: ServerDeps) {
         args: parsed.rpc_args,
         viewerWs: ws,
       });
+      return;
+    }
+
+    // Handle history_query: query ring buffer and respond
+    if (parsed.type === 'history_query') {
+      const result = deps.ringBuffer.query({
+        sessionId: parsed.session_id,
+        from: parsed.from,
+        to: parsed.to,
+        severity: parsed.severity,
+        limit: parsed.limit ?? 1000,
+        cursor: parsed.cursor ? Number(parsed.cursor) : undefined,
+      });
+      ws.send(JSON.stringify({
+        type: 'history',
+        query_id: parsed.query_id,
+        history_entries: result.entries,
+        has_more: result.cursor !== null,
+        cursor: result.cursor !== null ? String(result.cursor) : undefined,
+      }));
+      return;
+    }
+
+    // Handle session_list: respond with current sessions
+    if (parsed.type === 'session_list') {
+      const sessions = deps.sessionManager.getSessions();
+      ws.send(JSON.stringify({
+        type: 'session_list',
+        sessions: sessions.map(s => ({
+          session_id: s.sessionId,
+          application: s.application,
+          started_at: s.startedAt,
+          last_heartbeat: s.lastHeartbeat,
+          is_active: s.isActive,
+          log_count: s.logCount,
+          color_index: s.colorIndex,
+        })),
+      }));
       return;
     }
 
