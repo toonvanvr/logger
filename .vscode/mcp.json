@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "logger": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "mcp/src/index.ts"],
+      "env": {
+        "LOGGER_URL": "http://localhost:8080"
+      }
+    }
+  }
+}

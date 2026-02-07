@@ -1,0 +1,128 @@
+{
+  "uid": "logger-session-detail",
+  "title": "Logger Session Detail",
+  "tags": ["logger"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "session_id",
+        "label": "Session ID",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "" },
+        "query": {
+          "refId": "A",
+          "type": "label_values",
+          "label": "session",
+          "stream": "{environment=~\".+\"}"
+        },
+        "refresh": 2,
+        "sort": 2,
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Log Timeline",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{environment=~\".+\"} | session = `${session_id}`",
+          "maxLines": 500
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Error Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({severity=\"error\"} | session = `${session_id}` [1m]))",
+          "legendFormat": "Errors"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(count_over_time({environment=~\".+\"} | session = `${session_id}` [1m]))",
+          "legendFormat": "Total"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "pointSize": 5
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Errors" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Total" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Log Content",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{environment=~\".+\"} | session = `${session_id}` | json | line_format \"{{.message}}\"",
+          "maxLines": 200
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Time", "desc": true }]
+      },
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Line",
+            "format": "json"
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

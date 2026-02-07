@@ -1,3 +1,4 @@
+import type { ServerWebSocket } from 'bun';
 import { ingestEntry, processEntry } from './ingest';
 import type { ServerDeps } from './types';
 

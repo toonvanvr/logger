@@ -1,32 +1,38 @@
-import { type LogRequest } from '../../server/src/schema/log.request'
+import { runBasicLogging } from './scenarios/basic-logging'
+import { runErrorDebugging } from './scenarios/error-debugging'
+import { runMultiService } from './scenarios/multi-service'
+import { runStateTracking } from './scenarios/state-tracking'
+import { runGroupedLogs } from './scenarios/grouped-logs'
+import { runCustomRenderers } from './scenarios/custom-renderers'
+import { runStressTest } from './scenarios/stress-test'
+import { runImageLogging } from './scenarios/image-logging'
+import { runSessionLifecycle } from './scenarios/session-lifecycle'
+import { runRpcTools } from './scenarios/rpc-tools'
 
-setInterval(() => {
-  const logRequest: LogRequest = {
-    application: {
-      name: 'demo-app',
-      version: '1.0.0',
-      sessionId: 'abc123',
-    },
-    severity: 'info',
-    request: {
-      generatedAt: new Date().toISOString(),
-      sentAt: new Date().toISOString(),
-    },
-    payload: {
-      message: 'Hello, Loki!',
-      timestamp: new Date().toISOString(),
-    },
+const scenario = process.argv[2] ?? 'all'
+const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+const scenarios: Record<string, () => Promise<void>> = {
+  basic: runBasicLogging,
+  errors: runErrorDebugging,
+  multi: runMultiService,
+  state: runStateTracking,
+  groups: runGroupedLogs,
+  custom: runCustomRenderers,
+  stress: runStressTest,
+  images: runImageLogging,
+  session: runSessionLifecycle,
+  rpc: runRpcTools,
+}
+
+if (scenario === 'all') {
+  for (const [name, fn] of Object.entries(scenarios)) {
+    console.log(`\n=== Running: ${name} ===`)
+    await fn()
+    await delay(1000)
   }
-
-  fetch(`${process.env.SERVER_URL}/log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(logRequest),
-  }).then((response) => {
-    console.log('Log sent, response status:', response.status)
-  }).catch((error) => {
-    console.error('Error sending log:', error)
-  })
-}, 5000)
+} else {
+  const fn = scenarios[scenario]
+  if (!fn) { console.error(`Unknown scenario: ${scenario}`); process.exit(1) }
+  await fn()
+}

@@ -4,6 +4,9 @@
   "scripts": {
     "dev": "bun run --watch src/main.ts"
   },
+  "dependencies": {
+    "@logger/client": "file:../client"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   }

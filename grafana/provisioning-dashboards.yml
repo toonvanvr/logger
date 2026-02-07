@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: 'Logger'
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

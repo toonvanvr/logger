@@ -1,4 +1,5 @@
 import type { LogEntry, ServerMessage, Severity, ViewerMessage } from '@logger/shared';
+import type { ServerWebSocket } from 'bun';
 
 // ─── Types ───────────────────────────────────────────────────────────
 

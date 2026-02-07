@@ -28,6 +28,8 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       interval: 10s

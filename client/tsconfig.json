@@ -14,6 +14,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
+    "types": ["@types/bun"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true

@@ -83,7 +83,8 @@ export class LokiForwarder {
 
   /** Batch and send entries (single label group) to Loki. */
   private async sendBatch(entries: LogEntry[]): Promise<boolean> {
-    const labels = this.extractLabels(entries[0]);
+    if (entries.length === 0) return true;
+    const labels = this.extractLabels(entries[0]!);
     const values = entries.map((entry) => [
       toNanoseconds(entry.timestamp),
       JSON.stringify(entry),

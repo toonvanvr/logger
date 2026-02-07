@@ -34,8 +34,8 @@ describe('RpcBridge', () => {
 
   it('getAllTools returns tools across all sessions', () => {
     const bridge = new RpcBridge();
-    const tools1 = [makeTools()[0]];
-    const tools2 = [makeTools()[1]];
+    const tools1 = [makeTools()[0]!];
+    const tools2 = [makeTools()[1]!];
 
     bridge.registerTools('sess-1', tools1);
     bridge.registerTools('sess-2', tools2);

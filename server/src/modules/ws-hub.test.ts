@@ -1,4 +1,5 @@
 import type { LogEntry, ServerMessage, ViewerMessage } from '@logger/shared';
+import type { ServerWebSocket } from 'bun';
 import { describe, expect, it } from 'bun:test';
 import { WebSocketHub } from './ws-hub';
 

@@ -1,30 +1,33 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:app/screens/log_viewer.dart';
+import 'package:app/services/log_connection.dart';
+import 'package:app/services/log_store.dart';
+import 'package:app/services/session_store.dart';
+import 'package:app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:app/main.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('LogViewerScreen renders header and placeholder', (
+    WidgetTester tester,
+  ) async {
+    // Build the screen with providers but without triggering post-frame WS connect.
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => LogConnection()),
+          ChangeNotifierProvider(create: (_) => LogStore()),
+          ChangeNotifierProvider(create: (_) => SessionStore()),
+        ],
+        child: MaterialApp(
+          theme: createLoggerTheme(),
+          home: const LogViewerScreen(serverUrl: null),
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify the static UI renders before the post-frame callback fires.
+    expect(find.text('Logger'), findsOneWidget);
+    expect(find.text('Waiting for logs...'), findsOneWidget);
   });
 }
