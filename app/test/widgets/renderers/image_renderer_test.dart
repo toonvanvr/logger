@@ -37,7 +37,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Image: https://example.com/image.png'), findsOneWidget);
+      expect(find.text('https://example.com/image.png'), findsOneWidget);
     });
 
     // ── Test 2: shows label when provided ──

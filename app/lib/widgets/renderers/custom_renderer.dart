@@ -5,14 +5,38 @@ import 'package:flutter/material.dart';
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import 'custom/kv_renderer.dart';
+import 'custom/progress_renderer.dart';
+import 'custom/table_renderer.dart';
 
-/// Fallback renderer for [LogType.custom] entries.
+/// Renderer for [LogType.custom] entries.
 ///
-/// Shows the custom type label and a JSON dump of custom data if present.
+/// Dispatches to specialized renderers by [LogEntry.customType], or falls
+/// back to a JSON dump for unknown types.
 class CustomRenderer extends StatelessWidget {
   final LogEntry entry;
 
   const CustomRenderer({super.key, required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (entry.customType) {
+      case 'progress':
+        return ProgressRenderer(entry: entry);
+      case 'table':
+        return TableRenderer(entry: entry);
+      case 'kv':
+        return KvRenderer(entry: entry);
+      default:
+        return _FallbackRenderer(entry: entry);
+    }
+  }
+}
+
+class _FallbackRenderer extends StatelessWidget {
+  final LogEntry entry;
+
+  const _FallbackRenderer({required this.entry});
 
   @override
   Widget build(BuildContext context) {

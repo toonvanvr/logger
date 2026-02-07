@@ -60,6 +60,7 @@ class LoggerColors {
   static const syntaxKey = Color(0xFF7EB8D0);
   static const syntaxDate = Color(0xFFD99AE6);
   static const syntaxUrl = Color(0xFF6EB5A6);
+  static const syntaxProtocol = Color(0xFFD99AE6); // purple for protocol scheme
   static const syntaxPunctuation = Color(0xFF565165);
   static const syntaxError = Color(0xFFF07668);
   static const syntaxPath = Color(0xFF8DA4EF);

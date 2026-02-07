@@ -30,6 +30,14 @@ export async function runBasicLogging() {
     logger.info('API docs available at https://api.example.com/v2/docs')
     logger.debug('Config loaded: retries=3, timeout=30000, batchSize=100')
 
+    // Various URI protocols for syntax highlighting
+    logger.info('Connecting to postgres://db.example.com:5432/myapp')
+    logger.info('Cache endpoint: redis://cache.internal:6379/0')
+    logger.info('Message broker: amqp://mq.example.com:5672/vhost')
+    logger.info('WebSocket feed: wss://feeds.example.com/live')
+    logger.info('SSH tunnel: ssh://bastion.example.com:22')
+    logger.info('File storage: s3://my-bucket/logs/2026-02-07/')
+
     await logger.flush()
   } finally {
     await logger.close()

@@ -40,8 +40,6 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     'error',
     'critical',
   };
-  // TODO(log-list): Wire text filter into LogListView.
-  // ignore: unused_field
   String _textFilter = '';
   String? _selectedSection;
   bool _timeTravelActive = false;
@@ -67,6 +65,14 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
     // Register subscription with server so we receive broadcasts
     connection.subscribe();
+
+    // Re-subscribe when session selection changes
+    context.read<SessionStore>().addListener(() {
+      final selected = context.read<SessionStore>().selectedSessionIds;
+      connection.subscribe(
+        sessionIds: selected.isEmpty ? null : selected.toList(),
+      );
+    });
 
     // Request current session list
     connection.send(const ViewerMessage(type: ViewerMessageType.sessionList));
@@ -174,9 +180,18 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                 ),
                 // Log list
                 Expanded(
-                  child: LogListView(
-                    sectionFilter: _selectedSection,
-                    activeSeverities: _activeSeverities,
+                  child: Builder(
+                    builder: (context) {
+                      final selectedSessions = context
+                          .watch<SessionStore>()
+                          .selectedSessionIds;
+                      return LogListView(
+                        sectionFilter: _selectedSection,
+                        activeSeverities: _activeSeverities,
+                        textFilter: _textFilter,
+                        selectedSessionIds: selectedSessions,
+                      );
+                    },
                   ),
                 ),
                 // Time travel controls at bottom

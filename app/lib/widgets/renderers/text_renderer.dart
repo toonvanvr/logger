@@ -10,7 +10,7 @@ import 'stack_trace_renderer.dart';
 /// Order matters: earlier patterns take priority when regions overlap.
 final _highlightPattern = RegExp(
   r'(\{\{icon:[^}]+\}\})' // icon syntax
-  r'|(https?://[^\s]+)' // URLs
+  r'|(\w+://[^\s]+)' // URLs (all protocols)
   r"|('(?:[^'\\]|\\.)*'" // single-quoted strings
   r'|"(?:[^"\\]|\\.)*")' // double-quoted strings
   r'|(\b\d{4}-\d{2}-\d{2}' // ISO 8601 dates
@@ -80,7 +80,22 @@ class TextRenderer extends StatelessWidget {
         matchText = '[icon:${parts.skip(1).take(2).join(':')}]';
         color = LoggerColors.fgSecondary;
       } else if (match.group(2) != null) {
-        color = LoggerColors.syntaxUrl;
+        // URL — color protocol separately
+        final protocolEnd = matchText.indexOf('://') + 3;
+        spans.add(
+          TextSpan(
+            text: matchText.substring(0, protocolEnd),
+            style: baseStyle.copyWith(color: LoggerColors.syntaxProtocol),
+          ),
+        );
+        spans.add(
+          TextSpan(
+            text: matchText.substring(protocolEnd),
+            style: baseStyle.copyWith(color: LoggerColors.syntaxUrl),
+          ),
+        );
+        lastEnd = match.end;
+        continue;
       } else if (match.group(3) != null) {
         color = LoggerColors.syntaxString;
       } else if (match.group(4) != null) {

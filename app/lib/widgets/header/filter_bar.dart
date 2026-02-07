@@ -57,7 +57,7 @@ class FilterBar extends StatelessWidget {
           // Text search
           Expanded(
             child: SizedBox(
-              height: 22,
+              height: 28,
               child: TextField(
                 style: LoggerTypography.logMeta.copyWith(
                   color: LoggerColors.fgPrimary,
@@ -68,10 +68,9 @@ class FilterBar extends StatelessWidget {
                     color: LoggerColors.fgMuted,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 0,
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                  isDense: true,
                   filled: true,
                   fillColor: LoggerColors.bgSurface,
                   border: OutlineInputBorder(

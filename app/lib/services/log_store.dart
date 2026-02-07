@@ -78,13 +78,17 @@ class LogStore extends ChangeNotifier {
 
   /// Filter entries by optional criteria.
   List<LogEntry> filter({
-    String? sessionId,
+    Set<String>? sessionIds,
     Severity? minSeverity,
     String? section,
     String? textSearch,
   }) {
     return _entries.where((entry) {
-      if (sessionId != null && entry.sessionId != sessionId) return false;
+      if (sessionIds != null &&
+          sessionIds.isNotEmpty &&
+          !sessionIds.contains(entry.sessionId)) {
+        return false;
+      }
       if (minSeverity != null && entry.severity.index < minSeverity.index) {
         return false;
       }

@@ -71,6 +71,33 @@ export async function runCustomRenderers() {
         { label: 'Cache', value: 2 },
       ],
     })
+    await delay(300)
+
+    // KV with stacked layout
+    logger.info('Database connection pool status:')
+    logger.custom('kv', {
+      entries: [
+        { key: 'Active Connections', value: 8, color: '#A8CC7E' },
+        { key: 'Idle Connections', value: 2, color: '#7EB8D0' },
+        { key: 'Wait Queue', value: 0, color: '#636D83' },
+        { key: 'Max Pool Size', value: 10 },
+        { key: 'Avg Checkout Time', value: '2.3ms' },
+      ],
+      layout: 'stacked',
+    }, { id: 'pool-status' })
+    await delay(300)
+
+    // Progress with ring style
+    logger.info('Memory usage monitoring:')
+    logger.custom('progress', {
+      value: 1234,
+      max: 2048,
+      label: 'Heap Memory',
+      sublabel: '1.2 GB / 2.0 GB',
+      style: 'ring',
+      color: '#E6B455',
+    }, { id: 'memory-usage' })
+    await delay(300)
 
     await logger.flush()
   } finally {

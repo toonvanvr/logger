@@ -9,11 +9,34 @@ import 'image_renderer.dart';
 import 'json_renderer.dart';
 import 'rpc_renderer.dart';
 import 'session_renderer.dart';
+import 'stack_trace_renderer.dart';
 import 'state_renderer.dart';
 import 'text_renderer.dart';
 
 /// Returns the appropriate content renderer widget for [entry].
+///
+/// If the entry has an [ExceptionData] exception, a [StackTraceRenderer]
+/// is appended below the main content.
 Widget buildLogContent(LogEntry entry) {
+  final mainWidget = _buildMainContent(entry);
+
+  if (entry.exception != null && entry.type != LogType.text) {
+    // TextRenderer already handles exceptions internally
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        mainWidget,
+        const SizedBox(height: 4),
+        StackTraceRenderer(exception: entry.exception!),
+      ],
+    );
+  }
+
+  return mainWidget;
+}
+
+Widget _buildMainContent(LogEntry entry) {
   switch (entry.type) {
     case LogType.text:
       return TextRenderer(entry: entry);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
+import '../../theme/typography.dart';
 import '../renderers/renderer_factory.dart';
 import 'session_dot.dart';
 import 'severity_bar.dart';
@@ -16,6 +17,9 @@ class LogRow extends StatefulWidget {
   final bool isNew;
   final bool isEvenRow;
   final bool isSelected;
+  final int groupDepth;
+  final VoidCallback? onGroupToggle;
+  final bool isCollapsed;
   final VoidCallback? onTap;
 
   const LogRow({
@@ -24,6 +28,9 @@ class LogRow extends StatefulWidget {
     this.isNew = false,
     this.isEvenRow = false,
     this.isSelected = false,
+    this.groupDepth = 0,
+    this.onGroupToggle,
+    this.isCollapsed = false,
     this.onTap,
   });
 
@@ -121,7 +128,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           child: Opacity(
             opacity: _opacityAnimation.value,
             child: GestureDetector(
-              onTap: widget.onTap,
+              onTap: widget.onGroupToggle ?? widget.onTap,
               child: Container(
                 constraints: const BoxConstraints(minHeight: 24),
                 decoration: BoxDecoration(
@@ -167,6 +174,46 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildContent() {
-    return buildLogContent(widget.entry);
+    Widget content;
+
+    // For group open entries, override the collapse icon based on actual state
+    if (widget.entry.type == LogType.group &&
+        widget.entry.groupAction == GroupAction.open) {
+      final label = widget.entry.groupLabel ?? widget.entry.groupId ?? 'Group';
+      content = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.isCollapsed ? Icons.chevron_right : Icons.expand_more,
+            size: 14,
+            color: LoggerColors.fgSecondary,
+          ),
+          const SizedBox(width: 4),
+          Text(label, style: LoggerTypography.groupTitle),
+        ],
+      );
+    } else {
+      content = buildLogContent(widget.entry);
+    }
+
+    if (widget.groupDepth > 0) {
+      return Padding(
+        padding: EdgeInsets.only(left: widget.groupDepth * 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 2,
+              constraints: const BoxConstraints(minHeight: 16),
+              margin: const EdgeInsets.only(right: 6),
+              color: LoggerColors.borderDefault.withAlpha(128),
+            ),
+            Expanded(child: content),
+          ],
+        ),
+      );
+    }
+
+    return content;
   }
 }

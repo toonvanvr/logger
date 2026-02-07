@@ -151,7 +151,7 @@ void main() {
         _makeEntry(id: 'e3', sessionId: 'sess-1'),
       ]);
 
-      final result = store.filter(sessionId: 'sess-1');
+      final result = store.filter(sessionIds: {'sess-1'});
       expect(result.length, 2);
       expect(result.every((e) => e.sessionId == 'sess-1'), isTrue);
     });
@@ -227,7 +227,7 @@ void main() {
       ]);
 
       final result = store.filter(
-        sessionId: 'sess-1',
+        sessionIds: {'sess-1'},
         minSeverity: Severity.error,
         section: 'network',
         textSearch: 'timeout',

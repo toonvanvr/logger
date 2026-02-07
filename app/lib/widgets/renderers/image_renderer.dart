@@ -67,20 +67,76 @@ class _ImageRendererState extends State<ImageRenderer> {
   Widget _buildImage(ImageData image) {
     if (image.data != null) {
       final bytes = base64Decode(image.data!);
+
+      // Check if image is too small to be useful (happens with test/demo data)
+      if (bytes.length < 200 && (image.width == null || image.width! <= 4)) {
+        return Container(
+          height: 48,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: LoggerColors.bgOverlay,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: LoggerColors.borderSubtle),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.image, size: 24, color: LoggerColors.fgMuted),
+              const SizedBox(width: 8),
+              Text(
+                'Image (${image.mimeType ?? 'unknown'}${image.width != null ? ' ${image.width}×${image.height}' : ''}, ${bytes.length} bytes)',
+                style: LoggerTypography.logMeta.copyWith(
+                  color: LoggerColors.fgSecondary,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
       final child = Image.memory(bytes, fit: BoxFit.contain);
 
       if (_expanded) return child;
 
       return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: _collapsedHeight),
+        constraints: const BoxConstraints(
+          maxHeight: _collapsedHeight,
+          minHeight: 48,
+          minWidth: 48,
+        ),
         child: child,
       );
     }
 
     if (image.ref != null) {
-      return Text(
-        'Image: ${image.ref}',
-        style: LoggerTypography.logBody.copyWith(color: LoggerColors.syntaxUrl),
+      return Container(
+        height: 48,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: LoggerColors.bgOverlay,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: LoggerColors.borderSubtle),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.image_outlined,
+              size: 24,
+              color: LoggerColors.fgMuted,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                image.ref!,
+                style: LoggerTypography.logBody.copyWith(
+                  color: LoggerColors.syntaxUrl,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
