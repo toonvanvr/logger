@@ -29,7 +29,20 @@ const srv = Bun.serve({
         )
 
         return new Response("ok")
+      },
+    },
+    '/stream': {
+      async GET(req) {
+        if (srv.upgrade(req)) {
+          return
+        }
+        return new Response('ok')
       }
     }
   },
+  websocket: {
+    message(ws, message) {
+      console.log('Received message:', message)
+    },
+  }
 })

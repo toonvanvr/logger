@@ -1,0 +1,14 @@
+[tools]
+android-sdk = "latest"
+clang = "latest"
+cmake = "latest"
+dart = { version = "latest", url = "https://storage.googleapis.com/dart-archive/channels/stable/release/{{ version }}/sdk/dartsdk-{{ os() }}-{{ arch() }}-release.zip", version_list_url = "https://storage.googleapis.com/storage/v1/b/dart-archive/o?prefix=channels/stable/release/&delimiter=/", version_regex = 'channels/stable/release/(\d+\.\d+\.\d+)/' }
+flutter = { version = "latest", platforms = """
+[linux-arm64]
+url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_arm64_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
+
+[linux-x64]
+url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
+""", url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version }}-stable.zip", version_json_path = ".releases[?channel=stable].version", version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json" }
+make = "latest"
+ninja = "latest"
