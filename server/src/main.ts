@@ -1,48 +1,83 @@
-import { lokiClient } from './modules/loki-client'
-import { LogRequest } from './schema/log.request'
+import { config } from './core/config';
+import { HookManager } from './core/hooks';
+import { processPipeline } from './core/pipeline';
+import { RateLimiter } from './core/rate-limiter';
+import { FileStore } from './modules/file-store';
+import { LokiForwarder } from './modules/loki-forwarder';
+import { RingBuffer } from './modules/ring-buffer';
+import { RpcBridge } from './modules/rpc-bridge';
+import { SessionManager } from './modules/session-manager';
+import { WebSocketHub } from './modules/ws-hub';
+import { setupHttpRoutes } from './transport/http';
+import { setupTcp } from './transport/tcp';
+import { setupUdp } from './transport/udp';
+import { setupWebSocket } from './transport/ws';
 
-const srv = Bun.serve({
-  port: 8080,
-  routes: {
-    '/health': {
-      GET: () => new Response('ok'),
-    },
-    '/log': {
-      POST: async (req) => {
-        const body = await req.json()
-        const logRequest = LogRequest.parse(body)
+// ─── Initialize all modules ─────────────────────────────────────────
 
-        await lokiClient.pushStructuredLog(
-          {
-            type: 'log_request',
-            applicationName: logRequest.application?.name || '',
-            applicationVersion: logRequest.application?.version || '',
-            applicationSessionId: logRequest.application?.sessionId || '',
-            severity: logRequest.severity,
-            requestGeneratedAt: logRequest.request?.generatedAt || '',
-            requestSentAt: logRequest.request?.sentAt || '',
-          },
-          {
-            payload: logRequest.payload,
-            exception: logRequest.exception,
-          }
-        )
+const rateLimiter = new RateLimiter(
+  config.rateLimitGlobal,
+  config.rateLimitPerSession,
+  config.rateLimitBurstMultiplier,
+);
+const hookManager = new HookManager();
+const ringBuffer = new RingBuffer(config.ringBufferMaxEntries, config.ringBufferMaxBytes);
+const sessionManager = new SessionManager();
+const wsHub = new WebSocketHub();
+const lokiForwarder = new LokiForwarder({
+  lokiUrl: config.lokiUrl,
+  batchSize: config.lokiBatchSize,
+  flushIntervalMs: config.lokiFlushInterval,
+  maxBuffer: config.lokiMaxBuffer,
+  retries: config.lokiRetries,
+  environment: config.environment,
+});
+const fileStore = new FileStore({
+  storePath: config.imageStorePath,
+  maxBytes: config.imageStoreMaxBytes,
+});
+const rpcBridge = new RpcBridge();
 
-        return new Response("ok")
-      },
-    },
-    '/stream': {
-      async GET(req) {
-        if (srv.upgrade(req)) {
-          return
-        }
-        return new Response('ok')
-      }
+const deps = {
+  config,
+  pipeline: processPipeline,
+  rateLimiter,
+  hookManager,
+  ringBuffer,
+  sessionManager,
+  wsHub,
+  lokiForwarder,
+  fileStore,
+  rpcBridge,
+};
+
+// ─── Setup HTTP + WS server ─────────────────────────────────────────
+
+const ws = setupWebSocket(deps);
+const routes = setupHttpRoutes(deps);
+
+const server = Bun.serve({
+  port: config.port,
+  hostname: config.host,
+  routes,
+  websocket: ws.handlers,
+  fetch(req) {
+    const url = new URL(req.url);
+    if (url.pathname === '/api/v1/stream' || url.pathname === '/stream') {
+      if (ws.upgrade(req, server)) return undefined;
+      return new Response('WebSocket upgrade failed', { status: 400 });
     }
+    return new Response('Not Found', { status: 404 });
   },
-  websocket: {
-    message(ws, message) {
-      console.log('Received message:', message)
-    },
-  }
-})
+});
+
+// ─── Setup UDP + TCP ─────────────────────────────────────────────────
+
+await setupUdp(deps);
+await setupTcp(deps);
+
+// ─── Startup log ─────────────────────────────────────────────────────
+
+console.log(`Logger server listening on ${config.host}:${config.port} (HTTP/WS)`);
+console.log(`Logger UDP on ${config.host}:${config.udpPort}`);
+console.log(`Logger TCP on ${config.host}:${config.tcpPort}`);

@@ -11,6 +11,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@logger/shared": "file:../shared",
     "zod": "^4.3.6"
   }
 }

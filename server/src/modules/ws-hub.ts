@@ -1,0 +1,153 @@
+import type { LogEntry, ServerMessage, Severity, ViewerMessage } from '@logger/shared';
+
+// ─── Types ───────────────────────────────────────────────────────────
+
+export interface ViewerSubscription {
+  sessionIds: string[];
+  minSeverity?: Severity;
+  sections?: string[];
+  textFilter?: string;
+}
+
+interface ViewerEntry {
+  ws: ServerWebSocket<any>;
+  subscription: ViewerSubscription;
+}
+
+// ─── Severity ordering for filter comparison ─────────────────────────
+
+const SEVERITY_ORDER: Record<string, number> = {
+  debug: 0,
+  info: 1,
+  warning: 2,
+  error: 3,
+  critical: 4,
+};
+
+// ─── WebSocket Hub ───────────────────────────────────────────────────
+
+export class WebSocketHub {
+  private viewers = new Map<ServerWebSocket<any>, ViewerEntry>();
+
+  /** Register a viewer WebSocket connection. */
+  addViewer(ws: ServerWebSocket<any>): void {
+    this.viewers.set(ws, {
+      ws,
+      subscription: { sessionIds: [] },
+    });
+  }
+
+  /** Unregister a viewer WebSocket connection. */
+  removeViewer(ws: ServerWebSocket<any>): void {
+    this.viewers.delete(ws);
+  }
+
+  /** Get the number of connected viewers. */
+  getViewerCount(): number {
+    return this.viewers.size;
+  }
+
+  /** Update a viewer's subscription filter. */
+  setSubscription(ws: ServerWebSocket<any>, sub: ViewerSubscription): void {
+    const entry = this.viewers.get(ws);
+    if (entry) {
+      entry.subscription = sub;
+    }
+  }
+
+  /** Get a viewer's current subscription. */
+  getSubscription(ws: ServerWebSocket<any>): ViewerSubscription | undefined {
+    return this.viewers.get(ws)?.subscription;
+  }
+
+  /** Broadcast a server message to all viewers whose subscription matches. */
+  broadcast(message: ServerMessage): void {
+    const data = JSON.stringify(message);
+
+    for (const entry of this.viewers.values()) {
+      if (this.matchesSubscription(message, entry.subscription)) {
+        entry.ws.send(data);
+      }
+    }
+  }
+
+  /** Process an incoming viewer message (subscribe/unsubscribe). */
+  handleViewerMessage(ws: ServerWebSocket<any>, message: ViewerMessage): void {
+    switch (message.type) {
+      case 'subscribe': {
+        this.setSubscription(ws, {
+          sessionIds: message.session_ids ?? [],
+          minSeverity: message.min_severity,
+          sections: message.sections,
+          textFilter: message.text_filter,
+        });
+        break;
+      }
+      case 'unsubscribe': {
+        this.setSubscription(ws, { sessionIds: [] });
+        break;
+      }
+      // Other message types (history_query, rpc_request, etc.) are handled
+      // by other modules; this hub only processes subscription management.
+    }
+  }
+
+  // ─── Internals ───────────────────────────────────────────────────
+
+  /** Check if a server message matches a viewer's subscription. */
+  private matchesSubscription(message: ServerMessage, sub: ViewerSubscription): boolean {
+    // Non-log messages are broadcast to all
+    if (message.type !== 'log' || !message.entry) {
+      return true;
+    }
+
+    const entry = message.entry as LogEntry;
+
+    // Session filter: empty sessionIds means "all sessions"
+    if (sub.sessionIds.length > 0 && !sub.sessionIds.includes(entry.session_id)) {
+      return false;
+    }
+
+    // Severity filter
+    if (sub.minSeverity) {
+      const entrySev = SEVERITY_ORDER[entry.severity] ?? 0;
+      const minSev = SEVERITY_ORDER[sub.minSeverity] ?? 0;
+      if (entrySev < minSev) {
+        return false;
+      }
+    }
+
+    // Section filter
+    if (sub.sections && sub.sections.length > 0) {
+      const entrySection = entry.section ?? 'events';
+      if (!sub.sections.includes(entrySection)) {
+        return false;
+      }
+    }
+
+    // Text filter: case-insensitive substring match against text and tag values
+    if (sub.textFilter) {
+      const filter = sub.textFilter.toLowerCase();
+      let matched = false;
+
+      if (entry.text && entry.text.toLowerCase().includes(filter)) {
+        matched = true;
+      }
+
+      if (!matched && entry.tags) {
+        for (const value of Object.values(entry.tags)) {
+          if (value.toLowerCase().includes(filter)) {
+            matched = true;
+            break;
+          }
+        }
+      }
+
+      if (!matched) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
