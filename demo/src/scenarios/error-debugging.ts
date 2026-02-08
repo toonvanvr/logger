@@ -51,11 +51,9 @@ export async function runErrorDebugging() {
     }
     await delay(200)
 
-    // Critical error with deep cause chain
+    // Critical error with deep stack trace and 2-level cause chain
     try {
-      const cause1 = new RangeError('Array index 99 out of bounds [0..49]')
-      const cause2 = new Error('Failed to process batch item #47', { cause: cause1 })
-      throw new Error('Batch processing pipeline crashed', { cause: cause2 })
+      processIncomingRequest()
     } catch (err) {
       logger.critical(err as Error, { pipeline: 'data-import', batchId: 'batch_789' })
     }
@@ -64,4 +62,40 @@ export async function runErrorDebugging() {
   } finally {
     await logger.close()
   }
+}
+
+// Deep call chain helpers — produce 10+ frames for expand-5 exercising.
+function processIncomingRequest() {
+  validateRequestPayload()
+}
+function validateRequestPayload() {
+  deserializeMessageBody()
+}
+function deserializeMessageBody() {
+  parseJsonContent()
+}
+function parseJsonContent() {
+  transformDataSchema()
+}
+function transformDataSchema() {
+  applyBusinessRules()
+}
+function applyBusinessRules() {
+  executeDatabaseQuery()
+}
+function executeDatabaseQuery() {
+  buildQueryPlan()
+}
+function buildQueryPlan() {
+  optimizeQueryExecution()
+}
+function optimizeQueryExecution() {
+  resolveTableReferences()
+}
+function resolveTableReferences(): never {
+  const innerCause = new RangeError('Array index 99 out of bounds [0..49]')
+  const outerCause = new Error('Failed to resolve foreign key constraint on "user_sessions"', {
+    cause: innerCause,
+  })
+  throw new Error('Batch processing pipeline crashed', { cause: outerCause })
 }

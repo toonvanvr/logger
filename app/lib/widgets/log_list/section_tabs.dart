@@ -77,7 +77,7 @@ class _SectionTabsState extends State<SectionTabs> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.sections.isEmpty) return const SizedBox.shrink();
+    if (widget.sections.length <= 1) return const SizedBox.shrink();
 
     return Container(
       height: 28,

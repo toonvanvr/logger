@@ -67,8 +67,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      // "1 more frames" link visible
-      expect(find.text('1 more frames'), findsOneWidget);
+      // "expand all" button visible
+      expect(find.text('▸ all 1'), findsOneWidget);
     });
 
     // ── Test 3: vendor frames are dimmed ──

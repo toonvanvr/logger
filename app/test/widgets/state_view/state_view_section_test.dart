@@ -120,5 +120,40 @@ void main() {
       });
       expect(hasBgRaised, isTrue);
     });
+
+    // ── Test 7: _chart.* keys excluded from key-value grid ──
+
+    testWidgets('_chart.* keys are not shown as state cards', (tester) async {
+      final store = LogStore()
+        ..addEntry(_stateEntry('status', 'running'))
+        ..addEntry(
+          _stateEntry('_chart.heap', {
+            'type': 'area',
+            'values': [10, 20, 30],
+            'title': 'Heap MB',
+          }),
+        );
+      await tester.pumpWidget(_wrap(logStore: store));
+
+      expect(find.text('status'), findsOneWidget);
+      expect(find.text('_chart.heap'), findsNothing);
+    });
+
+    // ── Test 8: count badge excludes chart entries ──
+
+    testWidgets('count badge shows only display entry count', (tester) async {
+      final store = LogStore()
+        ..addEntry(_stateEntry('a', 'x'))
+        ..addEntry(
+          _stateEntry('_chart.c1', {
+            'type': 'bar',
+            'values': [1, 2, 3],
+          }),
+        );
+      await tester.pumpWidget(_wrap(logStore: store));
+
+      // Only 1 display entry, not 2
+      expect(find.text('1'), findsOneWidget);
+    });
   });
 }

@@ -103,7 +103,7 @@ void main() {
     expect(find.textContaining('null is not an object'), findsOneWidget);
     // First frame visible.
     expect(find.textContaining('app.js:10:5'), findsOneWidget);
-    // "1 more frames" toggle visible.
-    expect(find.textContaining('1 more frames'), findsOneWidget);
+    // Expand-all button visible for remaining frame.
+    expect(find.textContaining('▸ all 1'), findsOneWidget);
   });
 }

@@ -10,8 +10,7 @@ import '../renderers/renderer_factory.dart';
 import 'session_dot.dart';
 import 'severity_bar.dart';
 
-/// A single log row in the log list. Displays severity bar, content, and
-/// session dot. Supports fade-in animation and selection mode.
+/// A single log row in the log list with severity bar, content, and session dot.
 class LogRow extends StatefulWidget {
   final LogEntry entry;
   final bool isNew;
@@ -47,14 +46,8 @@ class LogRow extends StatefulWidget {
 class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool _isHovered = false;
-
-  /// Highlight animation for unseen entries: warm amber glow that fades out.
   late final Animation<Color?> _highlightAnimation;
-
-  /// Opacity animation for new entries: fade from 0 → 1.
   late final Animation<double> _opacityAnimation;
-
-  /// Translate-Y animation for new entries: slide up 4dp.
   late final Animation<double> _slideAnimation;
 
   @override
@@ -62,49 +55,39 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
     super.initState();
 
     if (widget.isNew) {
-      // New entry: 150ms fade-in + slide-up, then 500ms hold, then 2000ms
-      // highlight fade-out. Total controller duration covers all phases.
       _controller = AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 2800),
+        duration: const Duration(milliseconds: 2000),
       );
-
-      // Phase 1: fade-in + slide (0–150ms → 0.0–~0.054 of total 2800ms)
       _opacityAnimation = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: const Interval(0, 0.054, curve: Curves.easeOut),
+          curve: const Interval(0, 0.075, curve: Curves.easeOut),
         ),
       );
-
       _slideAnimation = Tween<double>(begin: 4, end: 0).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: const Interval(0, 0.054, curve: Curves.easeOut),
+          curve: const Interval(0, 0.075, curve: Curves.easeOut),
         ),
       );
-
-      // Phase 2: warm highlight appear (0–300ms → 0–0.107), hold until 800ms
-      // (0.286), then fade out 800ms–2800ms (0.286–1.0).
-      const highlightColor = Color(0x18E6B455); // #E6B45518
+      const highlightColor = Color(0x10E6B455);
       _highlightAnimation = TweenSequence<Color?>([
         TweenSequenceItem(
           tween: ColorTween(begin: Colors.transparent, end: highlightColor),
-          weight: 300, // 300ms appear
+          weight: 150, // 150ms appear
         ),
         TweenSequenceItem(
           tween: ConstantTween<Color?>(highlightColor),
-          weight: 500, // 500ms hold
+          weight: 200, // 200ms hold
         ),
         TweenSequenceItem(
           tween: ColorTween(begin: highlightColor, end: Colors.transparent),
-          weight: 2000, // 2000ms fade
+          weight: 1650, // 1650ms fade
         ),
       ]).animate(_controller);
-
       _controller.forward();
     } else {
-      // Already-seen entry: no animation.
       _controller = AnimationController(vsync: this, duration: Duration.zero);
       _opacityAnimation = const AlwaysStoppedAnimation(1);
       _slideAnimation = const AlwaysStoppedAnimation(0);
@@ -122,7 +105,6 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
     if (widget.isSelectionSelected) return LoggerColors.bgActive;
     if (widget.isSelected) return LoggerColors.bgActive;
     if (widget.isEvenRow) return LoggerColors.bgSurface;
-    // Alternate row: very subtle stripe.
     return LoggerColors.bgSurface.withValues(alpha: 0.85);
   }
 
@@ -135,30 +117,27 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           offset: Offset(0, _slideAnimation.value),
           child: Opacity(
             opacity: _opacityAnimation.value,
-            child: SelectionContainer.disabled(
-              child: GestureDetector(
-                onTap: widget.selectionMode
-                    ? widget.onSelect
-                    : (widget.onGroupToggle ?? widget.onTap),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 24),
-                  decoration: BoxDecoration(
-                    color: _highlightAnimation.value ?? _backgroundColor,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: LoggerColors.borderSubtle,
-                        width: 1,
-                      ),
+            child: GestureDetector(
+              onTap: widget.selectionMode
+                  ? widget.onSelect
+                  : (widget.onGroupToggle ?? widget.onTap),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 24),
+                decoration: BoxDecoration(
+                  color: _highlightAnimation.value ?? _backgroundColor,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: LoggerColors.borderSubtle,
+                      width: 1,
                     ),
                   ),
-                  // Stack the highlight color over the base background.
-                  foregroundDecoration:
-                      _highlightAnimation.value != null &&
-                          _highlightAnimation.value != Colors.transparent
-                      ? BoxDecoration(color: _highlightAnimation.value)
-                      : null,
-                  child: child,
                 ),
+                foregroundDecoration:
+                    _highlightAnimation.value != null &&
+                        _highlightAnimation.value != Colors.transparent
+                    ? BoxDecoration(color: _highlightAnimation.value)
+                    : null,
+                child: child,
               ),
             ),
           ),
@@ -189,28 +168,49 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                 ),
               SeverityBar(severity: widget.entry.severity),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  child: _buildContent(),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      child: _buildContent(),
+                    ),
+                    if (_isHovered)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: SelectionContainer.disabled(
+                          child: GestureDetector(
+                            onTap: () => Clipboard.setData(
+                              ClipboardData(text: _serializeEntry()),
+                            ),
+                            child: Container(
+                              width: 60,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    _backgroundColor.withValues(alpha: 0),
+                                    _backgroundColor,
+                                  ],
+                                ),
+                              ),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 4),
+                              child: const Icon(
+                                Icons.content_copy,
+                                size: 14,
+                                color: LoggerColors.fgMuted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (_isHovered)
-                GestureDetector(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: _serializeEntry()));
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.content_copy,
-                      size: 14,
-                      color: LoggerColors.fgMuted,
-                    ),
-                  ),
-                ),
               Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: SessionDot(sessionId: widget.entry.sessionId),

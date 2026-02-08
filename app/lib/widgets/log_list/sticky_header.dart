@@ -48,10 +48,13 @@ class _StickyHeaderOverlayState extends State<StickyHeaderOverlay> {
   }
 
   bool _handleKey(KeyEvent event) {
-    final alt = HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.altLeft) ||
+    final alt =
         HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.altRight);
+          LogicalKeyboardKey.altLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.altRight,
+        );
     if (alt != _altPressed) setState(() => _altPressed = alt);
     return false;
   }
@@ -101,12 +104,11 @@ class _StickyHeaderOverlayState extends State<StickyHeaderOverlay> {
               ),
               child: _expanded
                   ? SingleChildScrollView(
-                      child:
-                          _buildContent(visibleSections, hiddenSectionCount),
+                      child: _buildContent(visibleSections, hiddenSectionCount),
                     )
-                  : ClipRect(
-                      child:
-                          _buildContent(visibleSections, hiddenSectionCount),
+                  : SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: _buildContent(visibleSections, hiddenSectionCount),
                     ),
             ),
           ),
@@ -119,9 +121,10 @@ class _StickyHeaderOverlayState extends State<StickyHeaderOverlay> {
     List<StickySection> sections,
     double maxHeight,
   ) {
-    final count = (maxHeight / _estimatedSectionHeight)
-        .floor()
-        .clamp(1, sections.length);
+    final count = (maxHeight / _estimatedSectionHeight).floor().clamp(
+      1,
+      sections.length,
+    );
     return sections.sublist(0, count);
   }
 
@@ -137,8 +140,7 @@ class _StickyHeaderOverlayState extends State<StickyHeaderOverlay> {
             onToggle: () => setState(() => _expanded = !_expanded),
           ),
         for (int i = 0; i < sections.length; i++) ...[
-          if (i > 0)
-            const Divider(height: 1, color: LoggerColors.borderSubtle),
+          if (i > 0) const Divider(height: 1, color: LoggerColors.borderSubtle),
           _buildSection(sections[i]),
         ],
         if (hiddenSectionCount > 0 && !_expanded)

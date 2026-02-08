@@ -79,7 +79,7 @@ export const KvRendererData = z.object({
 export const ChartRendererData = z.object({
   custom_type: z.literal('chart'),
   custom_data: z.object({
-    type: z.enum(['sparkline', 'bar', 'area']),
+    type: z.enum(['sparkline', 'bar', 'area', 'dense_bar']),
     values: z.array(z.number()).min(2).max(1000),
     labels: z.array(z.string()).optional(),
     color: z

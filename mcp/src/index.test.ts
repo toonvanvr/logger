@@ -1,6 +1,4 @@
-import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { afterEach, describe, expect, it, mock } from 'bun:test';
 
 // ─── Test Helpers ────────────────────────────────────────────────────
 
@@ -72,7 +70,7 @@ async function fetchJson(path: string, init?: RequestInit): Promise<unknown> {
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
-describe('logger.health', () => {
+describe('logger.query scope=health', () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
   });
@@ -107,7 +105,7 @@ describe('logger.health', () => {
   });
 });
 
-describe('logger.sessions', () => {
+describe('logger.query scope=sessions', () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
   });
@@ -142,6 +140,51 @@ describe('logger.sessions', () => {
     expect(data).toEqual(sessions);
     expect(Array.isArray(data)).toBe(true);
     expect((data as unknown[]).length).toBe(2);
+  });
+});
+
+describe('logger.query scope=state', () => {
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('should return session state data', async () => {
+    const stateData = { mode: 'running', progress: 75, status: 'healthy' };
+
+    globalThis.fetch = mockFetch(
+      new Map([['/api/v1/sessions/sess-1/state', { status: 200, body: stateData }]]),
+    );
+
+    const data = await fetchJson('/api/v1/sessions/sess-1/state');
+    expect(data).toEqual(stateData);
+    expect((data as { mode: string }).mode).toBe('running');
+  });
+});
+
+describe('logger.query scope=logs (default)', () => {
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('should POST to query endpoint with default limit', async () => {
+    const entries = [{ id: 'log-1', severity: 'info', text: 'hello' }];
+
+    globalThis.fetch = mockFetch(
+      new Map([['/api/v1/query', { status: 200, body: entries }]]),
+    );
+
+    const queryBody = { limit: 20 };
+    const data = await fetchJson('/api/v1/query', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(queryBody),
+    });
+    expect(data).toEqual(entries);
+    expect(Array.isArray(data)).toBe(true);
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    const [, calledInit] = (globalThis.fetch as unknown as ReturnType<typeof mock>).mock.calls[0] as [string, RequestInit];
+    expect(calledInit.method).toBe('POST');
   });
 });
 
@@ -182,7 +225,7 @@ describe('logger.send', () => {
   });
 });
 
-describe('logger.health error handling', () => {
+describe('logger.query error handling', () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
   });
@@ -192,10 +235,6 @@ describe('logger.health error handling', () => {
       new Map([['/api/v1/health', { status: 500, body: { error: 'Internal error' } }]]),
     );
 
-    // Non-OK response signals an error. The mockFetch sets status 500 but
-    // the Response.ok check triggers.
-    // Actually our mockFetch always returns based on map, including 500.
-    // But our fetchJson checks res.ok which is false for 500.
     expect(fetchJson('/api/v1/health')).rejects.toThrow('HTTP 500');
   });
 });

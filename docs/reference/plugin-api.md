@@ -149,6 +149,46 @@ PluginRegistry.instance.register(myPlugin);
 | `smart_search_plugin` | Filter | — | Smart search with autocomplete |
 | `log_type_filter_plugin` | Filter | — | Filter by log type |
 
+## ChartPainter
+
+The `ChartPainter` class is a `CustomPainter` used by the chart plugin and the state chart strip. It supports multiple chart variants and optional tick marks.
+
+### Constructor Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `variant` | `String` | — | Chart type: `bar`, `sparkline`, `area`, `dense_bar`. |
+| `values` | `List<num>` | — | Data points to render. |
+| `labels` | `List<String>?` | `null` | Optional labels for each data point. |
+| `color` | `Color` | — | Fill color for the chart. |
+| `textColor` | `Color` | — | Color for labels and axis text. |
+| `showTicks` | `bool` | `false` | When `true`, renders horizontal tick lines behind the chart. |
+| `tickColor` | `Color?` | `null` | Override color for tick lines (defaults to `textColor` at 40% opacity). |
+
+### Chart Variants
+
+| Variant | Description |
+|---------|-------------|
+| `bar` | Standard bar chart with gaps between bars (default). |
+| `sparkline` | Connected line chart without axes. |
+| `area` | Filled area chart under a sparkline. |
+| `dense_bar` | Thin vertical bars without gaps, suited for high-frequency time-series. |
+
+### Example Usage
+
+```dart
+CustomPaint(
+  painter: ChartPainter(
+    variant: 'dense_bar',
+    values: [10, 20, 15, 30, 25],
+    color: Colors.blue,
+    textColor: Colors.white70,
+    showTicks: true,
+  ),
+  size: const Size(160, 60),
+)
+```
+
 ## Writing a New Plugin
 
 1. Create a new file in `app/lib/plugins/builtin/` (or a separate package for community plugins).

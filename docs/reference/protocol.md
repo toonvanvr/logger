@@ -106,6 +106,34 @@ Groups allow collapsible log sections.
 | `custom_type` | `string` | Custom type discriminator (e.g., `"chart"`, `"progress"`). |
 | `custom_data` | `unknown` | Arbitrary data for the custom renderer. |
 
+### State Charts
+
+State keys prefixed with `_chart.` are treated specially by the viewer: they are filtered out of the key-value display and rendered as live-updating inline charts in the state view panel.
+
+The `state_value` for a chart key must be an object with the following shape:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `string` | No | Chart variant: `bar` (default), `sparkline`, `area`, `dense_bar`. |
+| `values` | `number[]` | Yes | Data points (minimum 2). |
+| `title` | `string` | No | Short label displayed above the chart. |
+| `color` | `string` | No | Hex color override for the chart fill. |
+
+Example:
+
+```json
+{
+  "state_key": "_chart.memory",
+  "state_value": {
+    "type": "sparkline",
+    "values": [120, 135, 128, 142, 150],
+    "title": "Heap MB"
+  }
+}
+```
+
+The `dense_bar` variant renders thin vertical bars without gaps, suitable for high-frequency time-series data.
+
 ### Timing Metadata
 
 | Field | Type | Description |

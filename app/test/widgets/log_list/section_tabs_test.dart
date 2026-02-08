@@ -12,13 +12,30 @@ Widget _wrap(Widget child) {
 
 void main() {
   group('SectionTabs', () {
-    // ── Test 1: renders ALL tab ──
+    // ── Test 1: hides tabs when only one section ──
 
-    testWidgets('renders ALL tab', (tester) async {
+    testWidgets('hides tabs when only one section', (tester) async {
       await tester.pumpWidget(
         _wrap(
           SectionTabs(
             sections: const ['network'],
+            selectedSection: null,
+            onSectionChanged: (_) {},
+          ),
+        ),
+      );
+
+      expect(find.text('ALL'), findsNothing);
+      expect(find.byType(SizedBox), findsOneWidget);
+    });
+
+    // ── Test 1b: renders ALL tab with multiple sections ──
+
+    testWidgets('renders ALL tab with multiple sections', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          SectionTabs(
+            sections: const ['network', 'metrics'],
             selectedSection: null,
             onSectionChanged: (_) {},
           ),

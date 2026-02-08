@@ -6,6 +6,7 @@ import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'state_card.dart';
+import 'state_chart_strip.dart';
 
 /// Collapsible section showing persistent state key-value pairs.
 /// Placed between SectionTabs and LogListView.
@@ -19,6 +20,17 @@ class StateViewSection extends StatelessWidget {
     final state = logStore.mergedState;
 
     if (state.isEmpty) return const SizedBox.shrink();
+
+    // Separate chart state keys from display keys
+    final chartEntries = <String, dynamic>{};
+    final displayEntries = <String, dynamic>{};
+    for (final entry in state.entries) {
+      if (entry.key.startsWith('_chart.')) {
+        chartEntries[entry.key] = entry.value;
+      } else {
+        displayEntries[entry.key] = entry.value;
+      }
+    }
 
     final isCollapsed = settings.stateViewCollapsed;
 
@@ -64,7 +76,7 @@ class StateViewSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
-                      '${state.length}',
+                      '${displayEntries.length}',
                       style: LoggerTypography.badge.copyWith(
                         color: LoggerColors.fgMuted,
                         fontSize: 9,
@@ -75,7 +87,7 @@ class StateViewSection extends StatelessWidget {
               ),
             ),
           ),
-          // Card grid
+          // Card grid + chart strip
           if (!isCollapsed)
             ConstrainedBox(
               constraints: BoxConstraints(
@@ -83,17 +95,28 @@ class StateViewSection extends StatelessWidget {
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: state.entries
-                      .map(
-                        (entry) => StateCard(
-                          stateKey: entry.key,
-                          stateValue: entry.value,
-                        ),
-                      )
-                      .toList(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (displayEntries.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: displayEntries.entries
+                            .map(
+                              (entry) => StateCard(
+                                stateKey: entry.key,
+                                stateValue: entry.value,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    if (chartEntries.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      StateChartStrip(chartEntries: chartEntries),
+                    ],
+                  ],
                 ),
               ),
             ),

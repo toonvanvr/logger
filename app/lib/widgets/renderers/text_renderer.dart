@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import 'ansi_parser.dart';
 import 'stack_trace_renderer.dart';
 
 /// Pattern definitions for syntax highlighting in log text.
@@ -38,7 +39,7 @@ class TextRenderer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = entry.text ?? '';
-    final spans = _highlight(text);
+    final spans = hasAnsiCodes(text) ? _buildAnsiSpans(text) : _highlight(text);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,6 +52,27 @@ class TextRenderer extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  /// Converts ANSI-coded text into styled [TextSpan]s.
+  List<TextSpan> _buildAnsiSpans(String text) {
+    final segments = parseAnsi(text);
+    final baseStyle = LoggerTypography.logBody;
+
+    return segments.map((seg) {
+      return TextSpan(
+        text: seg.text,
+        style: baseStyle.copyWith(
+          color: seg.foreground ?? baseStyle.color,
+          backgroundColor: seg.background,
+          fontWeight: seg.bold
+              ? FontWeight.w700
+              : (seg.dim ? FontWeight.w300 : null),
+          fontStyle: seg.italic ? FontStyle.italic : null,
+          decoration: seg.underline ? TextDecoration.underline : null,
+        ),
+      );
+    }).toList();
   }
 
   /// Tokenises [text] and returns a list of coloured [TextSpan]s.

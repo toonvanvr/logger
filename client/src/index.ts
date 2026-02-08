@@ -11,6 +11,9 @@ export type { TransportAdapter } from './transport/types.js';
 export { LogQueue } from './queue.js';
 export { parseStackTrace } from './stack-parser.js';
 
+// ─── Color Helpers ───────────────────────────────────────────────────
+export * as color from './color.js';
+
 // ─── Re-exports from @logger/shared ─────────────────────────────────
 export type {
     ApplicationInfo, ExceptionData, GroupAction, IconRef, ImageData, LogBatch, LogEntry,

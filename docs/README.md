@@ -109,7 +109,16 @@ The viewer automatically detects and renders structured content:
 - **Progress bars** — visualise task completion
 - **Tables** — display tabular data inline
 - **Key-Value pairs** — structured metadata display
-- **Stack traces** — collapsible, syntax-highlighted error traces
+- **Stack traces** — incrementally expandable error traces with cause-chain indicators
+- **Charts** — live-updating inline visualisations from `_chart.*` state keys
+
+### ANSI Color Support
+
+Log text with ANSI escape codes is rendered with matching colors and styles. The client SDK provides helpers (`red`, `bold`, `rgb`, etc.) for easy colored output.
+
+### Text Selection and Copy
+
+Text in log rows is selectable via mouse drag. A gradient copy overlay appears on hover for quick single-row copying.
 
 <!--
 ### Screenshots

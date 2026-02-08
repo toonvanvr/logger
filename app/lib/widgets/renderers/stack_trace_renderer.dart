@@ -31,7 +31,7 @@ class StackTraceRenderer extends StatefulWidget {
 }
 
 class _StackTraceRendererState extends State<StackTraceRenderer> {
-  bool _expanded = false;
+  int _visibleCount = 1;
   bool _causesExpanded = false;
 
   @override
@@ -65,29 +65,49 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
         ),
         if (frames.isNotEmpty) ...[
           const SizedBox(height: 4),
-          _buildFrame(context, frames.first),
-          if (frames.length > 1 && !_expanded)
-            GestureDetector(
-              onTap: () => setState(() => _expanded = true),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  '${frames.length - 1} more frames',
-                  style: LoggerTypography.logMeta.copyWith(
-                    color: LoggerColors.syntaxUrl,
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...frames
+                    .take(_visibleCount)
+                    .map(
+                      (f) => Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: _buildFrame(context, f),
+                      ),
+                    ),
+                if (_visibleCount < frames.length)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        if (frames.length - _visibleCount > 5)
+                          _expandButton(
+                            '5 more',
+                            () => setState(
+                              () => _visibleCount = (_visibleCount + 5).clamp(
+                                0,
+                                frames.length,
+                              ),
+                            ),
+                          ),
+                        if (frames.length - _visibleCount > 5)
+                          const SizedBox(width: 8),
+                        _expandButton(
+                          'all ${frames.length - _visibleCount}',
+                          () => setState(() => _visibleCount = frames.length),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
-          if (_expanded)
-            ...frames
-                .skip(1)
-                .map(
-                  (f) => Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: _buildFrame(context, f),
-                  ),
-                ),
+          ),
         ],
         // Nested cause chain
         if (exception.cause != null) ...[
@@ -108,8 +128,17 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
       current = current.cause;
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 16),
+    return Container(
+      margin: const EdgeInsets.only(left: 16),
+      padding: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: LoggerColors.syntaxError.withAlpha(80),
+            width: 1,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -158,8 +187,17 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
 
   /// Recursively build remaining causes when expanded.
   Widget _buildExpandedCauses(ExceptionData cause) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16),
+    return Container(
+      margin: const EdgeInsets.only(left: 16),
+      padding: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: LoggerColors.syntaxError.withAlpha(80),
+            width: 1,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -176,6 +214,21 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
             causeDepth: widget.causeDepth + 2,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _expandButton(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Text(
+          '▸ $label',
+          style: LoggerTypography.logMeta.copyWith(
+            color: LoggerColors.syntaxUrl,
+          ),
+        ),
       ),
     );
   }

@@ -9,7 +9,46 @@ export async function runStickyDemo() {
     logger.info('=== Sticky Entries Demo ===')
     await delay(200)
 
-    // ─── 1. Sticky deploy pipeline that unsticks on completion ───────
+    // ─── 1. Sticky progress bar ───────────────────────────────────────
+    logger.info('Starting build process with sticky progress...')
+    await delay(200)
+
+    const buildId = crypto.randomUUID()
+    const steps = ['Compiling', 'Linking', 'Optimizing', 'Packaging', 'Signing']
+    for (let i = 0; i < steps.length; i++) {
+      const value = Math.round((i / steps.length) * 100)
+      const builder = i === 0
+        ? logger.withId(buildId).sticky()
+        : logger.withId(buildId).replace()
+      builder.custom('progress', {
+        value,
+        max: 100,
+        label: `Build: ${steps[i]}...`,
+        sublabel: `Step ${i + 1}/${steps.length}`,
+        color: '#E6B455',
+      })
+      await delay(400)
+
+      // Emit some normal logs while progress is pinned
+      logger.info(`Build step "${steps[i]}" processing...`)
+      await delay(200)
+    }
+
+    // Complete
+    logger.withId(buildId).replace().custom('progress', {
+      value: 100,
+      max: 100,
+      label: 'Build complete',
+      sublabel: 'All 5 steps succeeded',
+      color: '#A8CC7E',
+      style: 'bar',
+    })
+    await delay(500)
+    logger.info('Build finished — unpinning progress bar')
+    logger.unsticky('', buildId)
+    await delay(300)
+
+    // ─── 2. Sticky deploy pipeline that unsticks on completion ───────
     const deployGroupId = logger.group('Deploy Pipeline', { sticky: true })
     logger.info('Starting deployment to production...')
     await delay(100)
@@ -38,7 +77,7 @@ export async function runStickyDemo() {
     logger.unsticky(deployGroupId)
     await delay(500)
 
-    // ─── 2. Individual sticky entries that unstick after delays ──────
+    // ─── 3. Individual sticky entries that unstick after delays ──────
     logger.info('--- Individual Sticky Lifecycle ---')
     await delay(200)
 
@@ -65,7 +104,7 @@ export async function runStickyDemo() {
     logger.info('Server status remains pinned')
     await delay(300)
 
-    // ─── 3. Sticky group with prepend/append ────────────────────────
+    // ─── 4. Sticky group with prepend/append ────────────────────────
     logger.info('--- Sticky Group: Prepend & Append ---')
     await delay(200)
 
@@ -102,7 +141,7 @@ export async function runStickyDemo() {
     logger.unsticky(statusGroupId)
     await delay(300)
 
-    // ─── 4. Sticky overflow: many stickies at once ──────────────────
+    // ─── 5. Sticky overflow: many stickies at once ──────────────────
     logger.info('--- Sticky Overflow Test ---')
     await delay(200)
 
@@ -142,7 +181,7 @@ export async function runStickyDemo() {
     }
     await delay(500)
 
-    // ─── 5. Nested sticky with phase transitions ────────────────────
+    // ─── 6. Nested sticky with phase transitions ────────────────────
     logger.info('--- Nested Sticky Groups ---')
     await delay(200)
 
@@ -184,7 +223,7 @@ export async function runStickyDemo() {
     logger.groupEnd()
     await delay(300)
 
-    // ─── 6. Remaining background logs ───────────────────────────────
+    // ─── 7. Remaining background logs ───────────────────────────────
     for (let i = 0; i < 10; i++) {
       logger.debug(`Background task ${i + 1}/10: processing batch`)
       await delay(50)

@@ -7,6 +7,11 @@ export async function runMultiService() {
   const web = new Logger({ app: 'web-frontend', transport: 'http' })
   const worker = new Logger({ app: 'worker', transport: 'http' })
 
+  // Set sections so the viewer's section tabs become meaningful
+  api.section('HTTP')
+  web.section('Frontend')
+  worker.section('Jobs')
+
   try {
     // Interleaved startup
     api.info('API server starting on port 8080')

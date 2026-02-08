@@ -73,6 +73,7 @@ class LogFilterCache {
   }) {
     var results = logStore
         .filter(section: sectionFilter)
+        .where((e) => e.stickyAction != 'unpin')
         .where((e) => activeSeverities.contains(e.severity.name));
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.

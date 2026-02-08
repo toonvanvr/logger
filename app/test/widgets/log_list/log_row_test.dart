@@ -78,12 +78,13 @@ void main() {
     await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry(), isNew: true)));
 
     // At t=0 the entry is transparent (opacity animation starting at 0).
-    final opacity = tester.widget<Opacity>(find.byType(Opacity));
+    // Use .first to target the row-level animation Opacity (not copy icon).
+    final opacity = tester.widget<Opacity>(find.byType(Opacity).first);
     expect(opacity.opacity, 0.0);
 
     // After pumping 200ms the entry should be fully visible.
     await tester.pump(const Duration(milliseconds: 200));
-    final opacityAfter = tester.widget<Opacity>(find.byType(Opacity));
+    final opacityAfter = tester.widget<Opacity>(find.byType(Opacity).first);
     expect(opacityAfter.opacity, closeTo(1.0, 0.05));
   });
 }

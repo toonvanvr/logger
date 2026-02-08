@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CustomRendererData } from './custom-renderers';
+import { ChartRendererData, CustomRendererData } from './custom-renderers';
 
 describe('CustomRendererData', () => {
   // ── Table ──
@@ -158,6 +158,18 @@ describe('CustomRendererData', () => {
           custom_data: { type: 'sparkline', values: [1] },
         }),
       ).toThrow();
+    });
+
+    it('accepts dense_bar chart type', () => {
+      const result = ChartRendererData.safeParse({
+        custom_type: 'chart',
+        custom_data: {
+          type: 'dense_bar',
+          values: [12, 45, 23, 67, 34],
+          title: 'Req/10s',
+        },
+      });
+      expect(result.success).toBe(true);
     });
 
     it('rejects chart with invalid type', () => {

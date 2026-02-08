@@ -306,14 +306,16 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                           .selectedSessionIds;
                       return Stack(
                         children: [
-                          LogListView(
-                            sectionFilter: _selectedSection,
-                            activeSeverities: _activeSeverities,
-                            textFilter: _textFilter,
-                            selectedSessionIds: selectedSessions,
-                            selectionMode: _selectionMode,
-                            selectedEntryIds: _selectedEntryIds,
-                            onEntrySelected: _onEntrySelected,
+                          SelectionArea(
+                            child: LogListView(
+                              sectionFilter: _selectedSection,
+                              activeSeverities: _activeSeverities,
+                              textFilter: _textFilter,
+                              selectedSessionIds: selectedSessions,
+                              selectionMode: _selectionMode,
+                              selectedEntryIds: _selectedEntryIds,
+                              onEntrySelected: _onEntrySelected,
+                            ),
                           ),
                           if (_selectedEntryIds.isNotEmpty)
                             Positioned(
