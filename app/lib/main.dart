@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'plugins/builtin/chart_plugin.dart';
+import 'plugins/builtin/docker_logs_plugin.dart';
 import 'plugins/builtin/id_uniquifier_plugin.dart';
 import 'plugins/builtin/kv_plugin.dart';
 import 'plugins/builtin/log_type_filter_plugin.dart';
 import 'plugins/builtin/progress_plugin.dart';
 import 'plugins/builtin/smart_search_plugin.dart';
 import 'plugins/builtin/table_plugin.dart';
+import 'plugins/builtin/theme_plugin.dart';
 import 'plugins/plugin_registry.dart';
 import 'screens/log_viewer.dart';
 import 'services/connection_manager.dart';
@@ -29,6 +31,8 @@ void main() {
   PluginRegistry.instance.register(LogTypeFilterPlugin());
   PluginRegistry.instance.register(SmartSearchPlugin());
   PluginRegistry.instance.register(ChartRendererPlugin());
+  PluginRegistry.instance.register(DockerLogsPlugin());
+  PluginRegistry.instance.register(ThemePlugin());
 
   runApp(const LoggerApp());
 }

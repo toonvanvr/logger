@@ -14,7 +14,9 @@ class StatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logStore = context.watch<LogStore>();
+    final entryCount = context.select<LogStore, int>((s) => s.entryCount);
+    final memoryBytes =
+        context.select<LogStore, int>((s) => s.estimatedMemoryBytes);
     final manager = context.watch<ConnectionManager>();
     final stickyState = context.watch<StickyStateService>();
 
@@ -33,15 +35,15 @@ class StatusBar extends StatelessWidget {
             children: [
               _StatusItem(
                 icon: Icons.storage_outlined,
-                label: '${logStore.entryCount} entries',
-                isWarning: logStore.entryCount > 8000,
+                label: '$entryCount entries',
+                isWarning: entryCount > 8000,
               ),
               if (!narrow) ...[
                 const SizedBox(width: 12),
                 _StatusItem(
                   icon: Icons.memory_outlined,
-                  label: _formatMemory(logStore.estimatedMemoryBytes),
-                  isWarning: logStore.estimatedMemoryBytes > 100 * 1024 * 1024,
+                  label: _formatMemory(memoryBytes),
+                  isWarning: memoryBytes > 100 * 1024 * 1024,
                 ),
               ],
               if (hasStickyInfo && !narrow) ...[

@@ -6,10 +6,11 @@ import 'package:provider/provider.dart';
 import '../../plugins/builtin/smart_search_plugin.dart';
 import '../../plugins/plugin_registry.dart';
 import '../../services/log_store.dart';
-import '../../services/query_store.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import 'bookmark_button.dart';
 import 'search_suggestions.dart';
+import 'severity_toggle.dart';
 
 const _filterBarHeight = 32.0;
 
@@ -17,16 +18,9 @@ const _severities = ['debug', 'info', 'warning', 'error', 'critical'];
 
 /// Collapsible filter bar with severity toggles and text search.
 class FilterBar extends StatefulWidget {
-  /// Currently active severity levels.
   final Set<String> activeSeverities;
-
-  /// Called when severity selection changes.
   final ValueChanged<Set<String>>? onSeverityChange;
-
-  /// Called when the text filter changes.
   final ValueChanged<String>? onTextFilterChange;
-
-  /// Called when the clear-all button is pressed.
   final VoidCallback? onClear;
 
   const FilterBar({
@@ -55,6 +49,7 @@ class _FilterBarState extends State<FilterBar> {
   List<String> _suggestions = [];
   bool _isSelectingSuggestion = false;
   Timer? _overlayRemovalTimer;
+  Timer? _suggestDebounce;
 
   @override
   void initState() {
@@ -65,6 +60,7 @@ class _FilterBarState extends State<FilterBar> {
   @override
   void dispose() {
     _overlayRemovalTimer?.cancel();
+    _suggestDebounce?.cancel();
     _removeOverlay();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
@@ -75,16 +71,13 @@ class _FilterBarState extends State<FilterBar> {
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
       _updateSuggestions(_textController.text);
-    } else {
-      // Delay overlay removal so suggestion tap can fire first.
-      if (_isSelectingSuggestion) return;
-      _overlayRemovalTimer?.cancel();
-      _overlayRemovalTimer = Timer(const Duration(milliseconds: 100), () {
-        if (!_isSelectingSuggestion) {
-          _removeOverlay();
-        }
-      });
+      return;
     }
+    if (_isSelectingSuggestion) return;
+    _overlayRemovalTimer?.cancel();
+    _overlayRemovalTimer = Timer(const Duration(milliseconds: 100), () {
+      if (!_isSelectingSuggestion) _removeOverlay();
+    });
   }
 
   void _updateSuggestions(String query) {
@@ -92,15 +85,17 @@ class _FilterBarState extends State<FilterBar> {
         .getEnabledPlugins<SmartSearchPlugin>()
         .firstOrNull;
     if (plugin == null) {
-      _removeSuggestionsIfEmpty();
+      if (_suggestions.isNotEmpty) {
+        setState(() => _suggestions = []);
+        _removeOverlay();
+      }
       return;
     }
-
-    final logStore = context.read<LogStore>();
-    final suggestions = plugin.getSuggestions(query, logStore.entries);
-
+    final suggestions = plugin.getSuggestions(
+      query,
+      context.read<LogStore>().entries,
+    );
     setState(() => _suggestions = suggestions);
-
     if (suggestions.isNotEmpty && _focusNode.hasFocus) {
       _showOverlay();
     } else {
@@ -108,16 +103,10 @@ class _FilterBarState extends State<FilterBar> {
     }
   }
 
-  void _removeSuggestionsIfEmpty() {
-    if (_suggestions.isEmpty) return;
-    setState(() => _suggestions = []);
-    _removeOverlay();
-  }
-
   void _showOverlay() {
     _removeOverlay();
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
+      builder: (ctx) => Positioned(
         width: 320,
         child: CompositedTransformFollower(
           link: _layerLink,
@@ -154,7 +143,11 @@ class _FilterBarState extends State<FilterBar> {
 
   void _onTextChanged(String text) {
     widget.onTextFilterChange?.call(text);
-    _updateSuggestions(text);
+    _suggestDebounce?.cancel();
+    _suggestDebounce = Timer(
+      const Duration(milliseconds: 100),
+      () => _updateSuggestions(text),
+    );
   }
 
   @override
@@ -165,78 +158,29 @@ class _FilterBarState extends State<FilterBar> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
-          // Severity toggles
           for (final severity in _severities)
             Padding(
               padding: const EdgeInsets.only(right: 2),
-              child: _SeverityToggle(
+              child: SeverityToggle(
                 severity: severity,
                 isActive: widget.activeSeverities.contains(severity),
                 onToggle: () => _toggleSeverity(severity),
               ),
             ),
           const SizedBox(width: 8),
-          // Text search with suggestion overlay
-          Expanded(
-            child: CompositedTransformTarget(
-              link: _layerLink,
-              child: SizedBox(
-                height: 28,
-                child: TextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
-                  style: LoggerTypography.logMeta.copyWith(
-                    color: LoggerColors.fgPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Filter... (try uuid:, url:, error:)',
-                    hintStyle: LoggerTypography.logMeta.copyWith(
-                      color: LoggerColors.fgMuted,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    filled: true,
-                    fillColor: LoggerColors.bgSurface,
-                    border: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                        color: LoggerColors.borderDefault,
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                        color: LoggerColors.borderDefault,
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                        color: LoggerColors.borderFocus,
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                  onChanged: _onTextChanged,
-                ),
-              ),
-            ),
-          ),
+          Expanded(child: _buildSearchField()),
           const SizedBox(width: 8),
-          // Saved query bookmarks
-          _BookmarkButton(
+          BookmarkButton(
             activeSeverities: widget.activeSeverities,
             textFilter: _textController.text,
-            onQueryLoaded: (query) {
-              _textController.text = query.textFilter;
+            onQueryLoaded: (q) {
+              _textController.text = q.textFilter;
               _textController.selection = TextSelection.fromPosition(
-                TextPosition(offset: query.textFilter.length),
+                TextPosition(offset: q.textFilter.length),
               );
             },
           ),
           const SizedBox(width: 4),
-          // Clear all
           GestureDetector(
             onTap: widget.onClear,
             child: const Tooltip(
@@ -253,231 +197,49 @@ class _FilterBarState extends State<FilterBar> {
     );
   }
 
-  void _toggleSeverity(String severity) {
-    final updated = Set<String>.from(widget.activeSeverities);
-    if (updated.contains(severity)) {
-      updated.remove(severity);
-    } else {
-      updated.add(severity);
-    }
-    widget.onSeverityChange?.call(updated);
-  }
-}
-
-class _SeverityToggle extends StatelessWidget {
-  final String severity;
-  final bool isActive;
-  final VoidCallback onToggle;
-
-  const _SeverityToggle({
-    required this.severity,
-    required this.isActive,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = severityBarColor(severity);
-
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: isActive ? color.withAlpha(51) : Colors.transparent,
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(
-            color: isActive ? color : LoggerColors.borderDefault,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          severity[0].toUpperCase(),
-          style: LoggerTypography.badge.copyWith(
-            color: isActive ? color : LoggerColors.fgMuted,
-          ),
-        ),
-      ),
+  Widget _buildSearchField() {
+    final br = BorderRadius.circular(3);
+    final border = OutlineInputBorder(
+      borderSide: const BorderSide(color: LoggerColors.borderDefault),
+      borderRadius: br,
     );
-  }
-}
-
-/// Bookmark icon button that shows saved queries in a popup menu.
-class _BookmarkButton extends StatelessWidget {
-  final Set<String> activeSeverities;
-  final String textFilter;
-  final ValueChanged<SavedQuery> onQueryLoaded;
-
-  const _BookmarkButton({
-    required this.activeSeverities,
-    required this.textFilter,
-    required this.onQueryLoaded,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final queryStore = context.watch<QueryStore>();
-    final hasSaved = queryStore.queries.isNotEmpty;
-
-    return PopupMenuButton<_BookmarkAction>(
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(),
-      tooltip: 'Saved queries',
-      icon: Icon(
-        hasSaved ? Icons.bookmark : Icons.bookmark_border,
-        size: 16,
-        color: LoggerColors.fgMuted,
-      ),
-      iconSize: 16,
-      color: LoggerColors.bgOverlay,
-      onSelected: (action) => _handleAction(context, action),
-      itemBuilder: (context) => _buildMenuItems(queryStore),
-    );
-  }
-
-  List<PopupMenuEntry<_BookmarkAction>> _buildMenuItems(QueryStore queryStore) {
-    final items = <PopupMenuEntry<_BookmarkAction>>[];
-
-    // Save current option
-    items.add(
-      PopupMenuItem(
-        value: _BookmarkAction.save,
-        child: Row(
-          children: [
-            const Icon(Icons.save, size: 14, color: LoggerColors.fgSecondary),
-            const SizedBox(width: 8),
-            Text(
-              'Save current filters',
-              style: LoggerTypography.logMeta.copyWith(
-                color: LoggerColors.fgPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (queryStore.queries.isNotEmpty) {
-      items.add(const PopupMenuDivider(height: 1));
-
-      for (var i = 0; i < queryStore.queries.length; i++) {
-        final query = queryStore.queries[i];
-        items.add(
-          PopupMenuItem(
-            value: _BookmarkAction.load(i),
-            child: Text(
-              query.name,
-              style: LoggerTypography.logMeta.copyWith(
-                color: LoggerColors.fgPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        );
-      }
-    }
-
-    return items;
-  }
-
-  void _handleAction(BuildContext context, _BookmarkAction action) {
-    final queryStore = context.read<QueryStore>();
-
-    switch (action) {
-      case _BookmarkSave():
-        _showSaveDialog(context, queryStore);
-      case _BookmarkLoad(:final index):
-        if (index < queryStore.queries.length) {
-          final query = queryStore.queries[index];
-          queryStore.loadQuery(query);
-          onQueryLoaded(query);
-        }
-    }
-  }
-
-  void _showSaveDialog(BuildContext context, QueryStore queryStore) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: LoggerColors.bgOverlay,
-        title: Text(
-          'Save Query',
-          style: LoggerTypography.logMeta.copyWith(
-            color: LoggerColors.fgPrimary,
-            fontSize: 14,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SizedBox(
+        height: 28,
+        child: TextField(
+          controller: _textController,
+          focusNode: _focusNode,
           style: LoggerTypography.logMeta.copyWith(
             color: LoggerColors.fgPrimary,
           ),
           decoration: InputDecoration(
-            hintText: 'Query name',
+            hintText: 'Filter... (try uuid:, url:, error:)',
             hintStyle: LoggerTypography.logMeta.copyWith(
               color: LoggerColors.fgMuted,
             ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            filled: true,
+            fillColor: LoggerColors.bgSurface,
+            border: border,
+            enabledBorder: border,
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: LoggerColors.borderFocus),
+              borderRadius: br,
+            ),
           ),
-          onSubmitted: (name) {
-            if (name.trim().isNotEmpty) {
-              queryStore.saveQuery(
-                name.trim(),
-                severities: activeSeverities,
-                textFilter: textFilter,
-              );
-              Navigator.of(ctx).pop();
-            }
-          },
+          onChanged: _onTextChanged,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Cancel',
-              style: LoggerTypography.logMeta.copyWith(
-                color: LoggerColors.fgMuted,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                queryStore.saveQuery(
-                  name,
-                  severities: activeSeverities,
-                  textFilter: textFilter,
-                );
-                Navigator.of(ctx).pop();
-              }
-            },
-            child: Text(
-              'Save',
-              style: LoggerTypography.logMeta.copyWith(
-                color: LoggerColors.borderFocus,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
-}
 
-/// Internal action type for the bookmark popup menu.
-sealed class _BookmarkAction {
-  const _BookmarkAction();
-  static const save = _BookmarkSave();
-  static _BookmarkLoad load(int index) => _BookmarkLoad(index);
-}
-
-class _BookmarkSave extends _BookmarkAction {
-  const _BookmarkSave();
-}
-
-class _BookmarkLoad extends _BookmarkAction {
-  final int index;
-  const _BookmarkLoad(this.index);
+  void _toggleSeverity(String severity) {
+    final s = Set<String>.from(widget.activeSeverities);
+    s.contains(severity) ? s.remove(severity) : s.add(severity);
+    widget.onSeverityChange?.call(s);
+  }
 }
