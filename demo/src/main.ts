@@ -8,6 +8,7 @@ import { runRpcTools } from './scenarios/rpc-tools'
 import { runSessionLifecycle } from './scenarios/session-lifecycle'
 import { runShowcase } from './scenarios/showcase'
 import { runStateTracking } from './scenarios/state-tracking'
+import { runStickyDemo } from './scenarios/sticky-demo'
 import { runStressTest } from './scenarios/stress-test'
 
 const scenario = process.argv[2] ?? 'all'
@@ -25,6 +26,7 @@ const scenarios: Record<string, () => Promise<void>> = {
   images: runImageLogging,
   session: runSessionLifecycle,
   rpc: runRpcTools,
+  sticky: runStickyDemo,
 }
 
 if (scenario === 'all') {

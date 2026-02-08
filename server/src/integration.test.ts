@@ -252,10 +252,103 @@ describe('Integration: Session lifecycle', () => {
 });
 
 describe('Integration: RPC round-trip', () => {
-  // TODO: Full RPC round-trip requires coordinating a client WS (with registered tools),
-  // a viewer WS (sending rpc_request), and the RPC bridge routing between them.
-  // This is complex to test end-to-end; skipping for now.
-  it.todo('viewer sends RPC request → client receives and responds');
+  it('viewer sends RPC request → client receives and responds', async () => {
+    const sessionId = `rpc-roundtrip-${Date.now()}`;
+    const rpcId = crypto.randomUUID();
+
+    // 1. Connect a client WS that registers tools and auto-responds to requests
+    const clientWs = await new Promise<WebSocket>((resolve, reject) => {
+      const ws = new WebSocket(t.wsUrl, {
+        headers: { 'X-Logger-Role': 'client', 'X-Session-Id': sessionId },
+      } as any);
+
+      const timeout = setTimeout(() => {
+        ws.close();
+        reject(new Error('Client WS open timeout'));
+      }, 5000);
+
+      ws.onopen = () => {
+        clearTimeout(timeout);
+        // Register tools with the server
+        ws.send(JSON.stringify({
+          type: 'register_tools',
+          tools: [
+            { name: 'getStatus', description: 'Get app status', category: 'getter' },
+          ],
+        }));
+        resolve(ws);
+      };
+
+      ws.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error('Client WS error'));
+      };
+    });
+
+    // Set up client to auto-respond to incoming RPC requests
+    clientWs.onmessage = (event: MessageEvent) => {
+      const data = JSON.parse(String(event.data));
+      if (data.type === 'rpc_request') {
+        clientWs.send(JSON.stringify({
+          rpc_id: data.rpc_id,
+          rpc_direction: 'response',
+          rpc_response: { status: 'healthy', uptime: 12345 },
+        }));
+      }
+    };
+
+    // Small delay to let tool registration propagate
+    await new Promise((r) => setTimeout(r, 100));
+
+    try {
+      // 2. Connect a viewer WS and send an RPC request
+      const rpcResult = await new Promise<any>((resolve, reject) => {
+        const ws = new WebSocket(t.wsUrl, {
+          headers: { 'X-Logger-Role': 'viewer' },
+        } as any);
+
+        const timeout = setTimeout(() => {
+          ws.close();
+          reject(new Error('Viewer RPC response timeout'));
+        }, 5000);
+
+        ws.onopen = () => {
+          // Send RPC request targeting the client session
+          ws.send(JSON.stringify({
+            type: 'rpc_request',
+            rpc_id: rpcId,
+            target_session_id: sessionId,
+            rpc_method: 'getStatus',
+            rpc_args: { verbose: true },
+          }));
+        };
+
+        ws.onmessage = (event: MessageEvent) => {
+          const data = JSON.parse(String(event.data));
+          // Ignore session_list messages that viewers receive on connect
+          if (data.type === 'session_list') return;
+
+          if (data.type === 'rpc_response' && data.rpc_id === rpcId) {
+            clearTimeout(timeout);
+            ws.close();
+            resolve(data);
+          }
+        };
+
+        ws.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Viewer WS error'));
+        };
+      });
+
+      // 3. Verify the full round-trip
+      expect(rpcResult.type).toBe('rpc_response');
+      expect(rpcResult.rpc_id).toBe(rpcId);
+      expect(rpcResult.rpc_response).toEqual({ status: 'healthy', uptime: 12345 });
+    } finally {
+      clientWs.close();
+    }
+  });
 });
 
 describe('Integration: Rate limiting', () => {

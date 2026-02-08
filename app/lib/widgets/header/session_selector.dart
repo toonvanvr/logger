@@ -7,9 +7,10 @@ import '../../services/log_connection.dart';
 import '../../services/session_store.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import 'overflow_menu.dart';
+import 'window_controls.dart';
 
 const _headerHeight = 40.0;
-const _maxVisibleSessions = 8;
 const _sessionDotSize = 6.0;
 const _buttonHPadding = 8.0;
 const _buttonMaxWidth = 120.0;
@@ -38,10 +39,6 @@ class SessionSelector extends StatelessWidget {
     final sessionStore = context.watch<SessionStore>();
     final connection = context.watch<LogConnection>();
     final sessions = sessionStore.sessions;
-    final visible = sessions.length > _maxVisibleSessions
-        ? sessions.sublist(0, _maxVisibleSessions)
-        : sessions;
-    final hasOverflow = sessions.length > _maxVisibleSessions;
 
     return Container(
       height: _headerHeight,
@@ -68,33 +65,53 @@ class SessionSelector extends StatelessWidget {
             height: _headerHeight,
             color: LoggerColors.borderSubtle,
           ),
-          // Session buttons (bounded to available space, scrollable)
+          // Session buttons (dynamic count based on available width)
           Expanded(
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final session in visible)
-                  SessionButton(
-                    session: session,
-                    isSelected: sessionStore.isSelected(session.sessionId),
-                    onTap: () => sessionStore.selectOnly(session.sessionId),
-                    onCtrlTap: () =>
-                        sessionStore.toggleSession(session.sessionId),
-                  ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxVisible = (constraints.maxWidth / _buttonMinWidth)
+                    .floor()
+                    .clamp(4, 20);
+                final visible = sessions.length > maxVisible
+                    ? sessions.sublist(0, maxVisible)
+                    : sessions;
+                final hasOverflow = sessions.length > maxVisible;
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (final session in visible)
+                            SessionButton(
+                              session: session,
+                              isSelected: sessionStore.isSelected(
+                                session.sessionId,
+                              ),
+                              onTap: () =>
+                                  sessionStore.selectOnly(session.sessionId),
+                              onCtrlTap: () =>
+                                  sessionStore.toggleSession(session.sessionId),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (hasOverflow) OverflowButton(overflowSessions: sessions),
+                  ],
+                );
+              },
             ),
           ),
-          // Overflow button (outside scroll area, always visible)
-          if (hasOverflow) _OverflowButton(sessions: sessions),
           // Filter toggle
-          _HeaderIconButton(
+          HeaderIconButton(
             icon: Icons.filter_list,
             tooltip: 'Toggle filters',
             isActive: isFilterExpanded,
             onTap: onFilterToggle,
           ),
           // RPC panel toggle
-          _HeaderIconButton(
+          HeaderIconButton(
             icon: Icons.build_outlined,
             tooltip: 'Toggle tools panel',
             isActive: false,
@@ -102,10 +119,10 @@ class SessionSelector extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           // Connection indicator
-          _ConnectionIndicator(isConnected: connection.isConnected),
+          ConnectionIndicator(isConnected: connection.isConnected),
           const SizedBox(width: 8),
           // Always-on-top toggle
-          const _AlwaysOnTopButton(),
+          const AlwaysOnTopButton(),
           const SizedBox(width: 4),
         ],
       ),
@@ -213,179 +230,6 @@ class _SessionButtonState extends State<SessionButton> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// --- Private helper widgets ---
-
-class _OverflowButton extends StatelessWidget {
-  final List<SessionInfo> sessions;
-  const _OverflowButton({required this.sessions});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showOverflowMenu(context),
-      child: Container(
-        width: 28,
-        height: _headerHeight,
-        alignment: Alignment.center,
-        child: Text(
-          '···',
-          style: LoggerTypography.headerBtn.copyWith(
-            color: LoggerColors.fgMuted,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showOverflowMenu(BuildContext context) {
-    final sessionStore = context.read<SessionStore>();
-    final box = context.findRenderObject()! as RenderBox;
-    final position = box.localToGlobal(Offset.zero);
-
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        position.dx,
-        position.dy + _headerHeight,
-        position.dx + 28,
-        position.dy + _headerHeight,
-      ),
-      color: LoggerColors.bgOverlay,
-      items: sessions.map((session) {
-        final selected = sessionStore.isSelected(session.sessionId);
-        final poolColor = LoggerColors
-            .sessionPool[session.colorIndex % LoggerColors.sessionPool.length];
-        return PopupMenuItem<String>(
-          value: session.sessionId,
-          height: 28,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                selected ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 14,
-                color: selected ? LoggerColors.fgPrimary : LoggerColors.fgMuted,
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: _sessionDotSize,
-                height: _sessionDotSize,
-                decoration: BoxDecoration(
-                  color: poolColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  session.application.name,
-                  style: LoggerTypography.headerBtn,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    ).then((sessionId) {
-      if (sessionId != null) {
-        sessionStore.toggleSession(sessionId);
-      }
-    });
-  }
-}
-
-class _ConnectionIndicator extends StatelessWidget {
-  final bool isConnected;
-  const _ConnectionIndicator({required this.isConnected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: isConnected ? 'Connected' : 'Disconnected',
-      child: Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: isConnected
-              ? const Color(0xFFA8CC7E)
-              : const Color(0xFFE06C60),
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderIconButton extends StatefulWidget {
-  final IconData icon;
-  final String tooltip;
-  final bool isActive;
-  final VoidCallback? onTap;
-
-  const _HeaderIconButton({
-    required this.icon,
-    required this.tooltip,
-    this.isActive = false,
-    this.onTap,
-  });
-
-  @override
-  State<_HeaderIconButton> createState() => _HeaderIconButtonState();
-}
-
-class _HeaderIconButtonState extends State<_HeaderIconButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: Tooltip(
-        message: widget.tooltip,
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            width: 28,
-            height: _headerHeight,
-            alignment: Alignment.center,
-            color: _hovered ? LoggerColors.bgHover : Colors.transparent,
-            child: Icon(
-              widget.icon,
-              size: 14,
-              color: widget.isActive
-                  ? LoggerColors.borderFocus
-                  : LoggerColors.fgMuted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AlwaysOnTopButton extends StatefulWidget {
-  const _AlwaysOnTopButton();
-
-  @override
-  State<_AlwaysOnTopButton> createState() => _AlwaysOnTopButtonState();
-}
-
-class _AlwaysOnTopButtonState extends State<_AlwaysOnTopButton> {
-  bool _pinned = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return _HeaderIconButton(
-      icon: Icons.push_pin_outlined,
-      tooltip: 'Always on top',
-      isActive: _pinned,
-      onTap: () => setState(() => _pinned = !_pinned),
     );
   }
 }

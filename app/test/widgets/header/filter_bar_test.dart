@@ -1,16 +1,23 @@
+import 'package:app/services/query_store.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/header/filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+
+Widget _wrap(Widget child) {
+  return ChangeNotifierProvider(
+    create: (_) => QueryStore(),
+    child: MaterialApp(
+      theme: createLoggerTheme(),
+      home: Scaffold(body: child),
+    ),
+  );
+}
 
 void main() {
   testWidgets('renders severity toggles', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: createLoggerTheme(),
-        home: const Scaffold(body: FilterBar()),
-      ),
-    );
+    await tester.pumpWidget(_wrap(const FilterBar()));
 
     // 5 severity toggle buttons showing first letter
     expect(find.text('D'), findsOneWidget); // debug
@@ -24,12 +31,7 @@ void main() {
     Set<String>? lastSeverities;
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: createLoggerTheme(),
-        home: Scaffold(
-          body: FilterBar(onSeverityChange: (s) => lastSeverities = s),
-        ),
-      ),
+      _wrap(FilterBar(onSeverityChange: (s) => lastSeverities = s)),
     );
 
     // Tap debug toggle to turn it off
@@ -45,12 +47,7 @@ void main() {
     String? lastText;
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: createLoggerTheme(),
-        home: Scaffold(
-          body: FilterBar(onTextFilterChange: (t) => lastText = t),
-        ),
-      ),
+      _wrap(FilterBar(onTextFilterChange: (t) => lastText = t)),
     );
 
     await tester.enterText(find.byType(TextField), 'hello');

@@ -7,12 +7,32 @@ class LogStore extends ChangeNotifier {
   final List<LogEntry> _entries = [];
   final Map<String, int> _idIndex = {};
   final Map<String, Map<String, dynamic>> _stateStore = {};
+  int _version = 0;
+
+  /// Monotonically increasing version number, incremented on each mutation.
+  int get version => _version;
 
   /// All log entries in insertion order.
   List<LogEntry> get entries => List.unmodifiable(_entries);
 
   /// Total entry count.
   int get length => _entries.length;
+
+  /// Alias for [length] used by the status bar.
+  int get entryCount => _entries.length;
+
+  /// Rough estimate of memory consumed by stored entries (in bytes).
+  ///
+  /// Uses a heuristic of ~256 bytes per entry for the object overhead plus
+  /// the length of the text payload (2 bytes per char for Dart strings).
+  int get estimatedMemoryBytes {
+    var bytes = 0;
+    for (final entry in _entries) {
+      bytes += 256; // object overhead estimate
+      if (entry.text != null) bytes += entry.text!.length * 2;
+    }
+    return bytes;
+  }
 
   /// Add a single log entry, handling replace/upsert by id.
   void addEntry(LogEntry entry) {
@@ -30,6 +50,7 @@ class LogStore extends ChangeNotifier {
     if (entry.replace == true && _idIndex.containsKey(entry.id)) {
       final index = _idIndex[entry.id]!;
       _entries[index] = entry;
+      _version++;
       notifyListeners();
       return;
     }
@@ -37,6 +58,7 @@ class LogStore extends ChangeNotifier {
     // Normal insert
     _idIndex[entry.id] = _entries.length;
     _entries.add(entry);
+    _version++;
     notifyListeners();
   }
 
@@ -61,6 +83,7 @@ class LogStore extends ChangeNotifier {
         _entries.add(entry);
       }
     }
+    _version++;
     notifyListeners();
   }
 
@@ -69,6 +92,7 @@ class LogStore extends ChangeNotifier {
     _entries.clear();
     _idIndex.clear();
     _stateStore.clear();
+    _version++;
     notifyListeners();
   }
 

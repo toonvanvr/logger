@@ -87,6 +87,39 @@ export async function runCustomRenderers() {
     }, { id: 'pool-status' })
     await delay(300)
 
+    // Sparkline chart — CPU usage over time
+    logger.info('CPU usage trend (last 60s):')
+    logger.custom('chart', {
+      variant: 'sparkline',
+      title: 'CPU Usage %',
+      data: [
+        { label: '0s', value: 23 },
+        { label: '10s', value: 45 },
+        { label: '20s', value: 38 },
+        { label: '30s', value: 72 },
+        { label: '40s', value: 56 },
+        { label: '50s', value: 41 },
+        { label: '60s', value: 33 },
+      ],
+    })
+    await delay(300)
+
+    // Area chart — memory allocation
+    logger.info('Memory allocation by region:')
+    logger.custom('chart', {
+      variant: 'area',
+      title: 'Heap allocation (MB) over time',
+      data: [
+        { label: 'T0', value: 128 },
+        { label: 'T1', value: 256 },
+        { label: 'T2', value: 220 },
+        { label: 'T3', value: 380 },
+        { label: 'T4', value: 310 },
+        { label: 'T5', value: 290 },
+      ],
+    })
+    await delay(300)
+
     // Progress with ring style
     logger.info('Memory usage monitoring:')
     logger.custom('progress', {

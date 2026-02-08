@@ -13,23 +13,24 @@ class TableRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = entry.customData;
     if (data is! Map) {
-      return Text('[table: invalid data]',
-          style: LoggerTypography.logBody
-              .copyWith(color: LoggerColors.fgMuted));
+      return Text(
+        '[table: invalid data]',
+        style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),
+      );
     }
 
     final columns = (data['columns'] as List?)?.cast<String>() ?? [];
-    final rows = (data['rows'] as List?)
-            ?.map((r) => (r as List).toList())
-            .toList() ??
+    final rows =
+        (data['rows'] as List?)?.map((r) => (r as List).toList()).toList() ??
         [];
     final caption = data['caption'] as String?;
     final highlightColumn = data['highlight_column'] as int?;
 
     if (columns.isEmpty) {
-      return Text('[table: no columns]',
-          style: LoggerTypography.logBody
-              .copyWith(color: LoggerColors.fgMuted));
+      return Text(
+        '[table: no columns]',
+        style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),
+      );
     }
 
     return Column(
@@ -39,8 +40,9 @@ class TableRenderer extends StatelessWidget {
         if (caption != null) ...[
           Text(
             caption,
-            style: LoggerTypography.groupTitle
-                .copyWith(color: LoggerColors.fgSecondary),
+            style: LoggerTypography.groupTitle.copyWith(
+              color: LoggerColors.fgSecondary,
+            ),
           ),
           const SizedBox(height: 4),
         ],
@@ -55,11 +57,10 @@ class TableRenderer extends StatelessWidget {
             child: DataTable(
               headingRowHeight: 28,
               dataRowMinHeight: 24,
-              dataRowMaxHeight: 28,
+              dataRowMaxHeight: 36,
               columnSpacing: 16,
               horizontalMargin: 8,
-              headingRowColor:
-                  WidgetStateProperty.all(LoggerColors.bgRaised),
+              headingRowColor: WidgetStateProperty.all(LoggerColors.bgRaised),
               dataRowColor: WidgetStateProperty.resolveWith((states) {
                 return LoggerColors.bgSurface;
               }),
@@ -91,8 +92,7 @@ class TableRenderer extends StatelessWidget {
                     isEven ? LoggerColors.bgSurface : LoggerColors.bgBase,
                   ),
                   cells: List.generate(columns.length, (colIdx) {
-                    final cellValue =
-                        colIdx < row.length ? row[colIdx] : null;
+                    final cellValue = colIdx < row.length ? row[colIdx] : null;
                     final isHighlight = colIdx == highlightColumn;
                     return DataCell(
                       Text(

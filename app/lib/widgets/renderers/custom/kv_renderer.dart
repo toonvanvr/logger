@@ -13,9 +13,10 @@ class KvRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = entry.customData;
     if (data is! Map) {
-      return Text('[kv: invalid data]',
-          style: LoggerTypography.logBody
-              .copyWith(color: LoggerColors.fgMuted));
+      return Text(
+        '[kv: invalid data]',
+        style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),
+      );
     }
 
     final entries =
@@ -23,9 +24,10 @@ class KvRenderer extends StatelessWidget {
     final layout = data['layout'] as String? ?? 'inline';
 
     if (entries.isEmpty) {
-      return Text('[kv: no entries]',
-          style: LoggerTypography.logBody
-              .copyWith(color: LoggerColors.fgMuted));
+      return Text(
+        '[kv: no entries]',
+        style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),
+      );
     }
 
     if (layout == 'stacked') {
@@ -51,8 +53,9 @@ class KvRenderer extends StatelessWidget {
           children: [
             Text(
               '$key: ',
-              style: LoggerTypography.logMeta
-                  .copyWith(color: LoggerColors.syntaxKey),
+              style: LoggerTypography.logMeta.copyWith(
+                color: LoggerColors.syntaxKey,
+              ),
             ),
             Text(
               value?.toString() ?? 'null',
@@ -85,15 +88,15 @@ class KvRenderer extends StatelessWidget {
                 width: 120,
                 child: Text(
                   key,
-                  style: LoggerTypography.logMeta
-                      .copyWith(color: LoggerColors.syntaxKey),
+                  style: LoggerTypography.logMeta.copyWith(
+                    color: LoggerColors.syntaxKey,
+                  ),
                 ),
               ),
               Flexible(
                 child: Text(
                   value?.toString() ?? 'null',
-                  style:
-                      LoggerTypography.logBody.copyWith(color: valueColor),
+                  style: LoggerTypography.logBody.copyWith(color: valueColor),
                 ),
               ),
             ],

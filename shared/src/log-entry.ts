@@ -162,6 +162,10 @@ export const LogEntry = z.object({
   /** Whether the group starts collapsed in the viewer */
   group_collapsed: z.boolean().optional(),
 
+  // ── Sticky pinning ──
+  /** When true, this entry (or group) pins to the top of the viewport when scrolled past */
+  sticky: z.boolean().optional(),
+
   // ── State operations (type: "state") ──
   /** State key for upsert. Unique per session. */
   state_key: z.string().optional(),

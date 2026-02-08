@@ -13,9 +13,10 @@ class ProgressRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = entry.customData;
     if (data is! Map) {
-      return Text('[progress: invalid data]',
-          style: LoggerTypography.logBody
-              .copyWith(color: LoggerColors.fgMuted));
+      return Text(
+        '[progress: invalid data]',
+        style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),
+      );
     }
 
     final value = (data['value'] as num?)?.toDouble() ?? 0;
@@ -28,8 +29,9 @@ class ProgressRenderer extends StatelessWidget {
     final progress = max > 0 ? (value / max).clamp(0.0, 1.0) : 0.0;
     final percentage = (progress * 100).round();
 
-    final color =
-        colorStr != null ? _parseHex(colorStr) : LoggerColors.severityInfoBar;
+    final color = colorStr != null
+        ? _parseHex(colorStr)
+        : LoggerColors.severityInfoBar;
 
     if (style == 'ring') {
       return _buildRing(progress, percentage, color, label, sublabel);
@@ -79,15 +81,17 @@ class ProgressRenderer extends StatelessWidget {
                           Flexible(
                             child: Text(
                               label,
-                              style: LoggerTypography.logMeta
-                                  .copyWith(color: Colors.white),
+                              style: LoggerTypography.logMeta.copyWith(
+                                color: Colors.white,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         Text(
                           '$percentage%',
-                          style: LoggerTypography.logMeta
-                              .copyWith(color: Colors.white),
+                          style: LoggerTypography.logMeta.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -100,8 +104,9 @@ class ProgressRenderer extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               sublabel,
-              style: LoggerTypography.logMeta
-                  .copyWith(color: LoggerColors.fgMuted),
+              style: LoggerTypography.logMeta.copyWith(
+                color: LoggerColors.fgMuted,
+              ),
             ),
           ],
         ],
@@ -135,8 +140,9 @@ class ProgressRenderer extends StatelessWidget {
                 ),
                 Text(
                   '$percentage%',
-                  style: LoggerTypography.logMeta
-                      .copyWith(color: LoggerColors.fgPrimary),
+                  style: LoggerTypography.logMeta.copyWith(
+                    color: LoggerColors.fgPrimary,
+                  ),
                 ),
               ],
             ),
@@ -147,13 +153,13 @@ class ProgressRenderer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (label != null)
-                  Text(label, style: LoggerTypography.logBody),
+                if (label != null) Text(label, style: LoggerTypography.logBody),
                 if (sublabel != null)
                   Text(
                     sublabel,
-                    style: LoggerTypography.logMeta
-                        .copyWith(color: LoggerColors.fgMuted),
+                    style: LoggerTypography.logMeta.copyWith(
+                      color: LoggerColors.fgMuted,
+                    ),
                   ),
               ],
             ),

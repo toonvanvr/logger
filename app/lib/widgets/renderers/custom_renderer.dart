@@ -3,15 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
+import '../../plugins/plugin_registry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
-import 'custom/kv_renderer.dart';
-import 'custom/progress_renderer.dart';
-import 'custom/table_renderer.dart';
 
 /// Renderer for [LogType.custom] entries.
 ///
-/// Dispatches to specialized renderers by [LogEntry.customType], or falls
+/// Dispatches to specialized renderers via [PluginRegistry], or falls
 /// back to a JSON dump for unknown types.
 class CustomRenderer extends StatelessWidget {
   final LogEntry entry;
@@ -20,16 +18,19 @@ class CustomRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    switch (entry.customType) {
-      case 'progress':
-        return ProgressRenderer(entry: entry);
-      case 'table':
-        return TableRenderer(entry: entry);
-      case 'kv':
-        return KvRenderer(entry: entry);
-      default:
-        return _FallbackRenderer(entry: entry);
+    final customType = entry.customType;
+    if (customType != null) {
+      final plugin = PluginRegistry.instance.resolveRenderer(customType);
+      if (plugin != null) {
+        final data = entry.customData;
+        return plugin.buildRenderer(
+          context,
+          data is Map<String, dynamic> ? data : <String, dynamic>{},
+          entry,
+        );
+      }
     }
+    return _FallbackRenderer(entry: entry);
   }
 }
 

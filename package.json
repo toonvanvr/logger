@@ -1,0 +1,7 @@
+{
+  "name": "logger-workspace",
+  "private": true,
+  "scripts": {
+    "docs:screenshots": "bun run scripts/capture-docs-screenshots.ts"
+  }
+}

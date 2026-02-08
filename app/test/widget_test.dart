@@ -1,6 +1,7 @@
 import 'package:app/screens/log_viewer.dart';
 import 'package:app/services/log_connection.dart';
 import 'package:app/services/log_store.dart';
+import 'package:app/services/query_store.dart';
 import 'package:app/services/session_store.dart';
 import 'package:app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => LogConnection()),
           ChangeNotifierProvider(create: (_) => LogStore()),
           ChangeNotifierProvider(create: (_) => SessionStore()),
+          ChangeNotifierProvider(create: (_) => QueryStore()),
         ],
         child: MaterialApp(
           theme: createLoggerTheme(),

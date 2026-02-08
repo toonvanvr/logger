@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'live_pill.dart';
 import 'log_row.dart';
+import 'sticky_header.dart';
 
 /// Main virtualized log list using [ListView.builder].
 ///
@@ -57,6 +59,14 @@ class _LogListViewState extends State<LogListView> {
 
   /// The last known entry count — used to detect new arrivals.
   int _lastEntryCount = 0;
+
+  /// Cached filtered entries to avoid recomputation when filters haven't changed.
+  List<LogEntry>? _cachedFilteredEntries;
+  int _cachedLogStoreVersion = -1;
+  String? _cachedSectionFilter;
+  String? _cachedTextFilter;
+  Set<String> _cachedActiveSeverities = const {};
+  Set<String> _cachedSessionIds = const {};
 
   @override
   void initState() {
@@ -131,6 +141,8 @@ class _LogListViewState extends State<LogListView> {
     final result = <_DisplayEntry>[];
     int depth = 0;
     final groupStack = <String>[]; // stack of open group IDs
+    final stickyGroupIds =
+        <String>{}; // groups whose open entry has sticky=true
 
     for (final entry in entries) {
       // Check if this entry is inside a collapsed group
@@ -142,23 +154,60 @@ class _LogListViewState extends State<LogListView> {
         }
       }
 
+      final parentGroupId = groupStack.isNotEmpty ? groupStack.last : null;
+
       if (entry.type == LogType.group) {
         if (entry.groupAction == GroupAction.open) {
+          final gid = entry.groupId ?? entry.id;
+          final isSticky = entry.sticky == true;
+          if (isSticky) stickyGroupIds.add(gid);
+
           if (!isHidden) {
-            result.add(_DisplayEntry(entry: entry, depth: depth));
+            result.add(
+              _DisplayEntry(
+                entry: entry,
+                depth: depth,
+                isSticky: isSticky,
+                parentGroupId: parentGroupId,
+              ),
+            );
           }
-          groupStack.add(entry.groupId ?? entry.id);
+          groupStack.add(gid);
           depth++;
         } else if (entry.groupAction == GroupAction.close) {
           if (depth > 0) depth--;
-          if (groupStack.isNotEmpty) groupStack.removeLast();
+          if (groupStack.isNotEmpty) {
+            final closedId = groupStack.removeLast();
+            stickyGroupIds.remove(closedId);
+          }
           if (!isHidden) {
-            result.add(_DisplayEntry(entry: entry, depth: depth));
+            result.add(
+              _DisplayEntry(
+                entry: entry,
+                depth: depth,
+                parentGroupId: parentGroupId,
+              ),
+            );
           }
         }
       } else {
         if (!isHidden) {
-          result.add(_DisplayEntry(entry: entry, depth: depth));
+          // Entry is sticky if:
+          // 1. It has sticky=true itself
+          // 2. It's inside a group that has sticky=true
+          final isInStickyGroup = groupStack.any(
+            (gid) => stickyGroupIds.contains(gid),
+          );
+          final isSticky = entry.sticky == true || isInStickyGroup;
+
+          result.add(
+            _DisplayEntry(
+              entry: entry,
+              depth: depth,
+              isSticky: isSticky,
+              parentGroupId: parentGroupId,
+            ),
+          );
         }
       }
     }
@@ -166,11 +215,102 @@ class _LogListViewState extends State<LogListView> {
     return result;
   }
 
+  /// Compute sticky sections from display entries for the pinned overlay.
+  List<StickySection> _computeStickySections(List<_DisplayEntry> entries) {
+    final stickyEntries = entries.where((e) => e.isSticky).toList();
+    if (stickyEntries.isEmpty) return [];
+
+    // Group sticky entries by their parent group ID
+    final grouped = <String?, List<_DisplayEntry>>{};
+    for (final entry in stickyEntries) {
+      // Skip group-open / group-close entries from direct inclusion;
+      // they serve as headers.
+      if (entry.entry.type == LogType.group) continue;
+      grouped.putIfAbsent(entry.parentGroupId, () => []).add(entry);
+    }
+
+    // Also find sticky groups that have no individually-sticky children
+    // (the group itself was marked sticky, so all children are sticky)
+    for (final entry in stickyEntries) {
+      if (entry.entry.type == LogType.group &&
+          entry.entry.groupAction == GroupAction.open) {
+        final gid = entry.entry.groupId ?? entry.entry.id;
+        grouped.putIfAbsent(gid, () => []);
+      }
+    }
+
+    final sections = <StickySection>[];
+
+    for (final mapEntry in grouped.entries) {
+      final parentId = mapEntry.key;
+      final stickyChildren = mapEntry.value;
+
+      LogEntry? groupHeader;
+      int hiddenCount = 0;
+      int groupDepth = 0;
+
+      if (parentId != null) {
+        // Find the group-open entry for this parent
+        final headerDisplay = entries.where(
+          (d) =>
+              d.entry.type == LogType.group &&
+              d.entry.groupAction == GroupAction.open &&
+              (d.entry.groupId ?? d.entry.id) == parentId,
+        );
+        if (headerDisplay.isNotEmpty) {
+          groupHeader = headerDisplay.first.entry;
+          groupDepth = headerDisplay.first.depth;
+        }
+
+        // Count non-sticky children in this group
+        hiddenCount = entries
+            .where(
+              (d) =>
+                  d.parentGroupId == parentId &&
+                  !d.isSticky &&
+                  d.entry.type != LogType.group,
+            )
+            .length;
+      }
+
+      if (stickyChildren.isNotEmpty || groupHeader != null) {
+        sections.add(
+          StickySection(
+            groupHeader: groupHeader,
+            entries: stickyChildren.map((d) => d.entry).toList(),
+            hiddenCount: hiddenCount,
+            groupDepth: groupDepth,
+          ),
+        );
+      }
+    }
+
+    return sections;
+  }
+
   @override
   Widget build(BuildContext context) {
     final logStore = context.watch<LogStore>();
-    final filteredEntries = _getFilteredEntries(logStore);
+
+    // Only recompute filtered entries when inputs actually changed.
+    final storeVersion = logStore.version;
+    if (_cachedFilteredEntries == null ||
+        storeVersion != _cachedLogStoreVersion ||
+        widget.sectionFilter != _cachedSectionFilter ||
+        widget.textFilter != _cachedTextFilter ||
+        !setEquals(widget.activeSeverities, _cachedActiveSeverities) ||
+        !setEquals(widget.selectedSessionIds, _cachedSessionIds)) {
+      _cachedFilteredEntries = _getFilteredEntries(logStore);
+      _cachedLogStoreVersion = storeVersion;
+      _cachedSectionFilter = widget.sectionFilter;
+      _cachedTextFilter = widget.textFilter;
+      _cachedActiveSeverities = widget.activeSeverities;
+      _cachedSessionIds = widget.selectedSessionIds;
+    }
+
+    final filteredEntries = _cachedFilteredEntries!;
     final displayEntries = _processGrouping(filteredEntries);
+    final stickySections = _computeStickySections(displayEntries);
 
     // Detect new arrivals for live mode / new-log counter.
     if (displayEntries.length > _lastEntryCount) {
@@ -201,57 +341,67 @@ class _LogListViewState extends State<LogListView> {
 
     return Stack(
       children: [
-        Container(
-          color: LoggerColors.bgSurface,
-          child: ListView.builder(
-            controller: _scrollController,
-            physics: const ClampingScrollPhysics(),
-            itemCount: displayEntries.length,
-            itemBuilder: (context, index) {
-              final display = displayEntries[index];
-              final entry = display.entry;
-              final isNew = !_seenEntryIds.contains(entry.id);
+        Column(
+          children: [
+            // Sticky pinned header
+            if (stickySections.isNotEmpty)
+              StickyEntriesHeader(sections: stickySections),
+            // Main scrollable list
+            Expanded(
+              child: Container(
+                color: LoggerColors.bgSurface,
+                child: ListView.builder(
+                  controller: _scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  itemCount: displayEntries.length,
+                  itemBuilder: (context, index) {
+                    final display = displayEntries[index];
+                    final entry = display.entry;
+                    final isNew = !_seenEntryIds.contains(entry.id);
 
-              // Mark seen after building.
-              if (isNew) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _seenEntryIds.add(entry.id);
-                });
-              }
+                    // Mark seen after building.
+                    if (isNew) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _seenEntryIds.add(entry.id);
+                      });
+                    }
 
-              return LogRow(
-                key: ValueKey(entry.id),
-                entry: entry,
-                isNew: isNew,
-                isEvenRow: index.isEven,
-                isSelected: _selectedIndex == index,
-                groupDepth: display.depth,
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = _selectedIndex == index ? -1 : index;
-                  });
-                },
-                onGroupToggle:
-                    entry.type == LogType.group &&
-                        entry.groupAction == GroupAction.open
-                    ? () {
+                    return LogRow(
+                      key: ValueKey(entry.id),
+                      entry: entry,
+                      isNew: isNew,
+                      isEvenRow: index.isEven,
+                      isSelected: _selectedIndex == index,
+                      groupDepth: display.depth,
+                      onTap: () {
                         setState(() {
-                          final gid = entry.groupId ?? entry.id;
-                          if (_collapsedGroups.contains(gid)) {
-                            _collapsedGroups.remove(gid);
-                          } else {
-                            _collapsedGroups.add(gid);
-                          }
+                          _selectedIndex = _selectedIndex == index ? -1 : index;
                         });
-                      }
-                    : null,
-                isCollapsed:
-                    entry.type == LogType.group &&
-                    entry.groupAction == GroupAction.open &&
-                    _collapsedGroups.contains(entry.groupId ?? entry.id),
-              );
-            },
-          ),
+                      },
+                      onGroupToggle:
+                          entry.type == LogType.group &&
+                              entry.groupAction == GroupAction.open
+                          ? () {
+                              setState(() {
+                                final gid = entry.groupId ?? entry.id;
+                                if (_collapsedGroups.contains(gid)) {
+                                  _collapsedGroups.remove(gid);
+                                } else {
+                                  _collapsedGroups.add(gid);
+                                }
+                              });
+                            }
+                          : null,
+                      isCollapsed:
+                          entry.type == LogType.group &&
+                          entry.groupAction == GroupAction.open &&
+                          _collapsedGroups.contains(entry.groupId ?? entry.id),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
         if (!_isLiveMode && _newLogCount > 0)
           Positioned(
@@ -269,6 +419,13 @@ class _LogListViewState extends State<LogListView> {
 class _DisplayEntry {
   final LogEntry entry;
   final int depth;
+  final bool isSticky;
+  final String? parentGroupId;
 
-  const _DisplayEntry({required this.entry, required this.depth});
+  const _DisplayEntry({
+    required this.entry,
+    required this.depth,
+    this.isSticky = false,
+    this.parentGroupId,
+  });
 }

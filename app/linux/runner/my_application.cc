@@ -19,6 +19,26 @@ static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
+// Method channel handler for com.logger/window.
+static void window_method_call_handler(FlMethodChannel* channel,
+                                       FlMethodCall* method_call,
+                                       gpointer user_data) {
+  GtkWindow* window = GTK_WINDOW(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+
+  if (g_strcmp0(method, "setAlwaysOnTop") == 0) {
+    FlValue* args = fl_method_call_get_args(method_call);
+    gboolean value = fl_value_get_bool(args);
+    gtk_window_set_keep_above(window, value);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
+  } else {
+    fl_method_call_respond_not_implemented(method_call, NULL);
+  }
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
@@ -74,6 +94,14 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+
+  // Register window method channel for always-on-top support.
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  FlMethodChannel* window_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "com.logger/window", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+      window_channel, window_method_call_handler, window, NULL);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

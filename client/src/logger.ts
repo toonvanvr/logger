@@ -1,29 +1,36 @@
-import type { ExceptionData, LogEntry, Severity as SeverityType } from '@logger/shared';
+import type { LogEntry, Severity as SeverityType } from '@logger/shared';
+import {
+    baseFields,
+    buildBinaryEntry,
+    buildCustomEntry,
+    buildErrorException,
+    buildGroupCloseEntry,
+    buildGroupOpenEntry,
+    buildHtmlEntry,
+    buildImageEntry,
+    buildJsonEntry,
+    buildStateEntry,
+    buildTextEntry,
+    stringifyTags,
+} from './logger-builders.js';
+import {
+    buildSessionEndEntry,
+    buildSessionStartEntry,
+    drainTransportQueue,
+    handleRpcRequest,
+    type RpcHandler,
+} from './logger-session.js';
+import { type LoggerOptions, type Middleware, runMiddlewareChain } from './logger-types.js';
 import { LogQueue } from './queue.js';
-import { parseStackTrace } from './stack-parser.js';
 import { createTransport, type TransportType } from './transport/auto.js';
 import type { TransportAdapter } from './transport/types.js';
 
-// ─── Public types ────────────────────────────────────────────────────
-
-export type Middleware = (entry: LogEntry, next: () => void) => void;
-
-export interface LoggerOptions {
-  url?: string;
-  app?: string;
-  environment?: string;
-  transport?: TransportType;
-  middleware?: Middleware[];
-  maxQueueSize?: number;
-  sessionId?: string;
-  /** @internal — inject a pre-built transport (for testing). */
-  _transport?: TransportAdapter;
-}
+// Re-export public types from their canonical location.
+export type { LoggerOptions, Middleware } from './logger-types.js';
 
 // ─── Logger ──────────────────────────────────────────────────────────
 
 export class Logger {
-  // Internals
   private readonly queue: LogQueue;
   private transport: TransportAdapter | null;
   private readonly middlewares: Middleware[];
@@ -37,18 +44,8 @@ export class Logger {
   private drainTimer: ReturnType<typeof setInterval> | null = null;
   private readonly _sessionId: string;
   private transportReady: Promise<void> | null = null;
-  private readonly rpcHandlers = new Map<
-    string,
-    {
-      description: string;
-      category: 'getter' | 'tool';
-      argsSchema?: Record<string, unknown>;
-      confirm?: boolean;
-      handler: (args: unknown) => unknown | Promise<unknown>;
-    }
-  >();
-
-  // ── Public session façade ────────────────────────────────────────
+  private readonly rpcHandlers = new Map<string, RpcHandler>();
+  private _nextSticky = false;
 
   readonly session: {
     readonly id: string;
@@ -56,19 +53,8 @@ export class Logger {
     end: () => void;
   };
 
-  // ── Public rpc façade ────────────────────────────────────────────
-
   readonly rpc: {
-    register: (
-      name: string,
-      opts: {
-        description: string;
-        category: 'getter' | 'tool';
-        argsSchema?: Record<string, unknown>;
-        confirm?: boolean;
-        handler: (args: unknown) => unknown | Promise<unknown>;
-      },
-    ) => void;
+    register: (name: string, opts: RpcHandler) => void;
     unregister: (name: string) => void;
   };
 
@@ -82,14 +68,12 @@ export class Logger {
     this.middlewares = options?.middleware ? [...options.middleware] : [];
     this.transport = options?._transport ?? null;
 
-    // If no injected transport, lazily connect in the background.
     if (!this.transport) {
       this.transportReady = createTransport({
         type: this.transportType,
         url: this.url,
       }).then((t) => {
         this.transport = t;
-        // Wire up server message handling (RPC dispatch).
         if (this.transport.onMessage) {
           this.transport.onMessage((data: unknown) => this.handleServerMessage(data));
         }
@@ -97,23 +81,19 @@ export class Logger {
         // Transport unavailable — entries accumulate in queue.
       });
     } else {
-      // Injected transport — wire up immediately.
       if (this.transport.onMessage) {
         this.transport.onMessage((data: unknown) => this.handleServerMessage(data));
       }
     }
 
-    // Background drain interval.
     this.drainTimer = setInterval(() => this.drainQueue(), 100);
 
-    // Session façade.
     this.session = {
       id: this._sessionId,
       start: (metadata?: Record<string, unknown>) => this.startSession(metadata),
       end: () => this.endSession(),
     };
 
-    // RPC façade.
     this.rpc = {
       register: (name, opts) => this.rpcHandlers.set(name, opts),
       unregister: (name) => this.rpcHandlers.delete(name),
@@ -153,53 +133,45 @@ export class Logger {
   // ─── Structured methods ──────────────────────────────────────────
 
   json(data: unknown, options?: { severity?: string }): void {
-    this.enqueue({
-      ...this.baseFields((options?.severity as SeverityType) ?? 'info'),
-      type: 'json',
-      json: data,
-    });
+    this.enqueue(buildJsonEntry(this.base((options?.severity as SeverityType) ?? 'info'), data));
   }
 
   html(content: string, options?: { severity?: string }): void {
-    this.enqueue({
-      ...this.baseFields((options?.severity as SeverityType) ?? 'info'),
-      type: 'html',
-      html: content,
-    });
+    this.enqueue(buildHtmlEntry(this.base((options?.severity as SeverityType) ?? 'info'), content));
   }
 
   binary(data: Uint8Array, options?: { severity?: string }): void {
-    const b64 = Buffer.from(data).toString('base64');
-    this.enqueue({
-      ...this.baseFields((options?.severity as SeverityType) ?? 'info'),
-      type: 'binary',
-      binary: b64,
-    });
+    this.enqueue(buildBinaryEntry(this.base((options?.severity as SeverityType) ?? 'info'), data));
+  }
+
+  // ─── Sticky modifier ────────────────────────────────────────────────
+
+  /** Mark the next logged entry as sticky (pinned to top of viewport). */
+  sticky(): this {
+    this._nextSticky = true;
+    return this;
   }
 
   // ─── Group ───────────────────────────────────────────────────────
 
-  group(name: string): void;
-  group(name: string, fn: () => void | Promise<void>): Promise<void>;
-  group(name: string, fn?: () => void | Promise<void>): void | Promise<void> {
+  group(name: string, options?: { sticky?: boolean }): void;
+  group(name: string, fn: () => void | Promise<void>, options?: { sticky?: boolean }): Promise<void>;
+  group(name: string, fnOrOpts?: (() => void | Promise<void>) | { sticky?: boolean }, maybeOpts?: { sticky?: boolean }): void | Promise<void> {
+    let fn: (() => void | Promise<void>) | undefined;
+    let options: { sticky?: boolean } | undefined;
+    if (typeof fnOrOpts === 'function') {
+      fn = fnOrOpts;
+      options = maybeOpts;
+    } else {
+      options = fnOrOpts;
+    }
+
     const groupId = crypto.randomUUID();
     this.groupStack.push(groupId);
-
-    this.enqueue({
-      ...this.baseFields('info'),
-      type: 'group',
-      group_id: groupId,
-      group_action: 'open',
-      group_label: name,
-    });
-
+    this.enqueue(buildGroupOpenEntry(this.base('info'), groupId, name, options));
     if (fn) {
       return (async () => {
-        try {
-          await fn();
-        } finally {
-          this.groupEnd();
-        }
+        try { await fn!(); } finally { this.groupEnd(); }
       })();
     }
   }
@@ -207,71 +179,28 @@ export class Logger {
   groupEnd(): void {
     const groupId = this.groupStack.pop();
     if (!groupId) return;
-
-    this.enqueue({
-      ...this.baseFields('info'),
-      type: 'group',
-      group_id: groupId,
-      group_action: 'close',
-    });
+    this.enqueue(buildGroupCloseEntry(this.base('info'), groupId));
   }
 
-  // ─── State ───────────────────────────────────────────────────────
+  // ─── State / Image / Custom ──────────────────────────────────────
 
   state(key: string, value: unknown): void {
-    this.enqueue({
-      ...this.baseFields('info'),
-      type: 'state',
-      state_key: key,
-      state_value: value,
-    });
+    this.enqueue(buildStateEntry(this.base('info'), key, value));
   }
 
-  // ─── Image ───────────────────────────────────────────────────────
-
-  image(
-    data: Buffer | Uint8Array | string,
-    mime: string,
-    options?: { id?: string },
-  ): void {
-    const b64 = typeof data === 'string' ? data : Buffer.from(data).toString('base64');
-    this.enqueue({
-      ...this.baseFields('info'),
-      ...(options?.id ? { id: options.id, replace: true } : {}),
-      type: 'image',
-      image: { data: b64, mimeType: mime },
-    });
+  image(data: Buffer | Uint8Array | string, mime: string, options?: { id?: string }): void {
+    this.enqueue(buildImageEntry(this.base('info'), data, mime, options?.id));
   }
 
-  // ─── Custom ──────────────────────────────────────────────────────
-
-  custom(
-    type: string,
-    data: unknown,
-    options?: { id?: string; replace?: boolean },
-  ): void {
-    this.enqueue({
-      ...this.baseFields('info'),
-      ...(options?.id ? { id: options.id } : {}),
-      ...(options?.replace || options?.id ? { replace: true } : {}),
-      type: 'custom',
-      custom_type: type,
-      custom_data: data,
-    });
+  custom(type: string, data: unknown, options?: { id?: string; replace?: boolean }): void {
+    this.enqueue(buildCustomEntry(this.base('info'), type, data, options));
   }
-
-  // ─── Convenience custom helpers ──────────────────────────────────
 
   table(columns: string[], rows: unknown[][]): void {
     this.custom('table', { columns, rows });
   }
 
-  progress(
-    label: string,
-    value: number,
-    max: number,
-    options?: { id?: string },
-  ): void {
+  progress(label: string, value: number, max: number, options?: { id?: string }): void {
     const id = options?.id ?? `progress-${label}`;
     this.custom('progress', { label, value, max }, { id, replace: true });
   }
@@ -285,216 +214,73 @@ export class Logger {
     this.custom('kv', { entries: formatted }, { id, replace: true });
   }
 
-  // ─── Section ─────────────────────────────────────────────────────
+  // ─── Section / Middleware / Lifecycle ─────────────────────────────
 
-  section(name: string): void {
-    this.currentSection = name;
-  }
+  section(name: string): void { this.currentSection = name; }
 
-  // ─── Middleware ──────────────────────────────────────────────────
+  use(middleware: Middleware): void { this.middlewares.push(middleware); }
 
-  use(middleware: Middleware): void {
-    this.middlewares.push(middleware);
-  }
-
-  // ─── Lifecycle ───────────────────────────────────────────────────
-
-  async flush(): Promise<void> {
-    await this.drainQueue();
-  }
+  async flush(): Promise<void> { await this.drainQueue(); }
 
   async close(): Promise<void> {
-    if (this.drainTimer) {
-      clearInterval(this.drainTimer);
-      this.drainTimer = null;
-    }
+    if (this.drainTimer) { clearInterval(this.drainTimer); this.drainTimer = null; }
     await this.drainQueue();
-    if (this.transport) {
-      await this.transport.close();
-    }
+    if (this.transport) await this.transport.close();
   }
 
   // ─── Internals ──────────────────────────────────────────────────
 
-  private baseFields(severity: SeverityType): LogEntry {
-    return {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      session_id: this._sessionId,
-      severity,
-      type: 'text',
-      application: {
-        name: this.app,
-        environment: this.environment,
-      },
-      ...(this.currentSection ? { section: this.currentSection } : {}),
-      ...(this.groupStack.length > 0
-        ? { group_id: this.groupStack[this.groupStack.length - 1] }
-        : {}),
-    };
+  private base(severity: SeverityType): LogEntry {
+    return baseFields(
+      this._sessionId, this.app, this.environment, severity,
+      this.currentSection,
+      this.groupStack.length > 0 ? this.groupStack[this.groupStack.length - 1] : undefined,
+    );
   }
 
-  private log(
-    severity: SeverityType,
-    message: string,
-    meta?: Record<string, unknown>,
-  ): void {
+  private log(severity: SeverityType, message: string, meta?: Record<string, unknown>): void {
+    this.enqueue(buildTextEntry(this.base(severity), message, meta ? stringifyTags(meta) : undefined));
+  }
+
+  private logError(severity: SeverityType, err: Error, meta?: Record<string, unknown>): void {
     this.enqueue({
-      ...this.baseFields(severity),
-      type: 'text',
-      text: message,
-      ...(meta ? { tags: this.stringifyTags(meta) } : {}),
+      ...buildTextEntry(this.base(severity), err.message, meta ? stringifyTags(meta) : undefined),
+      exception: buildErrorException(err),
     });
-  }
-
-  private logError(
-    severity: SeverityType,
-    err: Error,
-    meta?: Record<string, unknown>,
-  ): void {
-    const exception: ExceptionData = {
-      type: err.constructor.name,
-      message: err.message,
-      ...(err.stack ? { stackTrace: parseStackTrace(err.stack) } : {}),
-      ...(err.cause instanceof Error
-        ? {
-            cause: {
-              type: (err.cause as Error).constructor.name,
-              message: (err.cause as Error).message,
-              ...((err.cause as Error).stack
-                ? { stackTrace: parseStackTrace((err.cause as Error).stack!) }
-                : {}),
-            },
-          }
-        : {}),
-    };
-
-    this.enqueue({
-      ...this.baseFields(severity),
-      type: 'text',
-      text: err.message,
-      exception,
-      ...(meta ? { tags: this.stringifyTags(meta) } : {}),
-    });
-  }
-
-  private stringifyTags(meta: Record<string, unknown>): Record<string, string> {
-    const tags: Record<string, string> = {};
-    for (const [k, v] of Object.entries(meta)) {
-      tags[k] = typeof v === 'string' ? v : JSON.stringify(v);
-    }
-    return tags;
   }
 
   private enqueue(entry: LogEntry): void {
-    // Auto-start session on first real log.
-    if (!this.sessionStarted) {
-      this.startSession();
+    if (this._nextSticky) {
+      entry = { ...entry, sticky: true };
+      this._nextSticky = false;
     }
-
-    // Run middleware chain.
-    this.runMiddleware(entry, () => {
-      this.queue.push(entry);
-    });
-  }
-
-  private runMiddleware(entry: LogEntry, done: () => void): void {
-    if (this.middlewares.length === 0) {
-      done();
-      return;
-    }
-
-    let index = 0;
-    const next = () => {
-      index++;
-      if (index < this.middlewares.length) {
-        this.middlewares[index](entry, next);
-      } else {
-        done();
-      }
-    };
-    this.middlewares[0](entry, next);
+    if (!this.sessionStarted) this.startSession();
+    runMiddlewareChain(this.middlewares, entry, () => this.queue.push(entry));
   }
 
   private async drainQueue(): Promise<void> {
-    if (!this.transport || !this.transport.connected) return;
-    const entries = this.queue.drain(100);
-    if (entries.length === 0) return;
-    try {
-      await this.transport.send(entries);
-    } catch {
-      // Re-enqueue on failure (best-effort).
-      for (const e of entries) {
-        this.queue.push(e);
-      }
-    }
+    await drainTransportQueue(this.transport, this.queue);
   }
 
   private startSession(metadata?: Record<string, unknown>): void {
     if (this.sessionStarted) return;
     this.sessionStarted = true;
-
-    const entry: LogEntry = {
-      ...this.baseFields('info'),
-      type: 'session',
-      session_action: 'start',
-      ...(metadata ? { tags: this.stringifyTags(metadata) } : {}),
-    };
-    // Session start bypasses middleware and goes straight to queue.
-    this.queue.push(entry);
+    this.queue.push(
+      buildSessionStartEntry(this.base('info'), metadata ? stringifyTags(metadata) : undefined),
+    );
   }
 
   private endSession(): void {
-    const entry: LogEntry = {
-      ...this.baseFields('info'),
-      type: 'session',
-      session_action: 'end',
-    };
-    this.queue.push(entry);
+    this.queue.push(buildSessionEndEntry(this.base('info')));
   }
 
   private handleServerMessage(data: unknown): void {
     if (!data || typeof data !== 'object') return;
-    const msg = data as Record<string, unknown>;
-
-    // Handle RPC requests from the server/viewer.
-    if (msg.type === 'rpc_request' && typeof msg.rpc_method === 'string') {
-      const handler = this.rpcHandlers.get(msg.rpc_method);
-      if (!handler) {
-        // Send error response.
-        this.enqueue({
-          ...this.baseFields('error'),
-          type: 'rpc',
-          rpc_id: msg.rpc_id as string,
-          rpc_direction: 'error',
-          rpc_method: msg.rpc_method,
-          rpc_error: `Unknown RPC method: ${msg.rpc_method}`,
-        });
-        return;
-      }
-
-      Promise.resolve(handler.handler(msg.rpc_args)).then(
-        (result) => {
-          this.enqueue({
-            ...this.baseFields('info'),
-            type: 'rpc',
-            rpc_id: msg.rpc_id as string,
-            rpc_direction: 'response',
-            rpc_method: msg.rpc_method as string,
-            rpc_response: result,
-          });
-        },
-        (err: Error) => {
-          this.enqueue({
-            ...this.baseFields('error'),
-            type: 'rpc',
-            rpc_id: msg.rpc_id as string,
-            rpc_direction: 'error',
-            rpc_method: msg.rpc_method as string,
-            rpc_error: err.message,
-          });
-        },
-      );
-    }
+    handleRpcRequest(
+      data as Record<string, unknown>,
+      this.rpcHandlers,
+      (entry) => this.enqueue(entry),
+      (severity) => this.base(severity),
+    );
   }
 }

@@ -82,20 +82,19 @@ void main() {
     expect(store.isSelected('s1'), isFalse);
   });
 
-  testWidgets('overflow button appears when >8 sessions', (tester) async {
+  testWidgets('overflow button appears when sessions exceed visible limit', (
+    tester,
+  ) async {
     final store = SessionStore();
     store.updateSessions(
-      List.generate(10, (i) => _makeSession('s$i', 'App $i', i)),
+      List.generate(25, (i) => _makeSession('s$i', 'App $i', i)),
     );
 
     await tester.pumpWidget(_buildTestWidget(sessionStore: store));
 
-    // Should show overflow button
+    // Should show overflow button (25 sessions exceeds any dynamic limit)
     expect(find.text('···'), findsOneWidget);
     // First session visible
     expect(find.text('App 0'), findsOneWidget);
-    // Last 2 hidden (beyond max visible sessions)
-    expect(find.text('App 8'), findsNothing);
-    expect(find.text('App 9'), findsNothing);
   });
 }

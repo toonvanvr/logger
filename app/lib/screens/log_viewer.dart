@@ -7,6 +7,7 @@ import '../models/server_message.dart';
 import '../models/viewer_message.dart';
 import '../services/log_connection.dart';
 import '../services/log_store.dart';
+import '../services/query_store.dart';
 import '../services/rpc_service.dart';
 import '../services/session_store.dart';
 import '../widgets/header/filter_bar.dart';
@@ -14,6 +15,7 @@ import '../widgets/header/session_selector.dart';
 import '../widgets/log_list/log_list_view.dart';
 import '../widgets/log_list/section_tabs.dart';
 import '../widgets/rpc/rpc_panel.dart';
+import '../widgets/status_bar/status_bar.dart';
 import '../widgets/time_travel/time_travel_controls.dart';
 
 /// Main screen — placeholder for the full log viewer UI.
@@ -55,6 +57,15 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   void _initConnection() {
+    // Wire up saved-query loading
+    final queryStore = context.read<QueryStore>();
+    queryStore.onQueryLoaded = (query) {
+      setState(() {
+        _activeSeverities = Set.from(query.severities);
+        _textFilter = query.textFilter;
+      });
+    };
+
     final url = widget.serverUrl;
     if (url == null) return;
 
@@ -76,6 +87,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
     // Request current session list
     connection.send(const ViewerMessage(type: ViewerMessageType.sessionList));
+
+    // Load existing entries from the server's ring buffer
+    connection.queryHistory(limit: 5000);
   }
 
   void _handleMessage(ServerMessage msg) {
@@ -94,7 +108,10 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       case ServerMessageType.sessionList:
         if (msg.sessions != null) sessionStore.updateSessions(msg.sessions!);
       case ServerMessageType.sessionUpdate:
-        // Handled via session_list refresh
+        // Re-fetch full session list to pick up new/ended sessions
+        context.read<LogConnection>().send(
+          const ViewerMessage(type: ViewerMessageType.sessionList),
+        );
         break;
       case ServerMessageType.stateSnapshot:
         // State snapshots are handled via LogStore state tracking
@@ -136,28 +153,34 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                     setState(() => _rpcPanelVisible = !_rpcPanelVisible);
                   },
                 ),
-                if (_isFilterExpanded)
-                  FilterBar(
-                    activeSeverities: _activeSeverities,
-                    onSeverityChange: (severities) {
-                      setState(() => _activeSeverities = severities);
-                    },
-                    onTextFilterChange: (text) {
-                      setState(() => _textFilter = text);
-                    },
-                    onClear: () {
-                      setState(() {
-                        _activeSeverities = const {
-                          'debug',
-                          'info',
-                          'warning',
-                          'error',
-                          'critical',
-                        };
-                        _textFilter = '';
-                      });
-                    },
-                  ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: _isFilterExpanded
+                      ? FilterBar(
+                          activeSeverities: _activeSeverities,
+                          onSeverityChange: (severities) {
+                            setState(() => _activeSeverities = severities);
+                          },
+                          onTextFilterChange: (text) {
+                            setState(() => _textFilter = text);
+                          },
+                          onClear: () {
+                            setState(() {
+                              _activeSeverities = const {
+                                'debug',
+                                'info',
+                                'warning',
+                                'error',
+                                'critical',
+                              };
+                              _textFilter = '';
+                            });
+                          },
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 // Section tabs
                 Builder(
                   builder: (context) {
@@ -204,6 +227,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                     setState(() => _timeTravelActive = false);
                   },
                 ),
+                const StatusBar(),
               ],
             ),
           ),
