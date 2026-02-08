@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/log_entry.dart';
+import '../../plugins/builtin/smart_search_plugin.dart';
+import '../../plugins/plugin_registry.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
 import '../../services/time_range_service.dart';
@@ -156,11 +158,29 @@ class _LogListViewState extends State<LogListView> {
         .filter(
           section: widget.sectionFilter,
           minSeverity: _minSeverityFromActive(),
-          textSearch: widget.textFilter,
         )
         .where((entry) {
           return widget.activeSeverities.contains(entry.severity.name);
         });
+
+    // Apply text filter via SmartSearchPlugin for prefix-aware matching
+    if (widget.textFilter != null && widget.textFilter!.isNotEmpty) {
+      final smartSearch = PluginRegistry.instance
+          .getEnabledPlugins<SmartSearchPlugin>()
+          .firstOrNull;
+      if (smartSearch != null) {
+        results = results.where(
+          (entry) => smartSearch.matches(entry, widget.textFilter!),
+        );
+      } else {
+        // Fallback to simple text matching
+        final lower = widget.textFilter!.toLowerCase();
+        results = results.where((entry) {
+          final text = entry.text?.toLowerCase() ?? '';
+          return text.contains(lower);
+        });
+      }
+    }
 
     // Time range filter: if active, only show entries in range.
     if (timeRange.isActive) {

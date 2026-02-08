@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../models/log_entry.dart';
+import '../models/status_bar_item.dart';
 import 'plugin_manifest.dart';
 import 'plugin_registry.dart';
 
@@ -97,4 +98,26 @@ abstract class ToolPlugin extends LoggerPlugin {
 
   /// Build the tool panel widget.
   Widget buildToolPanel(BuildContext context);
+
+  /// Optional configuration panel for settings.
+  Widget? buildConfigPanel(BuildContext context) => null;
+
+  /// Status bar items contributed by this tool.
+  List<StatusBarItem> get statusBarItems => const [];
+}
+
+/// Standard tool group identifiers for the settings panel.
+abstract class ToolGroups {
+  static const connections = 'Connections';
+  static const searchFilter = 'Search & Filter';
+  static const renderers = 'Renderers';
+  static const transforms = 'Transforms';
+  static const tools = 'Tools';
+  static const groupOrder = [
+    connections,
+    searchFilter,
+    renderers,
+    transforms,
+    tools,
+  ];
 }

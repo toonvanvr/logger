@@ -100,6 +100,18 @@ class LogStore extends ChangeNotifier {
   Map<String, dynamic> getState(String sessionId) =>
       _stateStore[sessionId] ?? {};
 
+  /// Merged state across all sessions (later session values win on key conflicts).
+  Map<String, dynamic> get mergedState {
+    final merged = <String, dynamic>{};
+    for (final sessionState in _stateStore.values) {
+      merged.addAll(sessionState);
+    }
+    return merged;
+  }
+
+  /// Count of merged state keys.
+  int get stateEntryCount => mergedState.length;
+
   /// Filter entries by optional criteria.
   List<LogEntry> filter({
     Set<String>? sessionIds,

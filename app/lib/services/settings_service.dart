@@ -26,4 +26,37 @@ class SettingsService extends ChangeNotifier {
     _urlOpenCommand = cmd;
     notifyListeners();
   }
+
+  // ─── Layout & Connection Settings ──────────────────────────────
+
+  bool _miniMode = false;
+  bool _stateViewCollapsed = false;
+  List<Map<String, dynamic>> _connections = [];
+
+  /// Whether the compact title bar mode is active.
+  bool get miniMode => _miniMode;
+
+  /// Whether the state view section is collapsed.
+  bool get stateViewCollapsed => _stateViewCollapsed;
+
+  /// Persisted connection configurations.
+  List<Map<String, dynamic>> get connections => List.unmodifiable(_connections);
+
+  /// Toggle compact title bar mode.
+  void setMiniMode(bool value) {
+    _miniMode = value;
+    notifyListeners();
+  }
+
+  /// Toggle state view section collapsed.
+  void setStateViewCollapsed(bool value) {
+    _stateViewCollapsed = value;
+    notifyListeners();
+  }
+
+  /// Update persisted connection configurations.
+  void setConnections(List<Map<String, dynamic>> value) {
+    _connections = value;
+    notifyListeners();
+  }
 }

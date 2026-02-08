@@ -12,6 +12,9 @@ class PluginManifest {
   final String description;
   final List<String> types;
   final PluginTier tier;
+  final String? group;
+  final bool hasConfigPanel;
+  final bool disableable;
 
   const PluginManifest({
     required this.id,
@@ -20,6 +23,9 @@ class PluginManifest {
     this.description = '',
     required this.types,
     this.tier = PluginTier.stdlib,
+    this.group,
+    this.hasConfigPanel = false,
+    this.disableable = true,
   });
 
   @override

@@ -10,7 +10,7 @@ import 'plugins/builtin/smart_search_plugin.dart';
 import 'plugins/builtin/table_plugin.dart';
 import 'plugins/plugin_registry.dart';
 import 'screens/log_viewer.dart';
-import 'services/log_connection.dart';
+import 'services/connection_manager.dart';
 import 'services/log_store.dart';
 import 'services/query_store.dart';
 import 'services/rpc_service.dart';
@@ -40,7 +40,7 @@ class LoggerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LogConnection()),
+        ChangeNotifierProvider(create: (_) => ConnectionManager()),
         ChangeNotifierProvider(create: (_) => LogStore()),
         ChangeNotifierProvider(create: (_) => SessionStore()),
         ChangeNotifierProvider(create: (_) => RpcService()),

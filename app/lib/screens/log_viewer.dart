@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../models/server_message.dart';
 import '../models/viewer_message.dart';
-import '../services/log_connection.dart';
+import '../services/connection_manager.dart';
 import '../services/log_store.dart';
 import '../services/query_store.dart';
 import '../services/rpc_service.dart';
@@ -15,6 +15,7 @@ import '../widgets/header/session_selector.dart';
 import '../widgets/log_list/log_list_view.dart';
 import '../widgets/log_list/section_tabs.dart';
 import '../widgets/settings/settings_panel.dart';
+import '../widgets/state_view/state_view_section.dart';
 import '../widgets/status_bar/status_bar.dart';
 import '../widgets/time_travel/time_range_minimap.dart';
 
@@ -68,8 +69,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     final url = widget.serverUrl;
     if (url == null) return;
 
-    final connection = context.read<LogConnection>();
-    connection.connect(url);
+    final connection = context.read<ConnectionManager>();
+    connection.addConnection(url, label: 'Default');
 
     _messageSub = connection.messages.listen(_handleMessage);
 
@@ -108,7 +109,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
         if (msg.sessions != null) sessionStore.updateSessions(msg.sessions!);
       case ServerMessageType.sessionUpdate:
         // Re-fetch full session list to pick up new/ended sessions
-        context.read<LogConnection>().send(
+        context.read<ConnectionManager>().send(
           const ViewerMessage(type: ViewerMessageType.sessionList),
         );
         break;
@@ -202,6 +203,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                     );
                   },
                 ),
+                // State view
+                const StateViewSection(),
                 // Log list
                 Expanded(
                   child: Builder(

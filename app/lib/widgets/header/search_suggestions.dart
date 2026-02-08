@@ -113,8 +113,13 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
   Widget build(BuildContext context) {
     if (widget.suggestions.isEmpty) return const SizedBox.shrink();
 
+    // Cap suggestions for performance
+    final capped = widget.suggestions.length > 50
+        ? widget.suggestions.sublist(0, 50)
+        : widget.suggestions;
+
     const itemHeight = 28.0;
-    final visibleCount = widget.suggestions.length.clamp(1, widget.maxVisible);
+    final visibleCount = capped.length.clamp(1, widget.maxVisible);
     final height = visibleCount * itemHeight;
 
     return Focus(
@@ -136,10 +141,10 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
         child: ListView.builder(
           controller: _scrollController,
           padding: EdgeInsets.zero,
-          itemCount: widget.suggestions.length,
+          itemCount: capped.length,
           itemExtent: itemHeight,
           itemBuilder: (context, index) {
-            final suggestion = widget.suggestions[index];
+            final suggestion = capped[index];
             final isHighlighted = index == _highlightedIndex;
             final isPrefix = suggestion.endsWith(':');
 
