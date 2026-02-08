@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -51,6 +53,8 @@ class _FilterBarState extends State<FilterBar> {
   final _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   List<String> _suggestions = [];
+  bool _isSelectingSuggestion = false;
+  Timer? _overlayRemovalTimer;
 
   @override
   void initState() {
@@ -60,6 +64,7 @@ class _FilterBarState extends State<FilterBar> {
 
   @override
   void dispose() {
+    _overlayRemovalTimer?.cancel();
     _removeOverlay();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
@@ -71,7 +76,14 @@ class _FilterBarState extends State<FilterBar> {
     if (_focusNode.hasFocus) {
       _updateSuggestions(_textController.text);
     } else {
-      _removeOverlay();
+      // Delay overlay removal so suggestion tap can fire first.
+      if (_isSelectingSuggestion) return;
+      _overlayRemovalTimer?.cancel();
+      _overlayRemovalTimer = Timer(const Duration(milliseconds: 100), () {
+        if (!_isSelectingSuggestion) {
+          _removeOverlay();
+        }
+      });
     }
   }
 
@@ -115,6 +127,7 @@ class _FilterBarState extends State<FilterBar> {
             suggestions: _suggestions,
             onSelected: _onSuggestionSelected,
             onDismiss: _removeOverlay,
+            onTapDown: () => _isSelectingSuggestion = true,
           ),
         ),
       ),
@@ -128,12 +141,15 @@ class _FilterBarState extends State<FilterBar> {
   }
 
   void _onSuggestionSelected(String suggestion) {
+    _overlayRemovalTimer?.cancel();
+    _isSelectingSuggestion = false;
     _textController.text = suggestion;
     _textController.selection = TextSelection.fromPosition(
       TextPosition(offset: suggestion.length),
     );
     widget.onTextFilterChange?.call(suggestion);
     _removeOverlay();
+    _focusNode.requestFocus();
   }
 
   void _onTextChanged(String text) {

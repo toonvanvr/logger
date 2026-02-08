@@ -15,6 +15,9 @@ import 'services/log_store.dart';
 import 'services/query_store.dart';
 import 'services/rpc_service.dart';
 import 'services/session_store.dart';
+import 'services/settings_service.dart';
+import 'services/sticky_state.dart';
+import 'services/time_range_service.dart';
 import 'theme/theme.dart';
 
 void main() {
@@ -42,6 +45,9 @@ class LoggerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SessionStore()),
         ChangeNotifierProvider(create: (_) => RpcService()),
         ChangeNotifierProvider(create: (_) => QueryStore()),
+        ChangeNotifierProvider(create: (_) => StickyStateService()),
+        ChangeNotifierProvider(create: (_) => SettingsService()),
+        ChangeNotifierProvider(create: (_) => TimeRangeService()),
       ],
       child: MaterialApp(
         title: 'Logger',

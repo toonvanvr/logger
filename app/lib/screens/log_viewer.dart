@@ -14,9 +14,9 @@ import '../widgets/header/filter_bar.dart';
 import '../widgets/header/session_selector.dart';
 import '../widgets/log_list/log_list_view.dart';
 import '../widgets/log_list/section_tabs.dart';
-import '../widgets/rpc/rpc_panel.dart';
+import '../widgets/settings/settings_panel.dart';
 import '../widgets/status_bar/status_bar.dart';
-import '../widgets/time_travel/time_travel_controls.dart';
+import '../widgets/time_travel/time_range_minimap.dart';
 
 /// Main screen — placeholder for the full log viewer UI.
 class LogViewerScreen extends StatefulWidget {
@@ -44,8 +44,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   };
   String _textFilter = '';
   String? _selectedSection;
-  bool _timeTravelActive = false;
-  bool _rpcPanelVisible = false;
+  bool _settingsPanelVisible = false;
 
   @override
   void initState() {
@@ -150,7 +149,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                     setState(() => _isFilterExpanded = !_isFilterExpanded);
                   },
                   onRpcToggle: () {
-                    setState(() => _rpcPanelVisible = !_rpcPanelVisible);
+                    setState(
+                      () => _settingsPanelVisible = !_settingsPanelVisible,
+                    );
                   },
                 ),
                 AnimatedSize(
@@ -217,25 +218,17 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                     },
                   ),
                 ),
-                // Time travel controls at bottom
-                TimeTravelControls(
-                  isActive: _timeTravelActive,
-                  onToggle: () {
-                    setState(() => _timeTravelActive = !_timeTravelActive);
-                  },
-                  onGoToLive: () {
-                    setState(() => _timeTravelActive = false);
-                  },
-                ),
+                // Time range minimap
+                const TimeRangeMinimap(),
                 const StatusBar(),
               ],
             ),
           ),
-          // RPC panel
-          RpcPanel(
-            isVisible: _rpcPanelVisible,
+          // Settings panel
+          SettingsPanel(
+            isVisible: _settingsPanelVisible,
             onClose: () {
-              setState(() => _rpcPanelVisible = false);
+              setState(() => _settingsPanelVisible = false);
             },
           ),
         ],

@@ -80,7 +80,7 @@ class TextRenderer extends StatelessWidget {
         matchText = '[icon:${parts.skip(1).take(2).join(':')}]';
         color = LoggerColors.fgSecondary;
       } else if (match.group(2) != null) {
-        // URL — color protocol separately
+        // URL — color protocol separately, highlight port distinctly
         final protocolEnd = matchText.indexOf('://') + 3;
         spans.add(
           TextSpan(
@@ -88,12 +88,42 @@ class TextRenderer extends StatelessWidget {
             style: baseStyle.copyWith(color: LoggerColors.syntaxProtocol),
           ),
         );
-        spans.add(
-          TextSpan(
-            text: matchText.substring(protocolEnd),
-            style: baseStyle.copyWith(color: LoggerColors.syntaxUrl),
-          ),
-        );
+        final rest = matchText.substring(protocolEnd);
+        final portMatch = RegExp(r':(\d+)').firstMatch(rest);
+        if (portMatch != null) {
+          // Before port
+          if (portMatch.start > 0) {
+            spans.add(
+              TextSpan(
+                text: rest.substring(0, portMatch.start),
+                style: baseStyle.copyWith(color: LoggerColors.syntaxUrl),
+              ),
+            );
+          }
+          // Port (including colon)
+          spans.add(
+            TextSpan(
+              text: rest.substring(portMatch.start, portMatch.end),
+              style: baseStyle.copyWith(color: LoggerColors.syntaxNumber),
+            ),
+          );
+          // After port
+          if (portMatch.end < rest.length) {
+            spans.add(
+              TextSpan(
+                text: rest.substring(portMatch.end),
+                style: baseStyle.copyWith(color: LoggerColors.syntaxUrl),
+              ),
+            );
+          }
+        } else {
+          spans.add(
+            TextSpan(
+              text: rest,
+              style: baseStyle.copyWith(color: LoggerColors.syntaxUrl),
+            ),
+          );
+        }
         lastEnd = match.end;
         continue;
       } else if (match.group(3) != null) {

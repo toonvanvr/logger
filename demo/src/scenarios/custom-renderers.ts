@@ -87,37 +87,89 @@ export async function runCustomRenderers() {
     }, { id: 'pool-status' })
     await delay(300)
 
-    // Sparkline chart — CPU usage over time
-    logger.info('CPU usage trend (last 60s):')
-    logger.custom('chart', {
-      variant: 'sparkline',
-      title: 'CPU Usage %',
-      data: [
-        { label: '0s', value: 23 },
-        { label: '10s', value: 45 },
-        { label: '20s', value: 38 },
-        { label: '30s', value: 72 },
-        { label: '40s', value: 56 },
-        { label: '50s', value: 41 },
-        { label: '60s', value: 33 },
-      ],
-    })
+    // Sparkline chart — CPU usage over time (bursty pattern)
+    logger.info('CPU usage trend (last 5 min):')
+    {
+      const cpuData: Array<{ label: string; value: number }> = []
+      for (let i = 0; i < 60; i++) {
+        const t = i / 60
+        // Baseline ~15%, with bursty spikes to 60-80%
+        let cpu = 15 + 5 * Math.sin(t * Math.PI * 8)
+        // Add random spikes
+        if (i % 12 === 3) cpu += 45 + Math.random() * 20  // spike
+        if (i % 12 === 4) cpu += 30 + Math.random() * 15  // spike tail
+        if (i % 20 === 10) cpu += 55 + Math.random() * 10 // big spike
+        cpu += (Math.random() - 0.5) * 6 // noise
+        cpu = Math.max(2, Math.min(95, cpu))
+        cpuData.push({ label: `${i * 5}s`, value: Math.round(cpu * 10) / 10 })
+      }
+      logger.custom('chart', {
+        variant: 'sparkline',
+        title: 'CPU Usage %',
+        data: cpuData,
+      })
+    }
     await delay(300)
 
-    // Area chart — memory allocation
-    logger.info('Memory allocation by region:')
-    logger.custom('chart', {
-      variant: 'area',
-      title: 'Heap allocation (MB) over time',
-      data: [
-        { label: 'T0', value: 128 },
-        { label: 'T1', value: 256 },
-        { label: 'T2', value: 220 },
-        { label: 'T3', value: 380 },
-        { label: 'T4', value: 310 },
-        { label: 'T5', value: 290 },
-      ],
-    })
+    // Area chart — memory allocation (sawtooth + GC pattern)
+    logger.info('Memory allocation over time:')
+    {
+      const memData: Array<{ label: string; value: number }> = []
+      let mem = 200
+      for (let i = 0; i < 80; i++) {
+        const t = i / 80
+        // Gradual growth with allocation pressure
+        mem += 3 + Math.random() * 4
+        // Sine wave noise
+        mem += 8 * Math.sin(t * Math.PI * 6)
+        // GC drops every ~15 points
+        if (i > 0 && i % 15 === 0) {
+          mem -= 100 + Math.random() * 100 // GC reclaims 100-200MB
+        }
+        // Request burst spike at ~25% and ~70% through
+        if (i === 20) mem += 150
+        if (i === 21) mem -= 80
+        if (i === 56) mem += 130
+        if (i === 57) mem -= 70
+        mem = Math.max(100, Math.min(800, mem))
+        memData.push({
+          label: `T+${i}`,
+          value: Math.round(mem),
+        })
+      }
+      logger.custom('chart', {
+        variant: 'area',
+        title: 'Heap allocation (MB) over time',
+        data: memData,
+      })
+    }
+    await delay(300)
+
+    // Sparkline chart — request rate (diurnal pattern)
+    logger.info('Request rate (last 24h):')
+    {
+      const reqData: Array<{ label: string; value: number }> = []
+      for (let i = 0; i < 72; i++) {
+        const hour = (i / 3) // 0-24 hours
+        // Diurnal sinusoidal pattern: peak at midday, trough at 4am
+        const diurnal = Math.sin((hour - 4) / 24 * Math.PI * 2) * 0.5 + 0.5
+        let rate = 200 + diurnal * 1800
+        // Add noise
+        rate += (Math.random() - 0.5) * 120
+        rate = Math.max(50, rate)
+        const h = Math.floor(hour)
+        const m = Math.round((hour - h) * 60)
+        reqData.push({
+          label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
+          value: Math.round(rate),
+        })
+      }
+      logger.custom('chart', {
+        variant: 'sparkline',
+        title: 'Requests/min (24h)',
+        data: reqData,
+      })
+    }
     await delay(300)
 
     // Progress with ring style

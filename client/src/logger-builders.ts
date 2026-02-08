@@ -97,6 +97,23 @@ export function buildGroupCloseEntry(
   };
 }
 
+// ─── Sticky actions ──────────────────────────────────────────────────
+
+export function buildUnstickyEntry(
+  base: LogEntry,
+  groupId: string,
+  entryId?: string,
+): LogEntry {
+  return {
+    ...base,
+    type: 'text',
+    text: '',
+    group_id: groupId,
+    sticky_action: 'unpin',
+    ...(entryId ? { id: entryId } : {}),
+  };
+}
+
 // ─── State / Image / Custom ─────────────────────────────────────────
 
 export function buildStateEntry(

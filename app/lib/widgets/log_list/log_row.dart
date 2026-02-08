@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
@@ -40,6 +43,7 @@ class LogRow extends StatefulWidget {
 
 class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _isHovered = false;
 
   /// Highlight animation for unseen entries: warm amber glow that fades out.
   late final Animation<Color?> _highlightAnimation;
@@ -127,50 +131,104 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           offset: Offset(0, _slideAnimation.value),
           child: Opacity(
             opacity: _opacityAnimation.value,
-            child: GestureDetector(
-              onTap: widget.onGroupToggle ?? widget.onTap,
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 24),
-                decoration: BoxDecoration(
-                  color: _highlightAnimation.value ?? _backgroundColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: LoggerColors.borderSubtle,
-                      width: 1,
+            child: SelectionContainer.disabled(
+              child: GestureDetector(
+                onTap: widget.onGroupToggle ?? widget.onTap,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 24),
+                  decoration: BoxDecoration(
+                    color: _highlightAnimation.value ?? _backgroundColor,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: LoggerColors.borderSubtle,
+                        width: 1,
+                      ),
                     ),
                   ),
+                  // Stack the highlight color over the base background.
+                  foregroundDecoration:
+                      _highlightAnimation.value != null &&
+                          _highlightAnimation.value != Colors.transparent
+                      ? BoxDecoration(color: _highlightAnimation.value)
+                      : null,
+                  child: child,
                 ),
-                // Stack the highlight color over the base background.
-                foregroundDecoration:
-                    _highlightAnimation.value != null &&
-                        _highlightAnimation.value != Colors.transparent
-                    ? BoxDecoration(color: _highlightAnimation.value)
-                    : null,
-                child: child,
               ),
             ),
           ),
         );
       },
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SeverityBar(severity: widget.entry.severity),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: _buildContent(),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SeverityBar(severity: widget.entry.severity),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  child: _buildContent(),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: SessionDot(sessionId: widget.entry.sessionId),
-            ),
-          ],
+              if (_isHovered)
+                GestureDetector(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: _serializeEntry()));
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.content_copy,
+                      size: 14,
+                      color: LoggerColors.fgMuted,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: SessionDot(sessionId: widget.entry.sessionId),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  String _serializeEntry() {
+    final entry = widget.entry;
+    if (entry.type == LogType.group) {
+      return entry.groupLabel ?? entry.groupId ?? 'Group';
+    }
+    final text = entry.text ?? '';
+    if (entry.jsonData != null) {
+      try {
+        final encoded = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(entry.jsonData);
+        return text.isNotEmpty ? '$text\n$encoded' : encoded;
+      } catch (_) {
+        return text.isNotEmpty
+            ? '$text\n${entry.jsonData}'
+            : '${entry.jsonData}';
+      }
+    }
+    if (entry.customData != null) {
+      try {
+        final encoded = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(entry.customData);
+        return text.isNotEmpty ? '$text\n$encoded' : encoded;
+      } catch (_) {
+        return text.isNotEmpty ? text : '${entry.customData}';
+      }
+    }
+    return text;
   }
 
   Widget _buildContent() {

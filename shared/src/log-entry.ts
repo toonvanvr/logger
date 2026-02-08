@@ -165,6 +165,8 @@ export const LogEntry = z.object({
   // ── Sticky pinning ──
   /** When true, this entry (or group) pins to the top of the viewport when scrolled past */
   sticky: z.boolean().optional(),
+  /** Action to perform on a sticky entry: 'pin' (default when sticky=true) or 'unpin' (remove from sticky) */
+  sticky_action: z.enum(['pin', 'unpin']).optional(),
 
   // ── State operations (type: "state") ──
   /** State key for upsert. Unique per session. */

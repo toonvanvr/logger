@@ -107,7 +107,7 @@ describe('Logger', () => {
   // ─── Group ─────────────────────────────────────────────────────
 
   test('group open/close lifecycle', async () => {
-    logger.group('my group');
+    const groupId = logger.group('my group');
     logger.info('inside');
     logger.groupEnd();
 
@@ -119,10 +119,11 @@ describe('Logger', () => {
     expect(groups[0].group_label).toBe('my group');
     expect(groups[1].group_action).toBe('close');
     expect(groups[0].group_id).toBe(groups[1].group_id);
+    expect(groupId).toBe(groups[0].group_id);
   });
 
   test('group with callback auto-closes', async () => {
-    await logger.group('auto', () => {
+    const groupId = await logger.group('auto', () => {
       logger.info('inside callback');
     });
 
@@ -132,6 +133,7 @@ describe('Logger', () => {
     expect(groups).toHaveLength(2);
     expect(groups[0].group_action).toBe('open');
     expect(groups[1].group_action).toBe('close');
+    expect(groupId).toBe(groups[0].group_id);
   });
 
   // ─── State ─────────────────────────────────────────────────────

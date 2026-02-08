@@ -18,6 +18,10 @@ class SearchSuggestions extends StatefulWidget {
   /// Called when the overlay should be dismissed.
   final VoidCallback onDismiss;
 
+  /// Called when a suggestion item receives a pointer-down event,
+  /// before the tap completes. Used to guard overlay removal.
+  final VoidCallback? onTapDown;
+
   /// Maximum visible suggestion count before scrolling.
   final int maxVisible;
 
@@ -26,6 +30,7 @@ class SearchSuggestions extends StatefulWidget {
     required this.suggestions,
     required this.onSelected,
     required this.onDismiss,
+    this.onTapDown,
     this.maxVisible = 8,
   });
 
@@ -138,51 +143,54 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
             final isHighlighted = index == _highlightedIndex;
             final isPrefix = suggestion.endsWith(':');
 
-            return GestureDetector(
-              onTap: () => widget.onSelected(suggestion),
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _highlightedIndex = index),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  color: isHighlighted
-                      ? LoggerColors.bgActive
-                      : Colors.transparent,
-                  child: Row(
-                    children: [
-                      if (isPrefix)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Icon(
-                            _prefixIcon(suggestion),
-                            size: 12,
-                            color: LoggerColors.fgMuted,
+            return Listener(
+              onPointerDown: (_) => widget.onTapDown?.call(),
+              child: GestureDetector(
+                onTap: () => widget.onSelected(suggestion),
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _highlightedIndex = index),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    color: isHighlighted
+                        ? LoggerColors.bgActive
+                        : Colors.transparent,
+                    child: Row(
+                      children: [
+                        if (isPrefix)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: Icon(
+                              _prefixIcon(suggestion),
+                              size: 12,
+                              color: LoggerColors.fgMuted,
+                            ),
+                          ),
+                        Expanded(
+                          child: Text(
+                            suggestion,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: LoggerTypography.logMeta.copyWith(
+                              color: isHighlighted
+                                  ? LoggerColors.fgSecondary
+                                  : LoggerColors.fgSecondary,
+                              fontWeight: isPrefix
+                                  ? FontWeight.w500
+                                  : FontWeight.w400,
+                            ),
                           ),
                         ),
-                      Expanded(
-                        child: Text(
-                          suggestion,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: LoggerTypography.logMeta.copyWith(
-                            color: isHighlighted
-                                ? LoggerColors.fgPrimary
-                                : LoggerColors.fgSecondary,
-                            fontWeight: isPrefix
-                                ? FontWeight.w600
-                                : FontWeight.w400,
+                        if (isPrefix)
+                          Text(
+                            _prefixHint(suggestion),
+                            style: LoggerTypography.logMeta.copyWith(
+                              color: LoggerColors.fgMuted,
+                              fontSize: 9,
+                            ),
                           ),
-                        ),
-                      ),
-                      if (isPrefix)
-                        Text(
-                          _prefixHint(suggestion),
-                          style: LoggerTypography.logMeta.copyWith(
-                            color: LoggerColors.fgMuted,
-                            fontSize: 9,
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

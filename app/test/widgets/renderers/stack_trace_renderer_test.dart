@@ -1,14 +1,19 @@
 import 'package:app/models/log_entry.dart';
+import 'package:app/services/settings_service.dart';
 import 'package:app/theme/colors.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/renderers/stack_trace_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 Widget _wrap(Widget child) {
-  return MaterialApp(
-    theme: createLoggerTheme(),
-    home: Scaffold(body: SingleChildScrollView(child: child)),
+  return ChangeNotifierProvider(
+    create: (_) => SettingsService(),
+    child: MaterialApp(
+      theme: createLoggerTheme(),
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    ),
   );
 }
 

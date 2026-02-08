@@ -235,6 +235,7 @@ The Logger viewer supports a plugin architecture for extensible rendering, filte
 | **[Configuration](reference/configuration.md)** | All `LOGGER_*` environment variables |
 | **[Protocol](reference/protocol.md)** | LogEntry schema and transport reference |
 | **[Plugin API](reference/plugin-api.md)** | How to write viewer plugins |
+| **[Keybindings](reference/keybindings.md)** | Keyboard shortcuts and mouse interactions |
 | **[UX Principles](design/ux-principles.md)** | Core UX design philosophy |
 | **[Color System](design/color-system.md)** | Color token reference |
 

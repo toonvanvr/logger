@@ -31,7 +31,7 @@ class ProgressRenderer extends StatelessWidget {
 
     final color = colorStr != null
         ? _parseHex(colorStr)
-        : LoggerColors.severityInfoBar;
+        : LoggerColors.borderFocus;
 
     if (style == 'ring') {
       return _buildRing(progress, percentage, color, label, sublabel);

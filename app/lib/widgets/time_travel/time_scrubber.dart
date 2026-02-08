@@ -5,6 +5,11 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
 /// A compact horizontal time scrubber bar for navigating log history.
+///
+/// **Deprecated**: Superseded by [TimeRangeMinimap] which provides a richer
+/// minimap with bar chart, stacked severity, and viewport handles.
+/// Kept for backwards compatibility; prefer using TimeRangeMinimap directly.
+@Deprecated('Use TimeRangeMinimap instead')
 class TimeScrubber extends StatefulWidget {
   /// Start of the session (earliest log).
   final DateTime? sessionStart;

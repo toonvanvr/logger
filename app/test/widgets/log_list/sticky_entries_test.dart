@@ -1,6 +1,8 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/session_store.dart';
+import 'package:app/services/sticky_state.dart';
+import 'package:app/services/time_range_service.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/log_list/log_list_view.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +39,8 @@ Widget _wrap({required LogStore logStore}) {
     providers: [
       ChangeNotifierProvider.value(value: logStore),
       ChangeNotifierProvider(create: (_) => SessionStore()),
+      ChangeNotifierProvider(create: (_) => StickyStateService()),
+      ChangeNotifierProvider(create: (_) => TimeRangeService()),
     ],
     child: MaterialApp(
       theme: createLoggerTheme(),

@@ -110,10 +110,10 @@ class SessionSelector extends StatelessWidget {
             isActive: isFilterExpanded,
             onTap: onFilterToggle,
           ),
-          // RPC panel toggle
+          // Settings panel toggle
           HeaderIconButton(
-            icon: Icons.build_outlined,
-            tooltip: 'Toggle tools panel',
+            icon: Icons.settings,
+            tooltip: 'Toggle settings panel',
             isActive: false,
             onTap: onRpcToggle,
           ),

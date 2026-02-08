@@ -47,6 +47,7 @@ class LogEntry {
 
   // Sticky pinning
   final bool? sticky;
+  final String? stickyAction;
 
   // State operations
   final String? stateKey;
@@ -101,6 +102,7 @@ class LogEntry {
     this.groupLabel,
     this.groupCollapsed,
     this.sticky,
+    this.stickyAction,
     this.stateKey,
     this.stateValue,
     this.sessionAction,
@@ -151,6 +153,7 @@ class LogEntry {
       groupLabel: json['group_label'] as String?,
       groupCollapsed: json['group_collapsed'] as bool?,
       sticky: json['sticky'] as bool?,
+      stickyAction: json['sticky_action'] as String?,
       stateKey: json['state_key'] as String?,
       stateValue: json['state_value'],
       sessionAction: parseSessionAction(json['session_action'] as String?),

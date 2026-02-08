@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../services/log_connection.dart';
 import '../../services/log_store.dart';
 import '../../services/session_store.dart';
+import '../../services/sticky_state.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
@@ -17,6 +18,11 @@ class StatusBar extends StatelessWidget {
     final logStore = context.watch<LogStore>();
     final sessionStore = context.watch<SessionStore>();
     final connection = context.watch<LogConnection>();
+    final stickyState = context.watch<StickyStateService>();
+
+    final dismissed = stickyState.dismissedCount;
+    final ignored = stickyState.ignoredGroupCount;
+    final hasStickyInfo = dismissed > 0 || ignored > 0;
 
     return Container(
       height: 20,
@@ -37,6 +43,15 @@ class StatusBar extends StatelessWidget {
             label: _formatMemory(logStore.estimatedMemoryBytes),
             isWarning: logStore.estimatedMemoryBytes > 100 * 1024 * 1024,
           ),
+          // S06: Dismissed/ignored sticky info
+          if (hasStickyInfo) ...[
+            const SizedBox(width: 12),
+            _StickyStatusSection(
+              dismissed: dismissed,
+              ignored: ignored,
+              onRestoreAll: stickyState.restoreAll,
+            ),
+          ],
           const Spacer(),
           // Right: connection status
           _ConnectionIndicator(
@@ -122,6 +137,52 @@ class _ConnectionIndicator extends StatelessWidget {
               ? '$sessionCount session${sessionCount == 1 ? '' : 's'}'
               : 'disconnected',
           style: LoggerTypography.logMeta.copyWith(fontSize: 9, color: color),
+        ),
+      ],
+    );
+  }
+}
+
+/// S06: Shows dismissed/ignored sticky counts with a "Restore all" action.
+class _StickyStatusSection extends StatelessWidget {
+  final int dismissed;
+  final int ignored;
+  final VoidCallback onRestoreAll;
+
+  const _StickyStatusSection({
+    required this.dismissed,
+    required this.ignored,
+    required this.onRestoreAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    if (dismissed > 0) parts.add('$dismissed dismissed');
+    if (ignored > 0) parts.add('$ignored ignored');
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.push_pin_outlined, size: 10, color: LoggerColors.fgMuted),
+        const SizedBox(width: 3),
+        Text(
+          parts.join(', '),
+          style: LoggerTypography.logMeta.copyWith(
+            fontSize: 9,
+            color: LoggerColors.fgMuted,
+          ),
+        ),
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: onRestoreAll,
+          child: Text(
+            'Restore all',
+            style: LoggerTypography.logMeta.copyWith(
+              fontSize: 9,
+              color: LoggerColors.borderFocus,
+            ),
+          ),
         ),
       ],
     );

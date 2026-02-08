@@ -1,6 +1,10 @@
+import 'dart:io' show Process;
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/log_entry.dart';
+import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
@@ -8,10 +12,19 @@ import '../../theme/typography.dart';
 ///
 /// By default only the first frame is visible; tapping "N more frames"
 /// expands the full list. Vendor frames are dimmed.
+/// Stack trace frames are clickable — clicking opens the file in the
+/// configured editor. URLs are opened with the system URL handler.
 class StackTraceRenderer extends StatefulWidget {
   final ExceptionData exception;
 
-  const StackTraceRenderer({super.key, required this.exception});
+  /// Nesting depth for cause chains (0 = root exception).
+  final int causeDepth;
+
+  const StackTraceRenderer({
+    super.key,
+    required this.exception,
+    this.causeDepth = 0,
+  });
 
   @override
   State<StackTraceRenderer> createState() => _StackTraceRendererState();
@@ -19,6 +32,7 @@ class StackTraceRenderer extends StatefulWidget {
 
 class _StackTraceRendererState extends State<StackTraceRenderer> {
   bool _expanded = false;
+  bool _causesExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +65,7 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
         ),
         if (frames.isNotEmpty) ...[
           const SizedBox(height: 4),
-          _buildFrame(frames.first),
+          _buildFrame(context, frames.first),
           if (frames.length > 1 && !_expanded)
             GestureDetector(
               onTap: () => setState(() => _expanded = true),
@@ -71,13 +85,35 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
                 .map(
                   (f) => Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: _buildFrame(f),
+                    child: _buildFrame(context, f),
                   ),
                 ),
         ],
-        // Nested cause
+        // Nested cause chain
         if (exception.cause != null) ...[
           const SizedBox(height: 6),
+          _buildCauseChain(context, exception.cause!),
+        ],
+      ],
+    );
+  }
+
+  /// Build the cause chain with collapsible deeper causes.
+  Widget _buildCauseChain(BuildContext context, ExceptionData firstCause) {
+    // Count total causes in the chain.
+    int causeCount = 0;
+    ExceptionData? current = firstCause;
+    while (current != null) {
+      causeCount++;
+      current = current.cause;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text(
             'Caused by:',
             style: LoggerTypography.logMeta.copyWith(
@@ -85,16 +121,71 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
             ),
           ),
           const SizedBox(height: 2),
-          StackTraceRenderer(exception: exception.cause!),
+          // Always show first cause (without its own nested cause rendering).
+          StackTraceRenderer(
+            exception: ExceptionData(
+              type: firstCause.type,
+              message: firstCause.message,
+              stackTrace: firstCause.stackTrace,
+            ),
+            causeDepth: widget.causeDepth + 1,
+          ),
+          // If there are deeper causes beyond the first, show them collapsed.
+          if (causeCount > 1 && firstCause.cause != null) ...[
+            if (!_causesExpanded)
+              GestureDetector(
+                onTap: () => setState(() => _causesExpanded = true),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${causeCount - 1} more cause${causeCount - 1 > 1 ? 's' : ''}',
+                    style: LoggerTypography.logMeta.copyWith(
+                      color: LoggerColors.syntaxUrl,
+                    ),
+                  ),
+                ),
+              ),
+            if (_causesExpanded)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: _buildExpandedCauses(firstCause.cause!),
+              ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
-  Widget _buildFrame(StackFrame frame) {
+  /// Recursively build remaining causes when expanded.
+  Widget _buildExpandedCauses(ExceptionData cause) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Caused by:',
+            style: LoggerTypography.logMeta.copyWith(
+              color: LoggerColors.fgSecondary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          StackTraceRenderer(
+            exception: cause,
+            causeDepth: widget.causeDepth + 2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFrame(BuildContext context, StackFrame frame) {
     final loc = frame.location;
     final isVendor = frame.isVendor ?? false;
     final color = isVendor ? LoggerColors.fgMuted : LoggerColors.syntaxPath;
+    final isUrl =
+        loc.uri.startsWith('http://') || loc.uri.startsWith('https://');
 
     final parts = StringBuffer(loc.uri);
     if (loc.line != null) {
@@ -107,9 +198,41 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
       parts.write(' in ${loc.symbol}');
     }
 
-    return Text(
-      parts.toString(),
-      style: LoggerTypography.logMeta.copyWith(color: color),
+    return SelectionContainer.disabled(
+      child: GestureDetector(
+        onTap: () => _onFrameTap(context, loc, isUrl),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Text(
+            parts.toString(),
+            style: LoggerTypography.logMeta.copyWith(
+              color: color,
+              decoration: TextDecoration.underline,
+              decorationColor: color.withAlpha(100),
+            ),
+          ),
+        ),
+      ),
     );
+  }
+
+  void _onFrameTap(BuildContext context, SourceLocation loc, bool isUrl) {
+    final settings = context.read<SettingsService>();
+
+    if (isUrl) {
+      final cmd = settings.urlOpenCommand.replaceAll('{url}', loc.uri);
+      _runCommand(cmd);
+    } else {
+      final cmd = settings.fileOpenCommand
+          .replaceAll('{file}', loc.uri)
+          .replaceAll('{line}', '${loc.line ?? 1}');
+      _runCommand(cmd);
+    }
+  }
+
+  void _runCommand(String cmd) {
+    final parts = cmd.split(' ');
+    if (parts.isEmpty) return;
+    Process.run(parts.first, parts.skip(1).toList());
   }
 }

@@ -1,24 +1,25 @@
 import type { LogEntry, Severity as SeverityType } from '@logger/shared';
 import {
-    baseFields,
-    buildBinaryEntry,
-    buildCustomEntry,
-    buildErrorException,
-    buildGroupCloseEntry,
-    buildGroupOpenEntry,
-    buildHtmlEntry,
-    buildImageEntry,
-    buildJsonEntry,
-    buildStateEntry,
-    buildTextEntry,
-    stringifyTags,
+  baseFields,
+  buildBinaryEntry,
+  buildCustomEntry,
+  buildErrorException,
+  buildGroupCloseEntry,
+  buildGroupOpenEntry,
+  buildHtmlEntry,
+  buildImageEntry,
+  buildJsonEntry,
+  buildStateEntry,
+  buildTextEntry,
+  buildUnstickyEntry,
+  stringifyTags,
 } from './logger-builders.js';
 import {
-    buildSessionEndEntry,
-    buildSessionStartEntry,
-    drainTransportQueue,
-    handleRpcRequest,
-    type RpcHandler,
+  buildSessionEndEntry,
+  buildSessionStartEntry,
+  drainTransportQueue,
+  handleRpcRequest,
+  type RpcHandler,
 } from './logger-session.js';
 import { type LoggerOptions, type Middleware, runMiddlewareChain } from './logger-types.js';
 import { LogQueue } from './queue.js';
@@ -46,6 +47,9 @@ export class Logger {
   private transportReady: Promise<void> | null = null;
   private readonly rpcHandlers = new Map<string, RpcHandler>();
   private _nextSticky = false;
+  private _nextId: string | undefined;
+  private _nextAfterId: string | undefined;
+  private _nextBeforeId: string | undefined;
 
   readonly session: {
     readonly id: string;
@@ -152,11 +156,34 @@ export class Logger {
     return this;
   }
 
+  /** Send an unpin action for a sticky group (and optionally a specific entry). */
+  unsticky(groupId: string, entryId?: string): void {
+    this.enqueue(buildUnstickyEntry(this.base('info'), groupId, entryId));
+  }
+
+  /** Override the ID of the next logged entry. One-shot modifier. */
+  withId(id: string): this {
+    this._nextId = id;
+    return this;
+  }
+
+  /** Insert the next logged entry visually after the entry with the given ID. One-shot modifier. */
+  after(id: string): this {
+    this._nextAfterId = id;
+    return this;
+  }
+
+  /** Insert the next logged entry visually before the entry with the given ID. One-shot modifier. */
+  before(id: string): this {
+    this._nextBeforeId = id;
+    return this;
+  }
+
   // ─── Group ───────────────────────────────────────────────────────
 
-  group(name: string, options?: { sticky?: boolean }): void;
-  group(name: string, fn: () => void | Promise<void>, options?: { sticky?: boolean }): Promise<void>;
-  group(name: string, fnOrOpts?: (() => void | Promise<void>) | { sticky?: boolean }, maybeOpts?: { sticky?: boolean }): void | Promise<void> {
+  group(name: string, options?: { sticky?: boolean }): string;
+  group(name: string, fn: () => void | Promise<void>, options?: { sticky?: boolean }): Promise<string>;
+  group(name: string, fnOrOpts?: (() => void | Promise<void>) | { sticky?: boolean }, maybeOpts?: { sticky?: boolean }): string | Promise<string> {
     let fn: (() => void | Promise<void>) | undefined;
     let options: { sticky?: boolean } | undefined;
     if (typeof fnOrOpts === 'function') {
@@ -172,8 +199,10 @@ export class Logger {
     if (fn) {
       return (async () => {
         try { await fn!(); } finally { this.groupEnd(); }
+        return groupId;
       })();
     }
+    return groupId;
   }
 
   groupEnd(): void {
@@ -253,6 +282,18 @@ export class Logger {
     if (this._nextSticky) {
       entry = { ...entry, sticky: true };
       this._nextSticky = false;
+    }
+    if (this._nextId) {
+      entry = { ...entry, id: this._nextId };
+      this._nextId = undefined;
+    }
+    if (this._nextAfterId) {
+      entry = { ...entry, after_id: this._nextAfterId };
+      this._nextAfterId = undefined;
+    }
+    if (this._nextBeforeId) {
+      entry = { ...entry, before_id: this._nextBeforeId };
+      this._nextBeforeId = undefined;
     }
     if (!this.sessionStarted) this.startSession();
     runMiddlewareChain(this.middlewares, entry, () => this.queue.push(entry));

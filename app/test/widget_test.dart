@@ -2,7 +2,11 @@ import 'package:app/screens/log_viewer.dart';
 import 'package:app/services/log_connection.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/query_store.dart';
+import 'package:app/services/rpc_service.dart';
 import 'package:app/services/session_store.dart';
+import 'package:app/services/settings_service.dart';
+import 'package:app/services/sticky_state.dart';
+import 'package:app/services/time_range_service.dart';
 import 'package:app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +24,10 @@ void main() {
           ChangeNotifierProvider(create: (_) => LogStore()),
           ChangeNotifierProvider(create: (_) => SessionStore()),
           ChangeNotifierProvider(create: (_) => QueryStore()),
+          ChangeNotifierProvider(create: (_) => StickyStateService()),
+          ChangeNotifierProvider(create: (_) => RpcService()),
+          ChangeNotifierProvider(create: (_) => SettingsService()),
+          ChangeNotifierProvider(create: (_) => TimeRangeService()),
         ],
         child: MaterialApp(
           theme: createLoggerTheme(),
