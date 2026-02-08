@@ -53,6 +53,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   bool _settingsPanelVisible = false;
   bool _selectionMode = false;
   Set<String> _selectedEntryIds = {};
+  String? _lastSelectedEntryId;
+  final Set<String> _bookmarkedEntryIds = {};
+  final Set<String> _stickyOverrideIds = {};
 
   @override
   void initState() {
@@ -145,6 +148,20 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   bool _handleKeyEvent(KeyEvent event) {
+    // Ctrl+M → toggle mini mode
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyM &&
+        (HardwareKeyboard.instance.logicalKeysPressed.contains(
+              LogicalKeyboardKey.controlLeft,
+            ) ||
+            HardwareKeyboard.instance.logicalKeysPressed.contains(
+              LogicalKeyboardKey.controlRight,
+            ))) {
+      final settings = context.read<SettingsService>();
+      settings.setMiniMode(!settings.miniMode);
+      return true;
+    }
+
     final shiftHeld =
         HardwareKeyboard.instance.logicalKeysPressed.contains(
           LogicalKeyboardKey.shiftLeft,
@@ -162,6 +179,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   void _onEntrySelected(String id) {
     setState(() {
+      _lastSelectedEntryId = id;
       if (_selectedEntryIds.contains(id)) {
         _selectedEntryIds.remove(id);
       } else {
@@ -183,6 +201,25 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     setState(() {
       _selectedEntryIds = {};
       _selectionMode = false;
+      _lastSelectedEntryId = null;
+    });
+  }
+
+  void _onEntryRangeSelected(String targetId, List<String> orderedIds) {
+    if (_lastSelectedEntryId == null) {
+      _onEntrySelected(targetId);
+      return;
+    }
+    final anchorIdx = orderedIds.indexOf(_lastSelectedEntryId!);
+    final targetIdx = orderedIds.indexOf(targetId);
+    if (anchorIdx == -1 || targetIdx == -1) {
+      _onEntrySelected(targetId);
+      return;
+    }
+    final start = anchorIdx < targetIdx ? anchorIdx : targetIdx;
+    final end = anchorIdx < targetIdx ? targetIdx : anchorIdx;
+    setState(() {
+      _selectedEntryIds.addAll(orderedIds.sublist(start, end + 1).toSet());
     });
   }
 
@@ -211,6 +248,24 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
         .toList();
     final json = const JsonEncoder.withIndent('  ').convert(entries);
     Clipboard.setData(ClipboardData(text: json));
+  }
+
+  void _bookmarkSelected() {
+    setState(() {
+      for (final id in _selectedEntryIds) {
+        if (_bookmarkedEntryIds.contains(id)) {
+          _bookmarkedEntryIds.remove(id);
+        } else {
+          _bookmarkedEntryIds.add(id);
+        }
+      }
+    });
+  }
+
+  void _stickySelected() {
+    setState(() {
+      _stickyOverrideIds.addAll(_selectedEntryIds);
+    });
   }
 
   @override
@@ -296,7 +351,11 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                   },
                 ),
                 // State view
-                const StateViewSection(),
+                StateViewSection(
+                  onStateFilter: (filter) {
+                    setState(() => _textFilter = filter);
+                  },
+                ),
                 // Log list
                 Expanded(
                   child: Builder(
@@ -315,6 +374,9 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                               selectionMode: _selectionMode,
                               selectedEntryIds: _selectedEntryIds,
                               onEntrySelected: _onEntrySelected,
+                              onEntryRangeSelected: _onEntryRangeSelected,
+                              bookmarkedEntryIds: _bookmarkedEntryIds,
+                              stickyOverrideIds: _stickyOverrideIds,
                             ),
                           ),
                           if (_selectedEntryIds.isNotEmpty)
@@ -327,8 +389,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                                   selectedCount: _selectedEntryIds.length,
                                   onCopy: _copySelected,
                                   onExportJson: _exportSelectedJson,
-                                  onBookmark: () {},
-                                  onSticky: () {},
+                                  onBookmark: _bookmarkSelected,
+                                  onSticky: _stickySelected,
                                   onClear: _clearSelection,
                                 ),
                               ),

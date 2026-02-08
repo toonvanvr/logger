@@ -23,6 +23,7 @@ class LogRow extends StatefulWidget {
   final bool selectionMode;
   final bool isSelectionSelected;
   final VoidCallback? onSelect;
+  final bool isBookmarked;
 
   const LogRow({
     super.key,
@@ -37,6 +38,7 @@ class LogRow extends StatefulWidget {
     this.selectionMode = false,
     this.isSelectionSelected = false,
     this.onSelect,
+    this.isBookmarked = false,
   });
 
   @override
@@ -215,6 +217,15 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                 padding: const EdgeInsets.only(right: 6),
                 child: SessionDot(sessionId: widget.entry.sessionId),
               ),
+              if (widget.isBookmarked)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(
+                    Icons.bookmark,
+                    size: 12,
+                    color: LoggerColors.borderFocus,
+                  ),
+                ),
             ],
           ),
         ),

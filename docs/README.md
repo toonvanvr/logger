@@ -46,35 +46,30 @@ graph LR
 
 ## Quick Start
 
-### Prerequisites
+### Minimal (No Docker)
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [Flutter](https://docs.flutter.dev/get-started/install) 3.10+
-- [Bun](https://bun.sh/) 1.0+
+- [Bun](https://bun.sh/) 1.0+ and [Flutter](https://docs.flutter.dev/get-started/install) 3.10+
 
-### 1. Start the Backend
+```bash
+cd server && bun install && bun run src/main.ts   # Start server
+cd app && flutter pub get && flutter run -d linux  # Run viewer
+cd demo && bun install && bun run src/main.ts      # Send test logs
+```
+
+The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. Loki warnings in the server console are expected without Docker.
+
+### Full Stack (Docker)
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose, [Flutter](https://docs.flutter.dev/get-started/install) 3.10+
 
 ```bash
 docker compose up -d
+cd app && flutter build linux && ./build/linux/x64/release/bundle/app
 ```
 
-This launches:
-- **Loki** — log storage
-- **Grafana** — dashboards (http://localhost:3000)
-- **Server** — log ingestion and streaming (http://localhost:8080)
-- **Demo** — generates sample log traffic
+This launches Loki, Grafana (http://localhost:3000), Server (http://localhost:8080), and Demo.
 
-### 2. Build and Run the Viewer
-
-```bash
-cd app
-flutter build linux
-./build/linux/x64/release/bundle/app
-```
-
-The viewer connects to `ws://localhost:8082` by default and begins streaming logs in real time.
-
-### 3. Integrate Your Application
+### Integrate Your Application
 
 ```typescript
 import { Logger } from "@logger/client";
@@ -254,4 +249,4 @@ For AI agent navigation, see [AGENTS.md](../AGENTS.md) at the repository root.
 
 ## License
 
-Private — not published to npm or pub.dev.
+[Mozilla Public License 2.0](../LICENSE) — see [LICENSE](../LICENSE) for full text.

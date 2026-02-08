@@ -2,13 +2,45 @@
 
 This guide walks through setting up the Logger system from scratch.
 
-## Prerequisites
+## Minimal Setup (No Docker)
 
-- **Docker** and **Docker Compose** — runs the server, Loki, and Grafana
-- **Flutter** 3.10+ — builds the desktop viewer
-- **Bun** 1.0+ — runs TypeScript components and scripts
+The quickest way to try Logger — no Docker required.
 
-## Step 1: Clone and Install
+### Prerequisites
+
+- **Bun** 1.0+ — runs the server
+- **Flutter** 3.10+ — builds the viewer
+
+### Start the Server
+
+```bash
+cd server && bun install && bun run src/main.ts
+```
+
+### Build and Run the Viewer
+
+```bash
+cd app && flutter pub get && flutter run -d linux
+```
+
+The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
+
+### Send Test Logs
+
+```bash
+cd demo && bun install && bun run src/main.ts
+```
+
+## Full Setup (Docker)
+
+For Loki persistence and Grafana dashboards, use Docker Compose.
+
+### Prerequisites
+
+- **Docker** and **Docker Compose**
+- **Flutter** 3.10+
+
+### Clone and Install
 
 ```bash
 git clone <repo-url> logger
@@ -17,7 +49,7 @@ cd logger
 
 No top-level install step is needed — each component manages its own dependencies.
 
-## Step 2: Start the Backend
+### Start the Backend
 
 ```bash
 docker compose up -d
@@ -31,23 +63,18 @@ docker compose ps
 
 You should see `loki`, `grafana`, `server`, and `demo` all running.
 
-## Step 3: Build the Viewer
+### Build and Launch the Viewer
 
 ```bash
 cd app
 flutter pub get
 flutter build linux
-```
-
-## Step 4: Launch
-
-```bash
 ./build/linux/x64/release/bundle/app
 ```
 
-The viewer will connect to the server at `ws://localhost:8082` and begin displaying log entries from the demo service.
+The viewer connects to `ws://localhost:8080/api/v1/stream` and begins displaying log entries from the demo service.
 
-## Step 5: Explore
+### Explore
 
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Server health**: http://localhost:8080/health
@@ -56,4 +83,4 @@ The viewer will connect to the server at `ws://localhost:8082` and begin display
 ## Next Steps
 
 - Read the [Features Guide](features.md) for an overview of viewer capabilities
-- Integrate the client SDK into your own application (see [main README](../README.md#3-integrate-your-application))
+- Integrate the client SDK into your own application (see [main README](../README.md#client-sdk))

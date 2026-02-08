@@ -24,7 +24,10 @@ class LogListView extends StatefulWidget {
   final bool selectionMode;
   final Set<String> selectedEntryIds;
   final ValueChanged<String>? onEntrySelected;
-  final ValueChanged<String>? onEntryRangeSelected;
+  final void Function(String targetId, List<String> orderedIds)?
+  onEntryRangeSelected;
+  final Set<String> bookmarkedEntryIds;
+  final Set<String> stickyOverrideIds;
 
   const LogListView({
     super.key,
@@ -32,12 +35,18 @@ class LogListView extends StatefulWidget {
     this.textFilter,
     this.selectedSessionIds = const {},
     this.activeSeverities = const {
-      'debug', 'info', 'warning', 'error', 'critical',
+      'debug',
+      'info',
+      'warning',
+      'error',
+      'critical',
     },
     this.selectionMode = false,
     this.selectedEntryIds = const {},
     this.onEntrySelected,
     this.onEntryRangeSelected,
+    this.bookmarkedEntryIds = const {},
+    this.stickyOverrideIds = const {},
   });
 
   @override
@@ -51,6 +60,7 @@ class _LogListViewState extends State<LogListView> {
   final Set<String> _collapsedGroups = {};
   final Set<String> _expandedStickyGroups = {};
   final Set<String> _processedUnpinIds = {};
+  List<DisplayEntry> _currentDisplayEntries = [];
   bool _isLiveMode = true;
   int _newLogCount = 0;
   int _selectedIndex = -1;
@@ -75,11 +85,16 @@ class _LogListViewState extends State<LogListView> {
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
     final atBottom = pos.pixels >= pos.maxScrollExtent - 24;
-    final newFirst =
-        (pos.pixels / _estimatedRowHeight).floor().clamp(0, 1 << 30);
+    final newFirst = (pos.pixels / _estimatedRowHeight).floor().clamp(
+      0,
+      1 << 30,
+    );
     if (newFirst != _firstVisibleIndex) _firstVisibleIndex = newFirst;
     if (atBottom && !_isLiveMode) {
-      setState(() { _isLiveMode = true; _newLogCount = 0; });
+      setState(() {
+        _isLiveMode = true;
+        _newLogCount = 0;
+      });
     } else if (!atBottom && _isLiveMode) {
       setState(() => _isLiveMode = false);
     }
@@ -92,7 +107,19 @@ class _LogListViewState extends State<LogListView> {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
     );
-    setState(() { _isLiveMode = true; _newLogCount = 0; });
+    setState(() {
+      _isLiveMode = true;
+      _newLogCount = 0;
+    });
+  }
+
+  bool _isShiftHeld() {
+    return HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.shiftLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.shiftRight,
+        );
   }
 
   void _onHiddenTap(String? groupId) {
@@ -106,17 +133,20 @@ class _LogListViewState extends State<LogListView> {
 
   void _handlePointerSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent || !_scrollController.hasClients) return;
-    final altHeld = HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.altLeft) ||
+    final altHeld =
         HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.altRight);
+          LogicalKeyboardKey.altLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.altRight,
+        );
     if (altHeld) {
       final lines = event.scrollDelta.dy.sign.toInt();
-      final target =
-          (_scrollController.offset + lines * _estimatedRowHeight).clamp(
-        _scrollController.position.minScrollExtent,
-        _scrollController.position.maxScrollExtent,
-      );
+      final target = (_scrollController.offset + lines * _estimatedRowHeight)
+          .clamp(
+            _scrollController.position.minScrollExtent,
+            _scrollController.position.maxScrollExtent,
+          );
       _scrollController.animateTo(
         target,
         duration: const Duration(milliseconds: 50),
@@ -125,8 +155,10 @@ class _LogListViewState extends State<LogListView> {
     } else {
       final pos = _scrollController.position;
       _scrollController.jumpTo(
-        (pos.pixels + event.scrollDelta.dy)
-            .clamp(pos.minScrollExtent, pos.maxScrollExtent),
+        (pos.pixels + event.scrollDelta.dy).clamp(
+          pos.minScrollExtent,
+          pos.maxScrollExtent,
+        ),
       );
     }
   }
@@ -157,9 +189,12 @@ class _LogListViewState extends State<LogListView> {
       entries: filteredEntries,
       textFilter: widget.textFilter,
       collapsedGroups: _collapsedGroups,
+      stickyOverrideIds: widget.stickyOverrideIds,
     );
-    final effectiveFirstVisible =
-        _isLiveMode ? displayEntries.length : _firstVisibleIndex;
+    _currentDisplayEntries = displayEntries;
+    final effectiveFirstVisible = _isLiveMode
+        ? displayEntries.length
+        : _firstVisibleIndex;
     final stickySections = computeStickySections(
       displayEntries,
       firstVisibleIndex: effectiveFirstVisible,
@@ -211,8 +246,7 @@ class _LogListViewState extends State<LogListView> {
                       controller: _scrollController,
                       physics: const ClampingScrollPhysics(),
                       itemCount: displayEntries.length,
-                      itemBuilder: (ctx, i) =>
-                          _buildItem(displayEntries[i], i),
+                      itemBuilder: (ctx, i) => _buildItem(displayEntries[i], i),
                     ),
                   ),
                 ),
@@ -248,24 +282,36 @@ class _LogListViewState extends State<LogListView> {
       isSelected: _selectedIndex == index,
       selectionMode: widget.selectionMode,
       isSelectionSelected: widget.selectedEntryIds.contains(entry.id),
-      onSelect: () => widget.onEntrySelected?.call(entry.id),
+      onSelect: () {
+        if (widget.selectionMode && _isShiftHeld()) {
+          final orderedIds = _currentDisplayEntries
+              .map((e) => e.entry.id)
+              .toList();
+          widget.onEntryRangeSelected?.call(entry.id, orderedIds);
+        } else {
+          widget.onEntrySelected?.call(entry.id);
+        }
+      },
+      isBookmarked: widget.bookmarkedEntryIds.contains(entry.id),
       groupDepth: display.depth,
       onTap: () {
         setState(() {
           _selectedIndex = _selectedIndex == index ? -1 : index;
         });
       },
-      onGroupToggle: entry.type == LogType.group &&
+      onGroupToggle:
+          entry.type == LogType.group &&
               entry.groupAction == GroupAction.open &&
               !display.isStandalone
           ? () => setState(() {
-                final gid = entry.groupId ?? entry.id;
-                _collapsedGroups.contains(gid)
-                    ? _collapsedGroups.remove(gid)
-                    : _collapsedGroups.add(gid);
-              })
+              final gid = entry.groupId ?? entry.id;
+              _collapsedGroups.contains(gid)
+                  ? _collapsedGroups.remove(gid)
+                  : _collapsedGroups.add(gid);
+            })
           : null,
-      isCollapsed: entry.type == LogType.group &&
+      isCollapsed:
+          entry.type == LogType.group &&
           entry.groupAction == GroupAction.open &&
           !display.isStandalone &&
           _collapsedGroups.contains(entry.groupId ?? entry.id),

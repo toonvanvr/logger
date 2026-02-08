@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../models/server_message.dart';
 import '../../services/session_store.dart';
+import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
-import '../../theme/typography.dart';
 import 'overflow_menu.dart';
 import 'session_button.dart';
 import 'window_controls.dart';
@@ -70,21 +70,6 @@ class _SessionSelectorState extends State<SessionSelector> {
       ),
       child: Row(
         children: [
-          // App title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              'Logger',
-              style: LoggerTypography.headerBtn.copyWith(
-                color: LoggerColors.fgSecondary,
-              ),
-            ),
-          ),
-          Container(
-            width: 1,
-            height: _headerHeight,
-            color: LoggerColors.borderSubtle,
-          ),
           // Session buttons with horizontal scroll
           Expanded(
             child: LayoutBuilder(
@@ -162,6 +147,13 @@ class _SessionSelectorState extends State<SessionSelector> {
             tooltip: 'Toggle settings panel',
             isActive: false,
             onTap: widget.onRpcToggle,
+          ),
+          // Mini mode toggle
+          HeaderIconButton(
+            icon: Icons.view_compact_outlined,
+            tooltip: 'Mini mode (Ctrl+M)',
+            isActive: false,
+            onTap: () => context.read<SettingsService>().setMiniMode(true),
           ),
           const SizedBox(width: 4),
           // Always-on-top toggle

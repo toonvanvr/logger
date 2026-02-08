@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd shared && bun install && bun test
+      - run: cd client && bun install && bun test
+      - run: cd server && bun install && bun test
+      - run: cd mcp && bun install && bun test
+
+  test-flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd app && flutter pub get
+      - run: cd app && flutter analyze
+      - run: cd app && flutter test
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Audit server dependencies
+        run: cd server && bun install && bun pm ls --all
+        continue-on-error: true
+      - name: Audit client dependencies
+        run: cd client && bun install && bun pm ls --all
+        continue-on-error: true

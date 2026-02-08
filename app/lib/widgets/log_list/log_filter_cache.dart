@@ -74,21 +74,27 @@ class LogFilterCache {
     var results = logStore
         .filter(section: sectionFilter)
         .where((e) => e.stickyAction != 'unpin')
+        .where((e) => e.type != LogType.state)
         .where((e) => activeSeverities.contains(e.severity.name));
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.
     if (textFilter != null && textFilter.isNotEmpty) {
-      final smartSearch = PluginRegistry.instance
-          .getEnabledPlugins<SmartSearchPlugin>()
-          .firstOrNull;
-      if (smartSearch != null) {
-        results = results.where((e) => smartSearch.matches(e, textFilter));
+      if (textFilter.startsWith('state:')) {
+        final key = textFilter.substring(6);
+        results = results.where((e) => e.stateKey == key);
       } else {
-        final lower = textFilter.toLowerCase();
-        results = results.where((e) {
-          final text = e.text?.toLowerCase() ?? '';
-          return text.contains(lower);
-        });
+        final smartSearch = PluginRegistry.instance
+            .getEnabledPlugins<SmartSearchPlugin>()
+            .firstOrNull;
+        if (smartSearch != null) {
+          results = results.where((e) => smartSearch.matches(e, textFilter));
+        } else {
+          final lower = textFilter.toLowerCase();
+          results = results.where((e) {
+            final text = e.text?.toLowerCase() ?? '';
+            return text.contains(lower);
+          });
+        }
       }
     }
 
@@ -102,9 +108,7 @@ class LogFilterCache {
 
     // Session filter.
     if (selectedSessionIds.isNotEmpty) {
-      results = results.where(
-        (e) => selectedSessionIds.contains(e.sessionId),
-      );
+      results = results.where((e) => selectedSessionIds.contains(e.sessionId));
     }
 
     return results.toList();

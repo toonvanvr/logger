@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
-import '../../theme/typography.dart';
 
 /// Dense 28px titlebar for mini mode, replacing the normal SessionSelector.
 ///
@@ -25,18 +26,6 @@ class MiniTitleBar extends StatelessWidget {
       color: LoggerColors.bgRaised,
       child: Row(
         children: [
-          // Left: App name
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Text(
-              'Logger',
-              style: LoggerTypography.badge.copyWith(
-                fontSize: 10,
-                color: LoggerColors.fgSecondary,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
           const SizedBox(width: 8),
           // Filter toggle
           _MiniButton(
@@ -50,6 +39,12 @@ class MiniTitleBar extends StatelessWidget {
             icon: Icons.settings,
             tooltip: 'Settings',
             onTap: onSettingsToggle,
+          ),
+          // Expand: exit mini mode
+          _MiniButton(
+            icon: Icons.open_in_full,
+            tooltip: 'Exit mini mode (Ctrl+M)',
+            onTap: () => context.read<SettingsService>().setMiniMode(false),
           ),
           // Center: Drag area for window move
           const Expanded(child: _DragArea()),

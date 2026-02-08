@@ -44,7 +44,8 @@ void main() {
   testWidgets('renders with no sessions', (tester) async {
     await tester.pumpWidget(_buildTestWidget());
 
-    expect(find.text('Logger'), findsOneWidget);
+    // Banner removed — no "Logger" text
+    expect(find.text('Logger'), findsNothing);
     // No session buttons → no overflow button
     expect(find.text('···'), findsNothing);
   });

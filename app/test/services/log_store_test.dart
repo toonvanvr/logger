@@ -281,5 +281,74 @@ void main() {
     test('getState returns empty map for unknown session', () {
       expect(store.getState('unknown'), isEmpty);
     });
+
+    // ── Eviction tests ──
+
+    group('entry cap eviction', () {
+      test('entries below cap are not evicted', () {
+        final entries = List.generate(100, (i) => _makeEntry(id: 'e$i'));
+        store.addEntries(entries);
+
+        expect(store.length, 100);
+        expect(store.entries.first.id, 'e0');
+        expect(store.entries.last.id, 'e99');
+      });
+
+      test('addEntry evicts oldest when cap exceeded', () {
+        // Fill to exactly maxEntries
+        final entries = List.generate(
+          LogStore.maxEntries,
+          (i) => _makeEntry(id: 'e$i'),
+        );
+        store.addEntries(entries);
+        expect(store.length, LogStore.maxEntries);
+
+        // Add one more — oldest should be evicted
+        store.addEntry(_makeEntry(id: 'overflow'));
+
+        expect(store.length, LogStore.maxEntries);
+        expect(store.entries.first.id, 'e1');
+        expect(store.entries.last.id, 'overflow');
+      });
+
+      test('id index remains valid after eviction', () {
+        final entries = List.generate(
+          LogStore.maxEntries,
+          (i) => _makeEntry(id: 'e$i'),
+        );
+        store.addEntries(entries);
+
+        // Add 5 more to trigger eviction of first 5
+        for (var i = 0; i < 5; i++) {
+          store.addEntry(_makeEntry(id: 'new$i'));
+        }
+
+        expect(store.length, LogStore.maxEntries);
+
+        // Upsert via replace should still find the correct entry by id
+        store.addEntry(_makeEntry(id: 'new0', text: 'updated', replace: true));
+        final idx = store.entries.indexWhere((e) => e.id == 'new0');
+        expect(idx, isNonNegative);
+        expect(store.entries[idx].text, 'updated');
+        // Length should not change from a replace
+        expect(store.length, LogStore.maxEntries);
+      });
+
+      test('addEntries batch eviction works', () {
+        final initial = List.generate(
+          LogStore.maxEntries,
+          (i) => _makeEntry(id: 'e$i'),
+        );
+        store.addEntries(initial);
+
+        // Add batch of 10 — oldest 10 should be evicted
+        final batch = List.generate(10, (i) => _makeEntry(id: 'batch$i'));
+        store.addEntries(batch);
+
+        expect(store.length, LogStore.maxEntries);
+        expect(store.entries.first.id, 'e10');
+        expect(store.entries.last.id, 'batch9');
+      });
+    });
   });
 }

@@ -12,6 +12,7 @@ class DisplayEntry {
 
   /// True when this group-open has no visible children (text filtering).
   final bool isStandalone;
+  final bool isAutoClose;
 
   const DisplayEntry({
     required this.entry,
@@ -19,6 +20,7 @@ class DisplayEntry {
     this.isSticky = false,
     this.parentGroupId,
     this.isStandalone = false,
+    this.isAutoClose = false,
   });
 }
 
@@ -27,6 +29,7 @@ List<DisplayEntry> processGrouping({
   required List<LogEntry> entries,
   required String? textFilter,
   required Set<String> collapsedGroups,
+  Set<String>? stickyOverrideIds,
 }) {
   // Pre-scan to find group IDs that have at least one non-group child.
   final groupIdsWithChildren = <String>{};
@@ -71,38 +74,43 @@ List<DisplayEntry> processGrouping({
 
         if (!isHidden) {
           if (!hasChildren && hasTextFilter) {
-            result.add(DisplayEntry(
-              entry: entry,
-              depth: depth,
-              isSticky: isSticky,
-              parentGroupId: parentGroupId,
-              isStandalone: true,
-            ));
+            result.add(
+              DisplayEntry(
+                entry: entry,
+                depth: depth,
+                isSticky: isSticky,
+                parentGroupId: parentGroupId,
+                isStandalone: true,
+              ),
+            );
           } else {
-            result.add(DisplayEntry(
-              entry: entry,
-              depth: depth,
-              isSticky: isSticky,
-              parentGroupId: parentGroupId,
-            ));
+            result.add(
+              DisplayEntry(
+                entry: entry,
+                depth: depth,
+                isSticky: isSticky,
+                parentGroupId: parentGroupId,
+              ),
+            );
           }
         }
         groupStack.add(gid);
         depth++;
       } else if (entry.groupAction == GroupAction.close) {
         if (depth > 0) depth--;
-        final closedId =
-            groupStack.isNotEmpty ? groupStack.removeLast() : null;
+        final closedId = groupStack.isNotEmpty ? groupStack.removeLast() : null;
         if (closedId != null) stickyGroupIds.remove(closedId);
 
         final closeHasChildren =
             closedId != null && groupIdsWithChildren.contains(closedId);
         if (!isHidden && (closeHasChildren || !hasTextFilter)) {
-          result.add(DisplayEntry(
-            entry: entry,
-            depth: depth,
-            parentGroupId: parentGroupId,
-          ));
+          result.add(
+            DisplayEntry(
+              entry: entry,
+              depth: depth,
+              parentGroupId: parentGroupId,
+            ),
+          );
         }
       }
     } else {
@@ -110,15 +118,43 @@ List<DisplayEntry> processGrouping({
         final isInStickyGroup = groupStack.any(
           (gid) => stickyGroupIds.contains(gid),
         );
-        final isSticky = entry.sticky == true || isInStickyGroup;
-        result.add(DisplayEntry(
-          entry: entry,
-          depth: depth,
-          isSticky: isSticky,
-          parentGroupId: parentGroupId,
-        ));
+        final isSticky =
+            entry.sticky == true ||
+            isInStickyGroup ||
+            (stickyOverrideIds?.contains(entry.id) ?? false);
+        result.add(
+          DisplayEntry(
+            entry: entry,
+            depth: depth,
+            isSticky: isSticky,
+            parentGroupId: parentGroupId,
+          ),
+        );
       }
     }
+  }
+
+  // Auto-close remaining open groups to prevent depth corruption.
+  while (groupStack.isNotEmpty) {
+    if (depth > 0) depth--;
+    final gid = groupStack.removeLast();
+    stickyGroupIds.remove(gid);
+    result.add(
+      DisplayEntry(
+        entry: LogEntry(
+          id: '${gid}_autoclose',
+          timestamp: entries.last.timestamp,
+          sessionId: entries.last.sessionId,
+          severity: entries.last.severity,
+          type: LogType.group,
+          groupAction: GroupAction.close,
+          groupId: gid,
+        ),
+        depth: depth,
+        isAutoClose: true,
+        parentGroupId: groupStack.isNotEmpty ? groupStack.last : null,
+      ),
+    );
   }
 
   return result;
@@ -183,10 +219,12 @@ List<StickySection> computeStickySections(
       }
 
       hiddenCount = entries
-          .where((d) =>
-              d.parentGroupId == parentId &&
-              !d.isSticky &&
-              d.entry.type != LogType.group)
+          .where(
+            (d) =>
+                d.parentGroupId == parentId &&
+                !d.isSticky &&
+                d.entry.type != LogType.group,
+          )
           .length;
     }
 
@@ -201,19 +239,23 @@ List<StickySection> computeStickySections(
     List<LogEntry> sectionEntries;
     if (parentId != null && expandedStickyGroups.contains(parentId)) {
       final allGroupEntries = entries
-          .where((d) =>
-              d.parentGroupId == parentId &&
-              d.entry.type != LogType.group &&
-              !dismissedIds.contains(d.entry.id))
+          .where(
+            (d) =>
+                d.parentGroupId == parentId &&
+                d.entry.type != LogType.group &&
+                !dismissedIds.contains(d.entry.id),
+          )
           .take(10)
           .map((d) => d.entry)
           .toList();
       sectionEntries = allGroupEntries;
       final totalInGroup = entries
-          .where((d) =>
-              d.parentGroupId == parentId &&
-              d.entry.type != LogType.group &&
-              !dismissedIds.contains(d.entry.id))
+          .where(
+            (d) =>
+                d.parentGroupId == parentId &&
+                d.entry.type != LogType.group &&
+                !dismissedIds.contains(d.entry.id),
+          )
           .length;
       hiddenCount = totalInGroup > 10 ? totalInGroup - 10 : 0;
     } else {
@@ -221,12 +263,14 @@ List<StickySection> computeStickySections(
     }
 
     if (sectionEntries.isNotEmpty || groupHeader != null) {
-      sections.add(StickySection(
-        groupHeader: groupHeader,
-        entries: sectionEntries,
-        hiddenCount: hiddenCount,
-        groupDepth: groupDepth,
-      ));
+      sections.add(
+        StickySection(
+          groupHeader: groupHeader,
+          entries: sectionEntries,
+          hiddenCount: hiddenCount,
+          groupDepth: groupDepth,
+        ),
+      );
     }
   }
 

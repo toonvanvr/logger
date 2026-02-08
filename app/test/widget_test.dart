@@ -37,7 +37,8 @@ void main() {
     );
 
     // Verify the static UI renders before the post-frame callback fires.
-    expect(find.text('Logger'), findsOneWidget);
+    // Banner removed — "Logger" text no longer shown in header.
+    expect(find.text('Logger'), findsNothing);
     expect(find.text('Waiting for logs...'), findsOneWidget);
   });
 }

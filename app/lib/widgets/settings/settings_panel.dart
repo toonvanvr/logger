@@ -4,6 +4,7 @@ import '../../plugins/plugin_registry.dart';
 import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import '../../version.dart';
 import 'connection_settings.dart';
 import 'settings_sub_panels.dart';
 import 'tool_group.dart';
@@ -173,6 +174,25 @@ class _PanelContentState extends State<_PanelContent> {
             ),
           ],
         ),
+        if (appVersion.isNotEmpty || commitSha.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: Opacity(
+              opacity: 0.4,
+              child: Text(
+                [
+                  if (appVersion.isNotEmpty) 'v$appVersion',
+                  if (commitSha.isNotEmpty) commitSha.substring(0, 7),
+                ].join(' · '),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontFamily: 'JetBrains Mono',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
       ],
     );
   }

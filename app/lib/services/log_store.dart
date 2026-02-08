@@ -4,6 +4,9 @@ import '../models/log_entry.dart';
 
 /// In-memory log storage for the viewer.
 class LogStore extends ChangeNotifier {
+  /// Maximum number of entries before FIFO eviction kicks in.
+  static const int maxEntries = 100000;
+
   final List<LogEntry> _entries = [];
   final Map<String, int> _idIndex = {};
   final Map<String, Map<String, dynamic>> _stateStore = {};
@@ -58,6 +61,7 @@ class LogStore extends ChangeNotifier {
     // Normal insert
     _idIndex[entry.id] = _entries.length;
     _entries.add(entry);
+    _evictIfNeeded();
     _version++;
     notifyListeners();
   }
@@ -83,8 +87,23 @@ class LogStore extends ChangeNotifier {
         _entries.add(entry);
       }
     }
+    _evictIfNeeded();
     _version++;
     notifyListeners();
+  }
+
+  /// Remove oldest entries when the cap is exceeded, rebuilding the id index.
+  void _evictIfNeeded() {
+    if (_entries.length <= maxEntries) return;
+    final excess = _entries.length - maxEntries;
+    for (var i = 0; i < excess; i++) {
+      _idIndex.remove(_entries[i].id);
+    }
+    _entries.removeRange(0, excess);
+    _idIndex.clear();
+    for (var i = 0; i < _entries.length; i++) {
+      _idIndex[_entries[i].id] = i;
+    }
   }
 
   /// Clear all stored entries and state.

@@ -55,6 +55,32 @@ Sticky entries are log entries pinned to the top of the viewport.
 
 ---
 
+## Layout
+
+| Shortcut | Action |
+|----------|--------|
+| **Ctrl + M** | Toggle mini mode (compact title bar) |
+
+---
+
+## Selection
+
+| Interaction | Action |
+|-------------|--------|
+| **Hold Shift** | Enter selection mode |
+| **Click (in selection mode)** | Toggle entry selection |
+| **Shift + Click** | Range select — select all entries between the last-clicked entry (anchor) and the clicked entry |
+
+---
+
+## State View
+
+| Interaction | Action |
+|-------------|--------|
+| **Click state card** | Filter log list to entries that set this state key (applies `state:key` filter) |
+
+---
+
 ## Quick Reference Card
 
 ```
@@ -75,4 +101,15 @@ Time Range (Mouse)
 Sticky
   Click ✕                Dismiss one entry
   Alt + Click ✕          Dismiss entire group
+
+Layout
+  Ctrl + M               Toggle mini mode
+
+Selection
+  Hold Shift             Enter selection mode
+  Click (selection)      Toggle entry select
+  Shift + Click          Range select
+
+State View
+  Click state card       Filter by state key
 ```

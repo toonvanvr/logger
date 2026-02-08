@@ -31,7 +31,8 @@ class ConnectionSettings extends StatelessWidget {
           ),
         const SizedBox(height: 8),
         _AddConnectionButton(
-          onAdd: () => manager.addConnection('ws://localhost:8082'),
+          onAdd: () =>
+              manager.addConnection('ws://localhost:8080/api/v1/stream'),
         ),
       ],
     );

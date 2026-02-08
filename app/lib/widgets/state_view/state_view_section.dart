@@ -11,7 +11,9 @@ import 'state_chart_strip.dart';
 /// Collapsible section showing persistent state key-value pairs.
 /// Placed between SectionTabs and LogListView.
 class StateViewSection extends StatelessWidget {
-  const StateViewSection({super.key});
+  final ValueChanged<String>? onStateFilter;
+
+  const StateViewSection({super.key, this.onStateFilter});
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +110,9 @@ class StateViewSection extends StatelessWidget {
                               (entry) => StateCard(
                                 stateKey: entry.key,
                                 stateValue: entry.value,
+                                onTap: onStateFilter != null
+                                    ? () => onStateFilter!('state:${entry.key}')
+                                    : null,
                               ),
                             )
                             .toList(),

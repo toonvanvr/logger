@@ -7,50 +7,60 @@ import '../../theme/typography.dart';
 class StateCard extends StatelessWidget {
   final String stateKey;
   final dynamic stateValue;
+  final VoidCallback? onTap;
 
   const StateCard({
     super.key,
     required this.stateKey,
     required this.stateValue,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final displayValue = stateValue?.toString() ?? 'null';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: LoggerColors.bgSurface,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: LoggerColors.borderSubtle),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            stateKey,
-            style: LoggerTypography.logMeta.copyWith(
-              color: LoggerColors.fgMuted,
-              fontSize: 10,
-            ),
+    return MouseRegion(
+      cursor: onTap != null
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: LoggerColors.bgSurface,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: LoggerColors.borderSubtle),
           ),
-          const SizedBox(width: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 200),
-            child: Tooltip(
-              message: displayValue,
-              child: Text(
-                displayValue,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                stateKey,
                 style: LoggerTypography.logMeta.copyWith(
-                  color: LoggerColors.fgPrimary,
+                  color: LoggerColors.fgMuted,
                   fontSize: 10,
                 ),
               ),
-            ),
+              const SizedBox(width: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Tooltip(
+                  message: displayValue,
+                  child: Text(
+                    displayValue,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: LoggerTypography.logMeta.copyWith(
+                      color: LoggerColors.fgPrimary,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
