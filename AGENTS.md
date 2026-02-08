@@ -18,9 +18,14 @@ logger/
 │   │   ├── models/       Data models (LogEntry, Session, etc.)
 │   │   ├── plugins/      Plugin system (registry, types, builtin/)
 │   │   ├── screens/      Top-level screens
-│   │   ├── services/     WebSocket, state management
+│   │   ├── services/     WebSocket, state management, connection manager
 │   │   ├── theme/        Color system, typography
 │   │   └── widgets/      Reusable UI components
+│   │       ├── header/       Session button, severity toggle, bookmark
+│   │       ├── log_list/     List builder, filter cache, selection actions, sticky headers
+│   │       ├── mini_mode/    Dense mini-mode title bar
+│   │       ├── settings/     Tool groups, connection CRUD, sub-panels
+│   │       └── state_view/   Collapsible persistent state sections
 │   └── test/             Widget & unit tests
 ├── client/           TypeScript client SDK
 │   └── src/
@@ -79,6 +84,8 @@ logger/
 | `app/lib/main.dart` | Flutter app entry point |
 | `app/lib/plugins/plugin_registry.dart` | Plugin registry singleton |
 | `app/lib/plugins/plugin_types.dart` | Plugin base interfaces (Renderer, Filter, Transform, Tool) |
+| `app/lib/services/connection_manager.dart` | Multi-server connection management with auto-reconnect |
+| `app/lib/widgets/state_view/state_view_section.dart` | Persistent state key-value view section |
 
 ## Build, Test, Run
 
@@ -152,7 +159,7 @@ The viewer app has a plugin architecture for extensibility:
 
 Plugins register with `PluginRegistry.instance.register(plugin)`. Each plugin has a `PluginManifest` with id, name, version, and tier (stdlib/community).
 
-Built-in plugins: `chart`, `id_uniquifier`, `kv` (key-value), `log_type_filter`, `progress`, `smart_search`, `table`.
+Built-in plugins: `chart`, `docker_logs`, `id_uniquifier`, `kv` (key-value), `log_type_filter`, `progress`, `smart_search`, `table`, `theme`.
 
 See `docs/reference/plugin-api.md` for the full API.
 

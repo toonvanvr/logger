@@ -1,5 +1,5 @@
 import 'package:app/screens/log_viewer.dart';
-import 'package:app/services/log_connection.dart';
+import 'package:app/services/connection_manager.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/query_store.dart';
 import 'package:app/services/rpc_service.dart';
@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => LogConnection()),
+          ChangeNotifierProvider(create: (_) => ConnectionManager()),
           ChangeNotifierProvider(create: (_) => LogStore()),
           ChangeNotifierProvider(create: (_) => SessionStore()),
           ChangeNotifierProvider(create: (_) => QueryStore()),
