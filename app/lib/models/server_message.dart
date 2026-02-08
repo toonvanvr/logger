@@ -115,6 +115,12 @@ class ServerMessage {
   final bool? hasMore;
   final String? cursor;
 
+  /// Which backend served this response: 'buffer' or 'store'.
+  final String? source;
+
+  /// ISO 8601 server timestamp when query was executed (for dedup).
+  final String? fenceTs;
+
   const ServerMessage({
     required this.type,
     this.ackIds,
@@ -137,6 +143,8 @@ class ServerMessage {
     this.historyEntries,
     this.hasMore,
     this.cursor,
+    this.source,
+    this.fenceTs,
   });
 
   factory ServerMessage.fromJson(Map<String, dynamic> json) {
@@ -174,6 +182,8 @@ class ServerMessage {
           .toList(),
       hasMore: json['has_more'] as bool?,
       cursor: json['cursor'] as String?,
+      source: json['source'] as String?,
+      fenceTs: json['fence_ts'] as String?,
     );
   }
 }

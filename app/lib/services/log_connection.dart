@@ -69,6 +69,7 @@ class LogConnection extends ChangeNotifier {
     String? sessionId,
     int? limit,
     String? cursor,
+    String? source,
   }) {
     send(
       ViewerMessage(
@@ -79,6 +80,7 @@ class LogConnection extends ChangeNotifier {
         sessionId: sessionId,
         limit: limit,
         cursor: cursor,
+        source: source,
       ),
     );
   }

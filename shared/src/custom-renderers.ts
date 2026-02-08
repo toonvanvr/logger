@@ -135,6 +135,28 @@ export const TimelineRendererData = z.object({
   }),
 });
 
+export const HttpRequestRendererData = z.object({
+  custom_type: z.literal('http_request'),
+  custom_data: z.object({
+    method: z.string(),
+    url: z.string(),
+    request_headers: z.record(z.string()).optional(),
+    request_body: z.string().optional(),
+    request_body_size: z.number().optional(),
+    status: z.number().optional(),
+    status_text: z.string().optional(),
+    response_headers: z.record(z.string()).optional(),
+    response_body: z.string().optional(),
+    response_body_size: z.number().optional(),
+    started_at: z.string(),
+    duration_ms: z.number().optional(),
+    ttfb_ms: z.number().optional(),
+    request_id: z.string().optional(),
+    content_type: z.string().optional(),
+    is_error: z.boolean().optional(),
+  }),
+});
+
 // ─── Discriminated Union ─────────────────────────────────────────────
 
 export const CustomRendererData = z.discriminatedUnion('custom_type', [
@@ -145,5 +167,6 @@ export const CustomRendererData = z.discriminatedUnion('custom_type', [
   DiffRendererData,
   TreeRendererData,
   TimelineRendererData,
+  HttpRequestRendererData,
 ]);
 export type CustomRendererData = z.infer<typeof CustomRendererData>;

@@ -184,8 +184,14 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
           return Response.json({ ok: false, error: processed.error }, { status: 400 });
         }
 
-        ingestEntry(processed.entry, deps);
-        return Response.json({ ok: true, id: processed.entry.id });
+        const entry = processed.entry;
+
+        if (!rateLimiter.tryConsume(entry.session_id)) {
+          return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 });
+        }
+
+        ingestEntry(entry, deps);
+        return Response.json({ ok: true, id: entry.id });
       },
     },
   };

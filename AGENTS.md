@@ -22,10 +22,15 @@ logger/
 │   │   ├── theme/        Color system, typography
 │   │   └── widgets/      Reusable UI components
 │   │       ├── header/       Session button, severity toggle, bookmark
+│   │       ├── landing/      Empty landing page
 │   │       ├── log_list/     List builder, filter cache, selection actions, sticky headers
 │   │       ├── mini_mode/    Dense mini-mode title bar
+│   │       ├── renderers/    Log content renderers (ANSI, text, JSON, custom/)
+│   │       ├── rpc/          RPC request/response UI
 │   │       ├── settings/     Tool groups, connection CRUD, sub-panels
-│   │       └── state_view/   Collapsible persistent state sections
+│   │       ├── state_view/   Collapsible persistent state sections
+│   │       ├── status_bar/   Connection status, counts, active filters
+│   │       └── time_travel/  Time range zoom/pan minimap
 │   └── test/             Widget & unit tests
 ├── client/           TypeScript client SDK
 │   └── src/
@@ -50,6 +55,7 @@ logger/
 │       ├── viewer-message.ts Viewer→Server messages
 │       ├── custom-renderers.ts  Custom renderer type definitions
 │       └── constants.ts      Shared constants
+├── docker-sidecar/   Docker container log forwarding sidecar
 ├── mcp/              MCP tool server for AI debugging
 ├── demo/             Demo log generator with scenarios
 ├── grafana/          Dashboard & datasource configs
@@ -85,7 +91,19 @@ logger/
 | `app/lib/plugins/plugin_registry.dart` | Plugin registry singleton |
 | `app/lib/plugins/plugin_types.dart` | Plugin base interfaces (Renderer, Filter, Transform, Tool) |
 | `app/lib/services/connection_manager.dart` | Multi-server connection management with auto-reconnect |
+| `app/lib/services/time_range_service.dart` | Time range zoom/pan state management |
+| `app/lib/services/log_store.dart` | In-memory log storage with filtering |
+| `app/lib/widgets/header/filter_bar.dart` | Search/filter bar with autocomplete |
+| `app/lib/widgets/log_list/log_list_view.dart` | Scrollable log list with live mode |
 | `app/lib/widgets/state_view/state_view_section.dart` | Persistent state key-value view section |
+| `app/lib/widgets/state_view/shelf_card.dart` | Secondary state shelf card |
+| `app/lib/widgets/landing/empty_landing_page.dart` | Empty landing page when no sessions |
+| `app/lib/plugins/builtin/http_request_plugin.dart` | HTTP request tracking renderer plugin |
+| `server/src/store/index.ts` | Store abstraction layer |
+| `server/src/store/adapters/loki-adapter.ts` | Loki storage adapter |
+| `server/src/store/adapters/memory-adapter.ts` | In-memory storage adapter |
+| `server/src/modules/self-logger.ts` | Server self-logging module |
+| `docker-sidecar/src/main.ts` | Docker container log forwarding sidecar |
 
 ## Build, Test, Run
 
@@ -147,6 +165,13 @@ Key choices documented in `docs/architecture/decisions/`:
 - **File size:** Target 150 lines, hard max 300 lines per file
 - **Testing:** Tests alongside implementation; balanced code-first + test-driven
 - **No secrets in code:** API keys via env vars only
+
+### Vibe Coding (AI-assisted development)
+- **Branch:** `vibe/` prefix (e.g., `vibe/feature-name`)
+- **Commits:** `vibe(subject): description` format
+- **Workflow:** Agents commit on `vibe/` branch, human reviews and merges to `main`
+- **Tools:** Use `git checkout -b vibe/<topic>` before making changes
+- **Automation:** CI runs on all branches; release only from `main`
 
 ## Plugin System
 

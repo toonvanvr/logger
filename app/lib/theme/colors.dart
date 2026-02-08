@@ -65,6 +65,10 @@ class LoggerColors {
   static const syntaxError = Color(0xFFF07668);
   static const syntaxPath = Color(0xFF8DA4EF);
   static const syntaxLineNumber = Color(0xFF636D83);
+
+  // ── Overlays (§1.7) ──
+  static const scrim = Color(0x40000000);
+  static const highlight = Color(0x10E6B455);
 }
 
 /// Maps a severity string to its bar color.

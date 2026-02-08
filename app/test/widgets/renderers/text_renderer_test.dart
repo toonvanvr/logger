@@ -6,19 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeTextEntry({
   String text = 'hello world',
   ExceptionData? exception,
 }) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T10:00:00.000Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
-    type: LogType.text,
-    text: text,
-    exception: exception,
-  );
+  return makeTestEntry(text: text, exception: exception);
 }
 
 Widget _wrap(Widget child) {

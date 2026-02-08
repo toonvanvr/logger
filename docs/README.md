@@ -140,6 +140,26 @@ The filter bar supports:
 - Source and tag-based filtering
 - Time range selection
 
+### Historical Log Access
+
+Seamless scrollback into Loki-stored history beyond the in-memory ring buffer, providing full access to older log entries while maintaining real-time streaming.
+
+### HTTP Request Tracking
+
+Log entries with HAR-format HTTP request/response data are rendered as expandable panels with method, URL, status, headers, and body.
+
+### Secondary State Shelves
+
+State keys can be organized into named shelves — collapsible sections in the state view panel for grouping related application state.
+
+### Self-Logging
+
+The server logs its own internal events as structured entries visible in the viewer, aiding infrastructure debugging.
+
+### Empty Landing Page
+
+A friendly landing page with connection status and quick-start guidance when no sessions are active.
+
 ### Grafana Dashboards
 
 Pre-configured dashboards are included:

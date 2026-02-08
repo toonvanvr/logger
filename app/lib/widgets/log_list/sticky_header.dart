@@ -96,7 +96,7 @@ class _StickyHeaderOverlayState extends State<StickyHeaderOverlay> {
                 ),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x40000000),
+                    color: LoggerColors.scrim,
                     blurRadius: 8,
                     offset: Offset(0, 2),
                   ),

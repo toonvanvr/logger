@@ -2,14 +2,15 @@ import 'package:app/models/log_entry.dart';
 import 'package:app/services/time_range_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../test_helpers.dart';
+
 /// Helper to create a minimal LogEntry with given timestamp and severity.
 LogEntry _entry(String iso, {Severity severity = Severity.info}) {
-  return LogEntry(
+  return makeTestEntry(
     id: iso,
     timestamp: iso,
     sessionId: 's1',
     severity: severity,
-    type: LogType.text,
   );
 }
 

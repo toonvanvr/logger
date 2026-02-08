@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/log_entry.dart';
+import '../../services/log_connection.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
 import '../../services/time_range_service.dart';
@@ -14,6 +15,9 @@ import 'log_filter_cache.dart';
 import 'log_list_builder.dart';
 import 'log_row.dart';
 import 'sticky_header.dart';
+import 'sticky_section_builder.dart';
+
+part 'log_list_scroll.dart';
 
 /// Main virtualized log list with auto-scroll (LIVE mode) and sticky headers.
 class LogListView extends StatefulWidget {
@@ -53,114 +57,24 @@ class LogListView extends StatefulWidget {
   State<LogListView> createState() => _LogListViewState();
 }
 
-class _LogListViewState extends State<LogListView> {
-  final ScrollController _scrollController = ScrollController();
+class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
   final LogFilterCache _filterCache = LogFilterCache();
   final Set<String> _seenEntryIds = {};
   final Set<String> _collapsedGroups = {};
-  final Set<String> _expandedStickyGroups = {};
   final Set<String> _processedUnpinIds = {};
   List<DisplayEntry> _currentDisplayEntries = [];
-  bool _isLiveMode = true;
-  int _newLogCount = 0;
   int _selectedIndex = -1;
-  int _firstVisibleIndex = 0;
-  int _lastEntryCount = 0;
-  static const double _estimatedRowHeight = 28.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _initScroll();
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    _disposeScroll();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final pos = _scrollController.position;
-    final atBottom = pos.pixels >= pos.maxScrollExtent - 24;
-    final newFirst = (pos.pixels / _estimatedRowHeight).floor().clamp(
-      0,
-      1 << 30,
-    );
-    if (newFirst != _firstVisibleIndex) _firstVisibleIndex = newFirst;
-    if (atBottom && !_isLiveMode) {
-      setState(() {
-        _isLiveMode = true;
-        _newLogCount = 0;
-      });
-    } else if (!atBottom && _isLiveMode) {
-      setState(() => _isLiveMode = false);
-    }
-  }
-
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) return;
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-    );
-    setState(() {
-      _isLiveMode = true;
-      _newLogCount = 0;
-    });
-  }
-
-  bool _isShiftHeld() {
-    return HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftLeft,
-        ) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftRight,
-        );
-  }
-
-  void _onHiddenTap(String? groupId) {
-    if (groupId == null) return;
-    setState(() {
-      _expandedStickyGroups.contains(groupId)
-          ? _expandedStickyGroups.remove(groupId)
-          : _expandedStickyGroups.add(groupId);
-    });
-  }
-
-  void _handlePointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent || !_scrollController.hasClients) return;
-    final altHeld =
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.altLeft,
-        ) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.altRight,
-        );
-    if (altHeld) {
-      final lines = event.scrollDelta.dy.sign.toInt();
-      final target = (_scrollController.offset + lines * _estimatedRowHeight)
-          .clamp(
-            _scrollController.position.minScrollExtent,
-            _scrollController.position.maxScrollExtent,
-          );
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 50),
-        curve: Curves.easeOut,
-      );
-    } else {
-      final pos = _scrollController.position;
-      _scrollController.jumpTo(
-        (pos.pixels + event.scrollDelta.dy).clamp(
-          pos.minScrollExtent,
-          pos.maxScrollExtent,
-        ),
-      );
-    }
   }
 
   @override
@@ -192,27 +106,25 @@ class _LogListViewState extends State<LogListView> {
       stickyOverrideIds: widget.stickyOverrideIds,
     );
     _currentDisplayEntries = displayEntries;
-    final effectiveFirstVisible = _isLiveMode
-        ? displayEntries.length
-        : _firstVisibleIndex;
     final stickySections = computeStickySections(
       displayEntries,
-      firstVisibleIndex: effectiveFirstVisible,
+      firstVisibleIndex: _isLiveMode
+          ? displayEntries.length
+          : _firstVisibleIndex,
       dismissedIds: stickyState.dismissedIds,
       ignoredGroupIds: stickyState.ignoredGroupIds,
       expandedStickyGroups: _expandedStickyGroups,
       collapsedGroups: _collapsedGroups,
     );
 
-    if (displayEntries.length > _lastEntryCount && !_isLiveMode) {
-      _newLogCount += displayEntries.length - _lastEntryCount;
-    }
-    _lastEntryCount = displayEntries.length;
+    _trackNewEntries(displayEntries.length);
 
     if (_isLiveMode && displayEntries.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
+          _isAutoScrolling = true;
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          _isAutoScrolling = false;
         }
       });
     }
@@ -232,22 +144,19 @@ class _LogListViewState extends State<LogListView> {
           onPointerSignal: _handlePointerSignal,
           child: Column(
             children: [
-              if (stickySections.isNotEmpty)
-                StickyHeaderOverlay(
-                  sections: stickySections,
-                  onHiddenTap: _onHiddenTap,
-                  stickyState: stickyState,
-                ),
+              StickyHeaderOverlay(
+                sections: stickySections,
+                onHiddenTap: _onHiddenTap,
+                stickyState: stickyState,
+              ),
               Expanded(
                 child: Container(
                   color: LoggerColors.bgSurface,
-                  child: SelectionArea(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      physics: const ClampingScrollPhysics(),
-                      itemCount: displayEntries.length,
-                      itemBuilder: (ctx, i) => _buildItem(displayEntries[i], i),
-                    ),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: displayEntries.length,
+                    itemBuilder: (ctx, i) => _buildItem(displayEntries[i], i),
                   ),
                 ),
               ),
@@ -268,12 +177,7 @@ class _LogListViewState extends State<LogListView> {
 
   Widget _buildItem(DisplayEntry display, int index) {
     final entry = display.entry;
-    final isNew = !_seenEntryIds.contains(entry.id);
-    if (isNew) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _seenEntryIds.add(entry.id);
-      });
-    }
+    final isNew = _seenEntryIds.add(entry.id);
     return LogRow(
       key: ValueKey(entry.id),
       entry: entry,

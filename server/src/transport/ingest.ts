@@ -1,4 +1,5 @@
 import type { LogEntry } from '@logger/shared';
+import { isSystemSession } from '../modules/self-logger';
 import type { ServerDeps } from './types';
 
 /**
@@ -25,7 +26,7 @@ export function processEntry(
  * Ingest a validated entry: session tracking, buffer, Loki, WS broadcast, hooks.
  */
 export function ingestEntry(entry: LogEntry, deps: ServerDeps): void {
-  const { sessionManager, ringBuffer, lokiForwarder, wsHub, hookManager } = deps;
+  const { sessionManager, ringBuffer, lokiForwarder, wsHub, hookManager, storeWriter } = deps;
 
   if (entry.type === 'session') {
     sessionManager.handleSessionAction(entry);
@@ -40,7 +41,14 @@ export function ingestEntry(entry: LogEntry, deps: ServerDeps): void {
     ringBuffer.push(entry);
   }
 
-  lokiForwarder.push(entry);
+  if (!isSystemSession(entry.session_id)) {
+    if (storeWriter) {
+      storeWriter.push([entry]);
+    } else {
+      lokiForwarder.push(entry);
+    }
+  }
+
   wsHub.broadcast({ type: 'log', entry });
   hookManager.runPostStore(entry);
 }

@@ -4,16 +4,14 @@ import 'package:app/widgets/renderers/session_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeSessionEntry({
   SessionAction action = SessionAction.start,
   String appName = 'MyApp',
   String? version,
 }) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T12:00:00Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
+  return makeTestEntry(
     type: LogType.session,
     sessionAction: action,
     application: ApplicationInfo(name: appName, version: version),

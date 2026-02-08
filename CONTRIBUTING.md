@@ -52,3 +52,12 @@ This project is licensed under **MPL-2.0**. Contributions to existing files fall
 2. Make your changes — keep commits focused.
 3. Ensure all tests pass (`bun test` / `flutter test`).
 4. Submit a pull request with a clear description of the change.
+
+## Vibe Coding (AI-Assisted Development)
+
+When using AI agents for development:
+
+- **Branch:** use `vibe/` prefix (e.g., `vibe/feature-name`)
+- **Commits:** use `vibe(subject): description` format
+- **Workflow:** agents commit on `vibe/` branches, humans review and merge to `main`
+- **CI** runs on all branches; releases only from `main`

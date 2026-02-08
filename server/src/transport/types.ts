@@ -7,6 +7,8 @@ import type { RingBuffer } from '../modules/ring-buffer';
 import type { RpcBridge } from '../modules/rpc-bridge';
 import type { SessionManager } from '../modules/session-manager';
 import type { WebSocketHub } from '../modules/ws-hub';
+import type { LogStoreReader } from '../store/log-store-reader';
+import type { LogStoreWriter } from '../store/log-store-writer';
 
 export interface ServerConfig {
   host: string;
@@ -28,4 +30,6 @@ export interface ServerDeps {
   lokiForwarder: LokiForwarder;
   fileStore: FileStore;
   rpcBridge: RpcBridge;
+  storeWriter?: LogStoreWriter;
+  storeReader?: LogStoreReader;
 }

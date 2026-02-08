@@ -4,15 +4,10 @@ import 'package:app/widgets/renderers/image_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeImageEntry({ImageData? image}) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T12:00:00Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
-    type: LogType.image,
-    image: image,
-  );
+  return makeTestEntry(type: LogType.image, image: image);
 }
 
 Widget _wrap(Widget child) {

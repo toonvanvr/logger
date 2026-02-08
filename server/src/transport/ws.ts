@@ -145,7 +145,7 @@ export function setupWebSocket(deps: ServerDeps) {
     ws.send(JSON.stringify({ type: 'ack', ack_ids: [entry.id] }));
   }
 
-  function handleViewerMessage(ws: ServerWebSocket<WsData>, parsed: any): void {
+  async function handleViewerMessage(ws: ServerWebSocket<WsData>, parsed: any): Promise<void> {
     // RPC request from viewer → route to client
     if (parsed.type === 'rpc_request' && parsed.rpc_id) {
       rpcBridge.handleRequest({
@@ -158,22 +158,129 @@ export function setupWebSocket(deps: ServerDeps) {
       return;
     }
 
-    // Handle history_query: query ring buffer and respond
+    // Handle history_query: tiered query — buffer first, then store
     if (parsed.type === 'history_query') {
-      const result = deps.ringBuffer.query({
+      const fenceTs = new Date().toISOString();
+      const requestedSource: string = parsed.source ?? 'auto';
+      const limit = parsed.limit ?? 1000;
+
+      // Direct store query
+      if (requestedSource === 'store') {
+        if (!deps.storeReader) {
+          ws.send(JSON.stringify({
+            type: 'history',
+            query_id: parsed.query_id,
+            history_entries: [],
+            has_more: false,
+            source: 'buffer',
+            fence_ts: fenceTs,
+          }));
+          return;
+        }
+        const storeCursor = parsed.cursor?.startsWith('store:')
+          ? parsed.cursor.slice(6)
+          : parsed.cursor;
+        const storeResult = await deps.storeReader.query({
+          sessionId: parsed.session_id,
+          from: parsed.from,
+          to: parsed.to,
+          severity: parsed.severity,
+          search: parsed.search,
+          limit,
+          cursor: storeCursor,
+          direction: 'backward',
+        });
+        ws.send(JSON.stringify({
+          type: 'history',
+          query_id: parsed.query_id,
+          history_entries: storeResult.entries,
+          has_more: storeResult.cursor !== null,
+          cursor: storeResult.cursor ? `store:${storeResult.cursor}` : undefined,
+          source: 'store',
+          fence_ts: fenceTs,
+        }));
+        return;
+      }
+
+      // Buffer query (for 'buffer' or 'auto')
+      const bufCursor = parsed.cursor?.startsWith('buf:')
+        ? Number(parsed.cursor.slice(4))
+        : parsed.cursor === 'auto:buf-exhausted'
+          ? undefined
+          : parsed.cursor
+            ? Number(parsed.cursor)
+            : undefined;
+
+      // If cursor indicates buffer exhausted, go directly to store
+      if (parsed.cursor === 'auto:buf-exhausted' && requestedSource === 'auto') {
+        if (!deps.storeReader) {
+          ws.send(JSON.stringify({
+            type: 'history',
+            query_id: parsed.query_id,
+            history_entries: [],
+            has_more: false,
+            source: 'buffer',
+            fence_ts: fenceTs,
+          }));
+          return;
+        }
+        const storeResult = await deps.storeReader.query({
+          sessionId: parsed.session_id,
+          from: parsed.from,
+          to: parsed.to,
+          severity: parsed.severity,
+          search: parsed.search,
+          limit,
+          direction: 'backward',
+        });
+        ws.send(JSON.stringify({
+          type: 'history',
+          query_id: parsed.query_id,
+          history_entries: storeResult.entries,
+          has_more: storeResult.cursor !== null,
+          cursor: storeResult.cursor ? `store:${storeResult.cursor}` : undefined,
+          source: 'store',
+          fence_ts: fenceTs,
+        }));
+        return;
+      }
+
+      // Standard buffer query
+      const bufResult = deps.ringBuffer.query({
         sessionId: parsed.session_id,
         from: parsed.from,
         to: parsed.to,
         severity: parsed.severity,
-        limit: parsed.limit ?? 1000,
-        cursor: parsed.cursor ? Number(parsed.cursor) : undefined,
+        limit,
+        cursor: bufCursor,
       });
+
+      const bufferExhausted = bufResult.cursor === null;
+      const hasStore = !!deps.storeReader;
+
+      // If auto and buffer exhausted, signal that next page should query store
+      let responseCursor: string | undefined;
+      let hasMore: boolean;
+
+      if (bufferExhausted && requestedSource === 'auto' && hasStore) {
+        responseCursor = 'auto:buf-exhausted';
+        hasMore = true;
+      } else if (!bufferExhausted) {
+        responseCursor = `buf:${bufResult.cursor}`;
+        hasMore = true;
+      } else {
+        responseCursor = undefined;
+        hasMore = false;
+      }
+
       ws.send(JSON.stringify({
         type: 'history',
         query_id: parsed.query_id,
-        history_entries: result.entries,
-        has_more: result.cursor !== null,
-        cursor: result.cursor !== null ? String(result.cursor) : undefined,
+        history_entries: bufResult.entries,
+        has_more: hasMore,
+        cursor: responseCursor,
+        source: 'buffer',
+        fence_ts: fenceTs,
       }));
       return;
     }

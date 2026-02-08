@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../plugins/builtin/chart_plugin.dart';
+import '../../plugins/builtin/chart_painter.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 

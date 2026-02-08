@@ -37,8 +37,9 @@ void main() {
     );
 
     // Verify the static UI renders before the post-frame callback fires.
-    // Banner removed — "Logger" text no longer shown in header.
-    expect(find.text('Logger'), findsNothing);
-    expect(find.text('Waiting for logs...'), findsOneWidget);
+    // Landing page shows when no logs and no active connection.
+    expect(find.text('Logger'), findsOneWidget);
+    expect(find.text('Connect to Server'), findsOneWidget);
+    expect(find.text('Quick Start'), findsOneWidget);
   });
 }

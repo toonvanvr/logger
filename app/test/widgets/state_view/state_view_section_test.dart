@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 Widget _wrap({required LogStore logStore, SettingsService? settings}) {
   return MultiProvider(
     providers: [
@@ -22,11 +24,10 @@ Widget _wrap({required LogStore logStore, SettingsService? settings}) {
 }
 
 LogEntry _stateEntry(String key, dynamic value, {String session = 's1'}) {
-  return LogEntry(
+  return makeTestEntry(
     id: 'state-$key',
     timestamp: '2026-01-01T00:00:00Z',
     sessionId: session,
-    severity: Severity.info,
     type: LogType.state,
     stateKey: key,
     stateValue: value,

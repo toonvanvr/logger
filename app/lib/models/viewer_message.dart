@@ -45,6 +45,9 @@ class ViewerMessage {
   final int? limit;
   final String? cursor;
 
+  /// Where to query: 'buffer', 'store', or 'auto' (default).
+  final String? source;
+
   // rpc_request
   final String? rpcId;
   final String? targetSessionId;
@@ -67,6 +70,7 @@ class ViewerMessage {
     this.search,
     this.limit,
     this.cursor,
+    this.source,
     this.rpcId,
     this.targetSessionId,
     this.rpcMethod,
@@ -88,6 +92,7 @@ class ViewerMessage {
     if (search != null) map['search'] = search;
     if (limit != null) map['limit'] = limit;
     if (cursor != null) map['cursor'] = cursor;
+    if (source != null) map['source'] = source;
     if (rpcId != null) map['rpc_id'] = rpcId;
     if (targetSessionId != null) map['target_session_id'] = targetSessionId;
     if (rpcMethod != null) map['rpc_method'] = rpcMethod;

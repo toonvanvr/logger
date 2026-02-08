@@ -6,8 +6,10 @@ import { FileStore } from './modules/file-store';
 import { LokiForwarder } from './modules/loki-forwarder';
 import { RingBuffer } from './modules/ring-buffer';
 import { RpcBridge } from './modules/rpc-bridge';
+import { SelfLogger } from './modules/self-logger';
 import { SessionManager } from './modules/session-manager';
 import { WebSocketHub } from './modules/ws-hub';
+import { createStoreReader, createStoreWriter } from './store';
 import { setupHttpRoutes } from './transport/http';
 import { setupTcp } from './transport/tcp';
 import { setupUdp } from './transport/udp';
@@ -37,6 +39,13 @@ const fileStore = new FileStore({
   maxBytes: config.imageStoreMaxBytes,
 });
 const rpcBridge = new RpcBridge();
+
+const selfLogger = new SelfLogger(ringBuffer, wsHub, sessionManager);
+
+// ─── Initialize store adapters ───────────────────────────────────────
+
+const storeWriter = createStoreWriter(config, { lokiForwarder });
+const storeReader = createStoreReader(config, { ringBuffer });
 
 // ─── Wire session events to WS broadcast ─────────────────────────────
 
@@ -68,6 +77,8 @@ const deps = {
   lokiForwarder,
   fileStore,
   rpcBridge,
+  storeWriter,
+  storeReader,
 };
 
 // ─── Setup HTTP + WS server ─────────────────────────────────────────
@@ -100,3 +111,7 @@ await setupTcp(deps);
 console.log(`Logger server listening on ${config.host}:${config.port} (HTTP/WS)`);
 console.log(`Logger UDP on ${config.host}:${config.udpPort}`);
 console.log(`Logger TCP on ${config.host}:${config.tcpPort}`);
+
+selfLogger.info(`Server started on ${config.host}:${config.port}`);
+selfLogger.info(`Store backend: ${config.storeBackend}`);
+selfLogger.info(`Ring buffer: ${config.ringBufferMaxEntries} entries / ${config.ringBufferMaxBytes} bytes`);

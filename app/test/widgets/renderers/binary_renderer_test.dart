@@ -6,15 +6,10 @@ import 'package:app/widgets/renderers/binary_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeBinaryEntry({String? binary}) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T12:00:00Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
-    type: LogType.binary,
-    binary: binary,
-  );
+  return makeTestEntry(type: LogType.binary, binary: binary);
 }
 
 Widget _wrap(Widget child) {

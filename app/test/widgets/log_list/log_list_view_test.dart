@@ -10,19 +10,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeEntry({
   required String id,
   String text = 'log line',
   Severity severity = Severity.info,
   String sessionId = 'sess-1',
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-07T10:00:00.000Z',
-    sessionId: sessionId,
-    severity: severity,
-    type: LogType.text,
     text: text,
+    severity: severity,
+    sessionId: sessionId,
   );
 }
 

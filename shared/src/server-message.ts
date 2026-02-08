@@ -75,5 +75,9 @@ export const ServerMessage = z.object({
   history_entries: z.array(LogEntry).optional(),
   has_more: z.boolean().optional(),
   cursor: z.string().optional(),
+  /** Which backend served this response */
+  source: z.enum(['buffer', 'store']).optional(),
+  /** ISO 8601 server timestamp when query was executed (for dedup) */
+  fence_ts: z.string().datetime({ offset: true }).optional(),
 });
 export type ServerMessage = z.infer<typeof ServerMessage>;

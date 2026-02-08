@@ -156,6 +156,43 @@ export function buildCustomEntry(
   };
 }
 
+// ─── HTTP Request ────────────────────────────────────────────────────
+
+export function buildHttpEntry(
+  base: LogEntry,
+  data: {
+    method: string;
+    url: string;
+    status?: number;
+    duration_ms?: number;
+    request_headers?: Record<string, string>;
+    response_headers?: Record<string, string>;
+    request_body?: string;
+    response_body?: string;
+    request_id?: string;
+    started_at?: string;
+  },
+): LogEntry {
+  const contentType = data.response_headers?.['content-type']
+    ?? data.response_headers?.['Content-Type'];
+  const isError = data.status != null ? data.status >= 400 : undefined;
+
+  return buildCustomEntry(base, 'http_request', {
+    method: data.method,
+    url: data.url,
+    ...(data.request_headers ? { request_headers: data.request_headers } : {}),
+    ...(data.request_body ? { request_body: data.request_body } : {}),
+    ...(data.response_headers ? { response_headers: data.response_headers } : {}),
+    ...(data.response_body ? { response_body: data.response_body } : {}),
+    ...(data.status != null ? { status: data.status } : {}),
+    ...(data.duration_ms != null ? { duration_ms: data.duration_ms } : {}),
+    ...(data.request_id ? { request_id: data.request_id } : {}),
+    started_at: data.started_at ?? new Date().toISOString(),
+    ...(contentType ? { content_type: contentType } : {}),
+    ...(isError != null ? { is_error: isError } : {}),
+  });
+}
+
 // ─── Utility ─────────────────────────────────────────────────────────
 
 export function stringifyTags(

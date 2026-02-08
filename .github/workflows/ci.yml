@@ -27,6 +27,16 @@ jobs:
       - run: cd app && flutter analyze
       - run: cd app && flutter test
 
+  type-check-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd shared && bun install && bunx tsc --noEmit
+      - run: cd client && bun install && bunx tsc --noEmit
+      - run: cd server && bun install && bunx tsc --noEmit
+      - run: cd mcp && bun install && bunx tsc --noEmit
+
   audit:
     runs-on: ubuntu-latest
     steps:

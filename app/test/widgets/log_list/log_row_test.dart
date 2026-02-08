@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeEntry({
   String id = 'e1',
   String text = 'hello world',
@@ -15,13 +17,12 @@ LogEntry _makeEntry({
   LogType type = LogType.text,
   String sessionId = 'sess-1',
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-07T10:00:00.000Z',
-    sessionId: sessionId,
+    text: text,
     severity: severity,
     type: type,
-    text: text,
+    sessionId: sessionId,
   );
 }
 

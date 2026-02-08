@@ -92,6 +92,49 @@ class LogStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Insert historical entries WITHOUT triggering live scroll.
+  ///
+  /// Deduplicates by ID (skips entries already in the store) and inserts
+  /// at the beginning of the list, sorted by timestamp, to maintain order.
+  /// Returns the number of entries actually inserted.
+  int insertHistorical(List<LogEntry> entries) {
+    final toInsert = <LogEntry>[];
+    for (final entry in entries) {
+      if (_idIndex.containsKey(entry.id)) continue;
+      toInsert.add(entry);
+    }
+    if (toInsert.isEmpty) return 0;
+
+    // Sort historical entries by timestamp (oldest first)
+    toInsert.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    // Prepend to the front of the list
+    _entries.insertAll(0, toInsert);
+
+    // Rebuild the id index since all indices shifted
+    _idIndex.clear();
+    for (var i = 0; i < _entries.length; i++) {
+      _idIndex[_entries[i].id] = i;
+    }
+
+    // Handle state updates for historical entries
+    for (final entry in toInsert) {
+      if (entry.type == LogType.state && entry.stateKey != null) {
+        _stateStore.putIfAbsent(entry.sessionId, () => {});
+        if (entry.stateValue == null) {
+          _stateStore[entry.sessionId]!.remove(entry.stateKey);
+        } else {
+          _stateStore[entry.sessionId]![entry.stateKey!] = entry.stateValue;
+        }
+      }
+    }
+
+    _evictIfNeeded();
+    _version++;
+    notifyListeners();
+    return toInsert.length;
+  }
+
   /// Remove oldest entries when the cap is exceeded, rebuilding the id index.
   void _evictIfNeeded() {
     if (_entries.length <= maxEntries) return;

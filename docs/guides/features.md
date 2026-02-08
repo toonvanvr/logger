@@ -4,7 +4,7 @@ An overview of the Logger viewer's capabilities.
 
 ## Severity Levels
 
-Log entries are categorised by severity: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Each level has a distinct colour in the viewer for quick visual scanning.
+Log entries are categorised by severity: `debug`, `info`, `warning`, `error`, `critical`. Each level has a distinct colour in the viewer for quick visual scanning.
 
 ## Custom Renderers
 
@@ -142,3 +142,23 @@ The viewer includes a status bar showing:
 - Current session count
 - Log entry count
 - Active filters
+
+## Historical Log Access
+
+The viewer can retrieve historical logs from Loki when scrolling back beyond the in-memory ring buffer. This provides seamless access to older log entries without losing real-time streaming for new entries.
+
+## HTTP Request Tracking
+
+Log entries with `custom_type: "http_request"` are rendered as expandable HTTP request/response panels in HAR-inspired format. The HTTP request plugin displays method, URL, status code, headers, and body with syntax highlighting.
+
+## Secondary State Shelves
+
+State keys can be organized into named shelves for grouping related state. Shelf cards appear as collapsible sections in the state view panel, keeping the state view organized when applications track many keys.
+
+## Empty Landing Page
+
+When no sessions are active, the viewer displays a friendly landing page with connection status and quick-start guidance instead of a blank screen.
+
+## Self-Logging
+
+The server can log its own internal events (startup, connections, errors) as structured log entries visible in the viewer. This aids in debugging the Logger infrastructure itself.

@@ -2,6 +2,8 @@ import 'package:app/models/log_entry.dart';
 import 'package:app/services/log_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../test_helpers.dart';
+
 LogEntry _makeEntry({
   String id = 'e1',
   String sessionId = 'sess-1',
@@ -13,9 +15,8 @@ LogEntry _makeEntry({
   dynamic stateValue,
   bool? replace,
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-07T12:00:00Z',
     sessionId: sessionId,
     severity: severity,
     type: type,

@@ -11,6 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 LogEntry _makeEntry({
@@ -25,13 +27,12 @@ LogEntry _makeEntry({
   bool? sticky,
   String? stickyAction,
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-08T10:00:00.000Z',
-    sessionId: sessionId,
-    severity: severity,
-    type: type,
     text: type == LogType.text ? text : null,
+    severity: severity,
+    sessionId: sessionId,
+    type: type,
     groupId: groupId,
     groupAction: groupAction,
     groupLabel: groupLabel,

@@ -2,6 +2,8 @@ import 'package:app/models/log_entry.dart';
 import 'package:app/widgets/log_list/log_list_builder.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeEntry({
   required String id,
   Severity severity = Severity.info,
@@ -12,10 +14,8 @@ LogEntry _makeEntry({
   GroupAction? groupAction,
   String? groupLabel,
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-08T00:00:00Z',
-    sessionId: 's1',
     severity: severity,
     type: type,
     text: text,

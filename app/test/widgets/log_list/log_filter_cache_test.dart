@@ -4,6 +4,8 @@ import 'package:app/services/time_range_service.dart';
 import 'package:app/widgets/log_list/log_filter_cache.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeEntry({
   required String id,
   LogType type = LogType.text,
@@ -12,12 +14,10 @@ LogEntry _makeEntry({
   String? stateKey,
   dynamic stateValue,
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-01-01T00:00:00Z',
-    sessionId: 's1',
-    severity: severity,
     type: type,
+    severity: severity,
     text: text,
     stateKey: stateKey,
     stateValue: stateValue,

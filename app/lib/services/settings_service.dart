@@ -31,6 +31,7 @@ class SettingsService extends ChangeNotifier {
 
   bool _miniMode = false;
   bool _stateViewCollapsed = false;
+  bool _shelfCollapsed = true;
   List<Map<String, dynamic>> _connections = [];
 
   /// Whether the compact title bar mode is active.
@@ -38,6 +39,9 @@ class SettingsService extends ChangeNotifier {
 
   /// Whether the state view section is collapsed.
   bool get stateViewCollapsed => _stateViewCollapsed;
+
+  /// Whether the secondary shelf is collapsed (default: true).
+  bool get shelfCollapsed => _shelfCollapsed;
 
   /// Persisted connection configurations.
   List<Map<String, dynamic>> get connections => List.unmodifiable(_connections);
@@ -51,6 +55,12 @@ class SettingsService extends ChangeNotifier {
   /// Toggle state view section collapsed.
   void setStateViewCollapsed(bool value) {
     _stateViewCollapsed = value;
+    notifyListeners();
+  }
+
+  /// Toggle secondary shelf collapsed.
+  void setShelfCollapsed(bool value) {
+    _shelfCollapsed = value;
     notifyListeners();
   }
 

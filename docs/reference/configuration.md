@@ -63,6 +63,12 @@ Controls the async batch forwarding of logs to Grafana Loki.
 |----------|---------|-------------|
 | `LOGGER_HOOK_REDACT_PATTERNS` | *(empty)* | Comma-separated list of regex patterns. Matching content is redacted from log entries before storage. |
 
+## Storage Backend
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOGGER_STORE_BACKEND` | `loki` | Storage backend for log persistence. Options: `loki` (forward to Grafana Loki) or `memory` (in-memory only, no external dependencies). |
+
 ## Docker Compose Defaults
 
 The `compose.yml` sets these for the containerized server:

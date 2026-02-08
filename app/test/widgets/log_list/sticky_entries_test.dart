@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeEntry({
   required String id,
   String text = 'log line',
@@ -20,13 +22,12 @@ LogEntry _makeEntry({
   String? groupLabel,
   bool? sticky,
 }) {
-  return LogEntry(
+  return makeTestEntry(
     id: id,
-    timestamp: '2026-02-08T10:00:00.000Z',
-    sessionId: sessionId,
-    severity: severity,
-    type: type,
     text: type == LogType.text ? text : null,
+    severity: severity,
+    sessionId: sessionId,
+    type: type,
     groupId: groupId,
     groupAction: groupAction,
     groupLabel: groupLabel,

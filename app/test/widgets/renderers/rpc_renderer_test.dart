@@ -4,6 +4,8 @@ import 'package:app/widgets/renderers/rpc_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeRpcEntry({
   RpcDirection direction = RpcDirection.request,
   String method = 'getState',
@@ -11,11 +13,7 @@ LogEntry _makeRpcEntry({
   dynamic response,
   String? error,
 }) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T12:00:00Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
+  return makeTestEntry(
     type: LogType.rpc,
     rpcId: 'rpc-1',
     rpcDirection: direction,

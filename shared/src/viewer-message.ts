@@ -42,6 +42,8 @@ export const ViewerMessage = z.object({
   limit: z.number().int().min(1).max(10000).optional(),
   /** Pagination cursor from previous response */
   cursor: z.string().optional(),
+  /** Where to query: buffer, store, or auto (buffer first, then store). Default: auto */
+  source: z.enum(['buffer', 'store', 'auto']).optional(),
 
   // ── For type: "rpc_request" ──
   rpc_id: z.string().uuid().optional(),

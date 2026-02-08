@@ -45,6 +45,14 @@ text | json | html | binary | image | state | group | rpc | session | custom
 | `binary` | `type: "binary"` | `string` | Base64-encoded binary data. |
 | `image` | `type: "image"` | `ImageData` | Image data (inline base64 or upload reference). |
 
+### Exception Data
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `exception` | `ExceptionData` | Exception or error details with stack trace. Can accompany any log type. |
+
+See [ExceptionData](#exceptiondata) under Sub-Schemas for the full shape.
+
 ### Group Operations
 
 Groups allow collapsible log sections.
@@ -61,6 +69,7 @@ Groups allow collapsible log sections.
 | Field | Type | Description |
 |-------|------|-------------|
 | `sticky` | `boolean` | When true, this entry pins to the viewport top when scrolled past. |
+| `sticky_action` | `"pin" \| "unpin"` | Action to perform: `pin` (default when sticky=true) or `unpin` (remove from sticky). |
 
 ### State Operations (`type: "state"`)
 

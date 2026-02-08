@@ -6,15 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import '../../test_helpers.dart';
+
 LogEntry _makeJsonEntry({required dynamic jsonData}) {
-  return LogEntry(
-    id: 'e1',
-    timestamp: '2026-02-07T10:00:00.000Z',
-    sessionId: 'sess-1',
-    severity: Severity.info,
-    type: LogType.json,
-    jsonData: jsonData,
-  );
+  return makeTestEntry(type: LogType.json, jsonData: jsonData);
 }
 
 Widget _wrap(Widget child) {

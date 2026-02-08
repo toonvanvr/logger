@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .flow {
+      offset-path: path('M 20 8 L 20 36 Q 20 44 28 44 L 52 44');
+      offset-rotate: 0deg;
+      animation: flow 1800ms ease-in-out infinite;
+    }
+    .flow-1 { fill: #7EB8D0; animation-delay: 0ms; }
+    .flow-2 { fill: #A8CC7E; animation-delay: 400ms; }
+    .flow-3 { fill: #D99AE6; animation-delay: 800ms; }
+    @keyframes flow {
+      0%   { offset-distance: 0%;   opacity: 0; }
+      5%   { offset-distance: 5%;   opacity: 1; }
+      80%  { offset-distance: 80%;  opacity: 1; }
+      100% { offset-distance: 100%; opacity: 0.3; }
+    }
+  </style>
+  <path d="M 20 8 L 20 36 Q 20 44 28 44 L 52 44"
+        stroke="#E6B455" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle class="flow flow-1" r="3"/>
+  <circle class="flow flow-2" r="3"/>
+  <circle class="flow flow-3" r="3"/>
+</svg>

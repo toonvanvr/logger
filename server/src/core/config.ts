@@ -32,6 +32,9 @@ export const config = {
   imageStorePath: process.env.LOGGER_IMAGE_STORE_PATH ?? '/tmp/logger-images',
   imageStoreMaxBytes: parseInt(process.env.LOGGER_IMAGE_STORE_MAX_BYTES ?? String(2 * 1024 * 1024 * 1024)),
 
+  // Store
+  storeBackend: (process.env.LOGGER_STORE_BACKEND ?? 'loki') as 'loki' | 'memory',
+
   // Hooks
   hookRedactPatterns: (process.env.LOGGER_HOOK_REDACT_PATTERNS ?? '').split(',').filter(Boolean),
 } as const;
