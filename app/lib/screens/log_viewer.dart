@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/server_message.dart';
@@ -10,10 +12,13 @@ import '../services/log_store.dart';
 import '../services/query_store.dart';
 import '../services/rpc_service.dart';
 import '../services/session_store.dart';
+import '../services/settings_service.dart';
 import '../widgets/header/filter_bar.dart';
 import '../widgets/header/session_selector.dart';
 import '../widgets/log_list/log_list_view.dart';
 import '../widgets/log_list/section_tabs.dart';
+import '../widgets/log_list/selection_actions.dart';
+import '../widgets/mini_mode/mini_title_bar.dart';
 import '../widgets/settings/settings_panel.dart';
 import '../widgets/state_view/state_view_section.dart';
 import '../widgets/status_bar/status_bar.dart';
@@ -46,10 +51,13 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   String _textFilter = '';
   String? _selectedSection;
   bool _settingsPanelVisible = false;
+  bool _selectionMode = false;
+  Set<String> _selectedEntryIds = {};
 
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
     // Defer connection to after the first frame to avoid notifyListeners during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initConnection();
@@ -131,12 +139,83 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     _messageSub?.cancel();
     super.dispose();
   }
 
+  bool _handleKeyEvent(KeyEvent event) {
+    final shiftHeld =
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.shiftLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.shiftRight,
+        );
+    if (shiftHeld && !_selectionMode) {
+      setState(() => _selectionMode = true);
+    } else if (!shiftHeld && _selectionMode && _selectedEntryIds.isEmpty) {
+      setState(() => _selectionMode = false);
+    }
+    return false;
+  }
+
+  void _onEntrySelected(String id) {
+    setState(() {
+      if (_selectedEntryIds.contains(id)) {
+        _selectedEntryIds.remove(id);
+      } else {
+        _selectedEntryIds.add(id);
+      }
+      if (_selectedEntryIds.isEmpty &&
+          !HardwareKeyboard.instance.logicalKeysPressed.contains(
+            LogicalKeyboardKey.shiftLeft,
+          ) &&
+          !HardwareKeyboard.instance.logicalKeysPressed.contains(
+            LogicalKeyboardKey.shiftRight,
+          )) {
+        _selectionMode = false;
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedEntryIds = {};
+      _selectionMode = false;
+    });
+  }
+
+  void _copySelected() {
+    final logStore = context.read<LogStore>();
+    final entries = logStore.entries
+        .where((e) => _selectedEntryIds.contains(e.id))
+        .map((e) => e.text ?? '')
+        .join('\n');
+    Clipboard.setData(ClipboardData(text: entries));
+  }
+
+  void _exportSelectedJson() {
+    final logStore = context.read<LogStore>();
+    final entries = logStore.entries
+        .where((e) => _selectedEntryIds.contains(e.id))
+        .map(
+          (e) => {
+            'id': e.id,
+            'timestamp': e.timestamp,
+            'severity': e.severity.name,
+            'text': e.text,
+            'sessionId': e.sessionId,
+          },
+        )
+        .toList();
+    final json = const JsonEncoder.withIndent('  ').convert(entries);
+    Clipboard.setData(ClipboardData(text: json));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsService>();
     return Scaffold(
       body: Row(
         children: [
@@ -144,17 +223,30 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
           Expanded(
             child: Column(
               children: [
-                SessionSelector(
-                  isFilterExpanded: _isFilterExpanded,
-                  onFilterToggle: () {
-                    setState(() => _isFilterExpanded = !_isFilterExpanded);
-                  },
-                  onRpcToggle: () {
-                    setState(
-                      () => _settingsPanelVisible = !_settingsPanelVisible,
-                    );
-                  },
-                ),
+                if (settings.miniMode)
+                  MiniTitleBar(
+                    isFilterExpanded: _isFilterExpanded,
+                    onFilterToggle: () {
+                      setState(() => _isFilterExpanded = !_isFilterExpanded);
+                    },
+                    onSettingsToggle: () {
+                      setState(
+                        () => _settingsPanelVisible = !_settingsPanelVisible,
+                      );
+                    },
+                  )
+                else
+                  SessionSelector(
+                    isFilterExpanded: _isFilterExpanded,
+                    onFilterToggle: () {
+                      setState(() => _isFilterExpanded = !_isFilterExpanded);
+                    },
+                    onRpcToggle: () {
+                      setState(
+                        () => _settingsPanelVisible = !_settingsPanelVisible,
+                      );
+                    },
+                  ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 150),
                   curve: Curves.easeInOut,
@@ -212,11 +304,34 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
                       final selectedSessions = context
                           .watch<SessionStore>()
                           .selectedSessionIds;
-                      return LogListView(
-                        sectionFilter: _selectedSection,
-                        activeSeverities: _activeSeverities,
-                        textFilter: _textFilter,
-                        selectedSessionIds: selectedSessions,
+                      return Stack(
+                        children: [
+                          LogListView(
+                            sectionFilter: _selectedSection,
+                            activeSeverities: _activeSeverities,
+                            textFilter: _textFilter,
+                            selectedSessionIds: selectedSessions,
+                            selectionMode: _selectionMode,
+                            selectedEntryIds: _selectedEntryIds,
+                            onEntrySelected: _onEntrySelected,
+                          ),
+                          if (_selectedEntryIds.isNotEmpty)
+                            Positioned(
+                              bottom: 12,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: SelectionActions(
+                                  selectedCount: _selectedEntryIds.length,
+                                  onCopy: _copySelected,
+                                  onExportJson: _exportSelectedJson,
+                                  onBookmark: () {},
+                                  onSticky: () {},
+                                  onClear: _clearSelection,
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),

@@ -33,6 +33,18 @@ class LogListView extends StatefulWidget {
   /// Set of active severity names for filtering.
   final Set<String> activeSeverities;
 
+  /// Whether selection mode is active (Shift held).
+  final bool selectionMode;
+
+  /// Set of entry IDs currently selected.
+  final Set<String> selectedEntryIds;
+
+  /// Callback when an entry is toggled in selection mode.
+  final ValueChanged<String>? onEntrySelected;
+
+  /// Callback for shift+click range selection.
+  final ValueChanged<String>? onEntryRangeSelected;
+
   const LogListView({
     super.key,
     this.sectionFilter,
@@ -45,6 +57,10 @@ class LogListView extends StatefulWidget {
       'error',
       'critical',
     },
+    this.selectionMode = false,
+    this.selectedEntryIds = const {},
+    this.onEntrySelected,
+    this.onEntryRangeSelected,
   });
 
   @override
@@ -647,6 +663,13 @@ class _LogListViewState extends State<LogListView> {
                           isNew: isNew,
                           isEvenRow: index.isEven,
                           isSelected: _selectedIndex == index,
+                          selectionMode: widget.selectionMode,
+                          isSelectionSelected: widget.selectedEntryIds.contains(
+                            entry.id,
+                          ),
+                          onSelect: () {
+                            widget.onEntrySelected?.call(entry.id);
+                          },
                           groupDepth: display.depth,
                           onTap: () {
                             setState(() {

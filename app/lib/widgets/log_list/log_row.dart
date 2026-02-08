@@ -10,11 +10,8 @@ import '../renderers/renderer_factory.dart';
 import 'session_dot.dart';
 import 'severity_bar.dart';
 
-/// A single log row in the log list.
-///
-/// Displays a severity bar on the left, log content in the center, and a
-/// session color dot on the right. Supports fade-in animation for new entries
-/// and an unseen highlight that fades out over time.
+/// A single log row in the log list. Displays severity bar, content, and
+/// session dot. Supports fade-in animation and selection mode.
 class LogRow extends StatefulWidget {
   final LogEntry entry;
   final bool isNew;
@@ -24,6 +21,9 @@ class LogRow extends StatefulWidget {
   final VoidCallback? onGroupToggle;
   final bool isCollapsed;
   final VoidCallback? onTap;
+  final bool selectionMode;
+  final bool isSelectionSelected;
+  final VoidCallback? onSelect;
 
   const LogRow({
     super.key,
@@ -35,6 +35,9 @@ class LogRow extends StatefulWidget {
     this.onGroupToggle,
     this.isCollapsed = false,
     this.onTap,
+    this.selectionMode = false,
+    this.isSelectionSelected = false,
+    this.onSelect,
   });
 
   @override
@@ -116,6 +119,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   }
 
   Color get _backgroundColor {
+    if (widget.isSelectionSelected) return LoggerColors.bgActive;
     if (widget.isSelected) return LoggerColors.bgActive;
     if (widget.isEvenRow) return LoggerColors.bgSurface;
     // Alternate row: very subtle stripe.
@@ -133,7 +137,9 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
             opacity: _opacityAnimation.value,
             child: SelectionContainer.disabled(
               child: GestureDetector(
-                onTap: widget.onGroupToggle ?? widget.onTap,
+                onTap: widget.selectionMode
+                    ? widget.onSelect
+                    : (widget.onGroupToggle ?? widget.onTap),
                 child: Container(
                   constraints: const BoxConstraints(minHeight: 24),
                   decoration: BoxDecoration(
@@ -165,6 +171,22 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.selectionMode)
+                GestureDetector(
+                  onTap: widget.onSelect,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(
+                      widget.isSelectionSelected
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
+                      size: 14,
+                      color: widget.isSelectionSelected
+                          ? LoggerColors.borderFocus
+                          : LoggerColors.fgMuted,
+                    ),
+                  ),
+                ),
               SeverityBar(severity: widget.entry.severity),
               Expanded(
                 child: Padding(
