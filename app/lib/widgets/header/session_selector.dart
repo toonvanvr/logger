@@ -1,23 +1,20 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/server_message.dart';
-import '../../services/log_connection.dart';
 import '../../services/session_store.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'overflow_menu.dart';
+import 'session_button.dart';
 import 'window_controls.dart';
 
 const _headerHeight = 40.0;
-const _sessionDotSize = 6.0;
-const _buttonHPadding = 8.0;
-const _buttonMaxWidth = 120.0;
 const _buttonMinWidth = 48.0;
 
 /// Compact header bar with session buttons and controls.
-class SessionSelector extends StatelessWidget {
+class SessionSelector extends StatefulWidget {
   /// Whether the filter bar below is expanded.
   final bool isFilterExpanded;
 
@@ -35,9 +32,32 @@ class SessionSelector extends StatelessWidget {
   });
 
   @override
+  State<SessionSelector> createState() => _SessionSelectorState();
+}
+
+class _SessionSelectorState extends State<SessionSelector> {
+  final ScrollController _scrollController = ScrollController();
+  int? _lastClickedIndex;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _rangeSelect(int index, List<SessionInfo> sessions, SessionStore store) {
+    final anchor = _lastClickedIndex ?? index;
+    final start = anchor < index ? anchor : index;
+    final end = anchor < index ? index : anchor;
+    store.deselectAll();
+    for (var i = start; i <= end; i++) {
+      store.toggleSession(sessions[i].sessionId);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sessionStore = context.watch<SessionStore>();
-    final connection = context.watch<LogConnection>();
     final sessions = sessionStore.sessions;
 
     return Container(
@@ -65,7 +85,7 @@ class SessionSelector extends StatelessWidget {
             height: _headerHeight,
             color: LoggerColors.borderSubtle,
           ),
-          // Session buttons (dynamic count based on available width)
+          // Session buttons with horizontal scroll
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -80,21 +100,47 @@ class SessionSelector extends StatelessWidget {
                 return Row(
                   children: [
                     Expanded(
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          for (final session in visible)
-                            SessionButton(
-                              session: session,
-                              isSelected: sessionStore.isSelected(
-                                session.sessionId,
+                      child: Listener(
+                        onPointerSignal: (event) {
+                          if (event is PointerScrollEvent &&
+                              _scrollController.hasClients) {
+                            final offset =
+                                (_scrollController.offset +
+                                        event.scrollDelta.dy)
+                                    .clamp(
+                                      0.0,
+                                      _scrollController
+                                          .position
+                                          .maxScrollExtent,
+                                    );
+                            _scrollController.jumpTo(offset);
+                          }
+                        },
+                        child: ListView(
+                          controller: _scrollController,
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            for (var i = 0; i < visible.length; i++)
+                              SessionButton(
+                                session: visible[i],
+                                isSelected: sessionStore.isSelected(
+                                  visible[i].sessionId,
+                                ),
+                                onTap: () {
+                                  setState(() => _lastClickedIndex = i);
+                                  sessionStore.selectOnly(visible[i].sessionId);
+                                },
+                                onCtrlTap: () {
+                                  setState(() => _lastClickedIndex = i);
+                                  sessionStore.toggleSession(
+                                    visible[i].sessionId,
+                                  );
+                                },
+                                onShiftTap: () =>
+                                    _rangeSelect(i, sessions, sessionStore),
                               ),
-                              onTap: () =>
-                                  sessionStore.selectOnly(session.sessionId),
-                              onCtrlTap: () =>
-                                  sessionStore.toggleSession(session.sessionId),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     if (hasOverflow) OverflowButton(overflowSessions: sessions),
@@ -107,128 +153,21 @@ class SessionSelector extends StatelessWidget {
           HeaderIconButton(
             icon: Icons.filter_list,
             tooltip: 'Toggle filters',
-            isActive: isFilterExpanded,
-            onTap: onFilterToggle,
+            isActive: widget.isFilterExpanded,
+            onTap: widget.onFilterToggle,
           ),
           // Settings panel toggle
           HeaderIconButton(
             icon: Icons.settings,
             tooltip: 'Toggle settings panel',
             isActive: false,
-            onTap: onRpcToggle,
+            onTap: widget.onRpcToggle,
           ),
           const SizedBox(width: 4),
-          // Connection indicator
-          ConnectionIndicator(isConnected: connection.isConnected),
-          const SizedBox(width: 8),
           // Always-on-top toggle
           const AlwaysOnTopButton(),
           const SizedBox(width: 4),
         ],
-      ),
-    );
-  }
-}
-
-/// A single session button in the header.
-class SessionButton extends StatefulWidget {
-  final SessionInfo session;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final VoidCallback onCtrlTap;
-
-  const SessionButton({
-    super.key,
-    required this.session,
-    required this.isSelected,
-    required this.onTap,
-    required this.onCtrlTap,
-  });
-
-  @override
-  State<SessionButton> createState() => _SessionButtonState();
-}
-
-class _SessionButtonState extends State<SessionButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final poolColor =
-        LoggerColors.sessionPool[widget.session.colorIndex %
-            LoggerColors.sessionPool.length];
-
-    Color bg;
-    if (widget.isSelected) {
-      bg = LoggerColors.bgActive;
-    } else if (_hovered) {
-      bg = LoggerColors.bgHover;
-    } else {
-      bg = Colors.transparent;
-    }
-
-    final textColor = widget.isSelected
-        ? LoggerColors.fgPrimary
-        : LoggerColors.fgSecondary;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () {
-          if (HardwareKeyboard.instance.logicalKeysPressed.contains(
-                LogicalKeyboardKey.controlLeft,
-              ) ||
-              HardwareKeyboard.instance.logicalKeysPressed.contains(
-                LogicalKeyboardKey.controlRight,
-              )) {
-            widget.onCtrlTap();
-          } else {
-            widget.onTap();
-          }
-        },
-        child: Container(
-          constraints: const BoxConstraints(
-            minWidth: _buttonMinWidth,
-            maxWidth: _buttonMaxWidth,
-          ),
-          height: _headerHeight,
-          decoration: BoxDecoration(
-            color: bg,
-            border: Border(
-              right: const BorderSide(
-                color: LoggerColors.borderSubtle,
-                width: 1,
-              ),
-              bottom: widget.isSelected
-                  ? BorderSide(color: poolColor, width: 2)
-                  : BorderSide.none,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: _buttonHPadding),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: _sessionDotSize,
-                height: _sessionDotSize,
-                decoration: BoxDecoration(
-                  color: poolColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  widget.session.application.name,
-                  style: LoggerTypography.headerBtn.copyWith(color: textColor),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

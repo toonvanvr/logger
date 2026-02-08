@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../services/rpc_service.dart';
-import '../../services/settings_service.dart';
+import '../../plugins/plugin_registry.dart';
+import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
-import '../rpc/rpc_tool_tile.dart';
+import 'connection_settings.dart';
+import 'settings_sub_panels.dart';
+import 'tool_group.dart';
+import 'tool_row.dart';
 
-/// Slide-out settings sidebar with editor configuration and RPC tools.
+/// Slide-out settings sidebar with grouped plugin tools.
 class SettingsPanel extends StatelessWidget {
-  /// Whether the panel is visible.
   final bool isVisible;
-
-  /// Called when the close button is pressed.
   final VoidCallback onClose;
 
   const SettingsPanel({
@@ -40,37 +39,159 @@ class SettingsPanel extends StatelessWidget {
 
 // ─── Internal widgets ────────────────────────────────────────────────
 
-class _PanelContent extends StatelessWidget {
+class _PanelContent extends StatefulWidget {
   final VoidCallback onClose;
-
   const _PanelContent({required this.onClose});
+
+  @override
+  State<_PanelContent> createState() => _PanelContentState();
+}
+
+class _PanelContentState extends State<_PanelContent> {
+  Widget? _subPanel;
+  String? _subPanelTitle;
+
+  void _openSubPanel(String title, Widget panel) {
+    setState(() {
+      _subPanelTitle = title;
+      _subPanel = panel;
+    });
+  }
+
+  void _closeSubPanel() {
+    setState(() {
+      _subPanel = null;
+      _subPanelTitle = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _PanelHeader(onClose: onClose),
+        _PanelHeader(
+          title: _subPanelTitle ?? 'Settings',
+          showBack: _subPanel != null,
+          onBack: _closeSubPanel,
+          onClose: widget.onClose,
+        ),
         const Divider(height: 1, color: LoggerColors.borderSubtle),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            children: const [
-              _EditorSettingsSection(),
-              Divider(height: 1, color: LoggerColors.borderSubtle),
-              _RpcToolsSection(),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            child: _subPanel ?? _buildMainList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainList() {
+    final registry = PluginRegistry.instance;
+    final filters = registry.getPlugins<FilterPlugin>();
+    final renderers = registry.getPlugins<RendererPlugin>();
+    final transforms = registry.getPlugins<TransformPlugin>();
+
+    return ListView(
+      key: const ValueKey('main'),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      children: [
+        ToolGroup(
+          title: ToolGroups.connections,
+          children: [
+            ToolRow(
+              icon: Icons.cable,
+              label: 'Connections',
+              hasConfig: true,
+              onConfigTap: () =>
+                  _openSubPanel('Connections', const ConnectionSettings()),
+            ),
+          ],
+        ),
+        if (filters.isNotEmpty)
+          ToolGroup(
+            title: ToolGroups.searchFilter,
+            children: [
+              for (final p in filters)
+                ToolRow(
+                  icon: p.filterIcon,
+                  label: p.name,
+                  enabled: p.manifest.disableable ? p.enabled : null,
+                  onEnabledChanged: p.manifest.disableable
+                      ? (v) => setState(() => registry.setEnabled(p.id, v))
+                      : null,
+                ),
             ],
           ),
+        if (renderers.isNotEmpty)
+          ToolGroup(
+            title: ToolGroups.renderers,
+            children: [
+              for (final p in renderers)
+                ToolRow(
+                  icon: Icons.brush,
+                  label: p.name,
+                  enabled: p.manifest.disableable ? p.enabled : null,
+                  onEnabledChanged: p.manifest.disableable
+                      ? (v) => setState(() => registry.setEnabled(p.id, v))
+                      : null,
+                ),
+            ],
+          ),
+        if (transforms.isNotEmpty)
+          ToolGroup(
+            title: ToolGroups.transforms,
+            children: [
+              for (final p in transforms)
+                ToolRow(
+                  icon: Icons.transform,
+                  label: p.name,
+                  enabled: p.manifest.disableable ? p.enabled : null,
+                  onEnabledChanged: p.manifest.disableable
+                      ? (v) => setState(() => registry.setEnabled(p.id, v))
+                      : null,
+                ),
+            ],
+          ),
+        ToolGroup(
+          title: ToolGroups.tools,
+          children: [
+            ToolRow(
+              icon: Icons.edit,
+              label: 'Editor',
+              hasConfig: true,
+              onConfigTap: () =>
+                  _openSubPanel('Editor', const EditorSubPanel()),
+            ),
+            ToolRow(
+              icon: Icons.terminal,
+              label: 'RPC Tools',
+              hasConfig: true,
+              onConfigTap: () =>
+                  _openSubPanel('RPC Tools', const RpcToolsSubPanel()),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
+// ─── Panel header with optional back button ──────────────────────────
+
 class _PanelHeader extends StatelessWidget {
+  final String title;
+  final bool showBack;
+  final VoidCallback onBack;
   final VoidCallback onClose;
 
-  const _PanelHeader({required this.onClose});
+  const _PanelHeader({
+    required this.title,
+    required this.showBack,
+    required this.onBack,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +200,19 @@ class _PanelHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          Text('Settings', style: LoggerTypography.sectionH),
+          if (showBack)
+            InkWell(
+              onTap: onBack,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(
+                  Icons.arrow_back,
+                  size: 16,
+                  color: LoggerColors.fgSecondary,
+                ),
+              ),
+            ),
+          Text(title, style: LoggerTypography.sectionH),
           const Spacer(),
           InkWell(
             onTap: onClose,
@@ -89,179 +222,6 @@ class _PanelHeader extends StatelessWidget {
               color: LoggerColors.fgSecondary,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Editor Settings ─────────────────────────────────────────────────
-
-class _EditorSettingsSection extends StatelessWidget {
-  const _EditorSettingsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<SettingsService>();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Editor',
-            style: LoggerTypography.sectionH.copyWith(
-              color: LoggerColors.fgSecondary,
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'File open command',
-            style: LoggerTypography.logMeta.copyWith(
-              color: LoggerColors.fgMuted,
-            ),
-          ),
-          const SizedBox(height: 4),
-          _SettingsTextField(
-            value: settings.fileOpenCommand,
-            onChanged: settings.setFileOpenCommand,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'URL open command',
-            style: LoggerTypography.logMeta.copyWith(
-              color: LoggerColors.fgMuted,
-            ),
-          ),
-          const SizedBox(height: 4),
-          _SettingsTextField(
-            value: settings.urlOpenCommand,
-            onChanged: settings.setUrlOpenCommand,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsTextField extends StatefulWidget {
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  const _SettingsTextField({required this.value, required this.onChanged});
-
-  @override
-  State<_SettingsTextField> createState() => _SettingsTextFieldState();
-}
-
-class _SettingsTextFieldState extends State<_SettingsTextField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.value);
-  }
-
-  @override
-  void didUpdateWidget(_SettingsTextField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value && _controller.text != widget.value) {
-      _controller.text = widget.value;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: LoggerTypography.logMeta.copyWith(color: LoggerColors.fgPrimary),
-      decoration: InputDecoration(
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        filled: true,
-        fillColor: LoggerColors.bgSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: LoggerColors.borderSubtle),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: LoggerColors.borderSubtle),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: LoggerColors.borderFocus),
-        ),
-      ),
-      onChanged: widget.onChanged,
-    );
-  }
-}
-
-// ─── RPC Tools ───────────────────────────────────────────────────────
-
-class _RpcToolsSection extends StatelessWidget {
-  const _RpcToolsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final rpcService = context.watch<RpcService>();
-    final toolsBySession = rpcService.tools;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              'RPC Tools',
-              style: LoggerTypography.sectionH.copyWith(
-                color: LoggerColors.fgSecondary,
-                fontSize: 11,
-              ),
-            ),
-          ),
-          if (toolsBySession.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                'No tools available',
-                style: LoggerTypography.logMeta,
-              ),
-            )
-          else
-            for (final entry in toolsBySession.entries) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                child: Text(
-                  entry.key,
-                  style: LoggerTypography.badge.copyWith(
-                    color: LoggerColors.fgMuted,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              for (final tool in entry.value)
-                RpcToolTile(
-                  sessionId: entry.key,
-                  toolName: tool.name,
-                  description: tool.description,
-                  category: tool.category,
-                  argsSchema: tool.argsSchema,
-                  requiresConfirm: tool.confirm,
-                ),
-            ],
         ],
       ),
     );

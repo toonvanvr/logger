@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../services/log_connection.dart';
+import '../../services/connection_manager.dart';
 import '../../services/log_store.dart';
-import '../../services/session_store.dart';
 import '../../services/sticky_state.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
@@ -16,8 +15,7 @@ class StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logStore = context.watch<LogStore>();
-    final sessionStore = context.watch<SessionStore>();
-    final connection = context.watch<LogConnection>();
+    final manager = context.watch<ConnectionManager>();
     final stickyState = context.watch<StickyStateService>();
 
     final dismissed = stickyState.dismissedCount;
@@ -28,37 +26,37 @@ class StatusBar extends StatelessWidget {
       height: 20,
       color: LoggerColors.bgBase,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          // Left: entry count
-          _StatusItem(
-            icon: Icons.storage_outlined,
-            label: '${logStore.entryCount} entries',
-            isWarning: logStore.entryCount > 8000,
-          ),
-          const SizedBox(width: 12),
-          // Memory estimate
-          _StatusItem(
-            icon: Icons.memory_outlined,
-            label: _formatMemory(logStore.estimatedMemoryBytes),
-            isWarning: logStore.estimatedMemoryBytes > 100 * 1024 * 1024,
-          ),
-          // S06: Dismissed/ignored sticky info
-          if (hasStickyInfo) ...[
-            const SizedBox(width: 12),
-            _StickyStatusSection(
-              dismissed: dismissed,
-              ignored: ignored,
-              onRestoreAll: stickyState.restoreAll,
-            ),
-          ],
-          const Spacer(),
-          // Right: connection status
-          _ConnectionIndicator(
-            connected: connection.isConnected,
-            sessionCount: sessionStore.sessions.length,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 400;
+          return Row(
+            children: [
+              _StatusItem(
+                icon: Icons.storage_outlined,
+                label: '${logStore.entryCount} entries',
+                isWarning: logStore.entryCount > 8000,
+              ),
+              if (!narrow) ...[
+                const SizedBox(width: 12),
+                _StatusItem(
+                  icon: Icons.memory_outlined,
+                  label: _formatMemory(logStore.estimatedMemoryBytes),
+                  isWarning: logStore.estimatedMemoryBytes > 100 * 1024 * 1024,
+                ),
+              ],
+              if (hasStickyInfo && !narrow) ...[
+                const SizedBox(width: 12),
+                _StickyStatusSection(
+                  dismissed: dismissed,
+                  ignored: ignored,
+                  onRestoreAll: stickyState.restoreAll,
+                ),
+              ],
+              const Spacer(),
+              _ConnectionIndicator(manager: manager),
+            ],
+          );
+        },
       ),
     );
   }
@@ -104,41 +102,60 @@ class _StatusItem extends StatelessWidget {
 }
 
 class _ConnectionIndicator extends StatelessWidget {
-  final bool connected;
-  final int sessionCount;
+  final ConnectionManager manager;
 
-  const _ConnectionIndicator({
-    required this.connected,
-    required this.sessionCount,
-  });
+  const _ConnectionIndicator({required this.manager});
 
   @override
   Widget build(BuildContext context) {
-    final color = connected
+    final active = manager.connections.values
+        .where((c) => c.isActive)
+        .toList(growable: false);
+
+    final String text;
+    final Color dotColor;
+
+    if (active.isEmpty) {
+      text = 'disconnected';
+      dotColor = LoggerColors.severityErrorText;
+    } else if (active.length == 1) {
+      text = active.first.displayLabel;
+      dotColor = LoggerColors.severityInfoText;
+    } else {
+      text = '${active.length} connections';
+      dotColor = LoggerColors.severityInfoText;
+    }
+
+    final color = active.isNotEmpty
         ? LoggerColors.severityInfoText
         : LoggerColors.fgMuted;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: connected
-                ? LoggerColors.severityInfoText
-                : LoggerColors.severityErrorText,
-          ),
+    return GestureDetector(
+      onTap: () {}, // Future: connection menu
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: dotColor,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              text,
+              style: LoggerTypography.logMeta.copyWith(
+                fontSize: 9,
+                color: color,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 4),
-        Text(
-          connected
-              ? '$sessionCount session${sessionCount == 1 ? '' : 's'}'
-              : 'disconnected',
-          style: LoggerTypography.logMeta.copyWith(fontSize: 9, color: color),
-        ),
-      ],
+      ),
     );
   }
 }
