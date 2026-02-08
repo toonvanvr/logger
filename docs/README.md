@@ -51,9 +51,9 @@ graph LR
 - [Bun](https://bun.sh/) 1.0+ and [Flutter](https://docs.flutter.dev/get-started/install) 3.10+
 
 ```bash
-cd server && bun install && bun run src/main.ts   # Start server
-cd app && flutter pub get && flutter run -d linux  # Run viewer
-cd demo && bun install && bun run src/main.ts      # Send test logs
+cd packages/server && bun install && bun run src/main.ts   # Start server
+cd app && flutter pub get && flutter run -d linux            # Run viewer
+cd packages/demo && bun install && bun run src/main.ts      # Send test logs
 ```
 
 The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. Loki warnings in the server console are expected without Docker.
@@ -193,13 +193,16 @@ The Flutter viewer connects to the server WebSocket endpoint. Connection setting
 ```
 logger/
 ├── app/            Flutter desktop viewer
-├── client/         TypeScript client SDK
-├── server/         Bun-based log server
-├── shared/         Common types and schemas
-├── demo/           Demo log generator
-├── grafana/        Dashboard and datasource configs
-├── loki/           Loki configuration
-├── mcp/            MCP tool server
+├── packages/        All TypeScript packages
+│   ├── client/      TypeScript client SDK
+│   ├── server/      Bun-based log server
+│   ├── shared/      Common types and schemas
+│   ├── demo/        Demo log generator
+│   ├── mcp/         MCP tool server
+│   └── docker-sidecar/ Docker log collector
+├── deploy/          Infrastructure configs
+│   ├── grafana/     Dashboard and datasource configs
+│   └── loki/        Loki configuration
 ├── docs/           Documentation and screenshots
 │   ├── screenshots/   Auto-generated screenshots
 │   └── guides/        Human-readable guides
@@ -214,13 +217,13 @@ logger/
 
 ```bash
 # Server tests
-cd server && bun test
+cd packages/server && bun test
 
 # Client tests
-cd client && bun test
+cd packages/client && bun test
 
 # Shared tests
-cd shared && bun test
+cd packages/shared && bun test
 
 # Flutter widget tests
 cd app && flutter test

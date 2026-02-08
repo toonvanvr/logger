@@ -176,9 +176,9 @@ sequenceDiagram
 
 ## 3. Component Deep Dives
 
-### 3.1 Server (`server/src/`)
+### 3.1 Server (`packages/server/src/`)
 
-The server is a modular Bun/TypeScript application. Entry point: `server/src/main.ts`.
+The server is a modular Bun/TypeScript application. Entry point: `packages/server/src/main.ts`.
 
 #### Modules
 
@@ -224,9 +224,9 @@ Asynchronous batch forwarding to Grafana Loki:
 - Retries failed pushes up to `LOGGER_LOKI_RETRIES` times (default: 3)
 - Buffers up to `LOGGER_LOKI_MAX_BUFFER` entries before dropping (default: 10,000)
 
-### 3.2 Client SDK (`client/src/`)
+### 3.2 Client SDK (`packages/client/src/`)
 
-Lightweight TypeScript library for sending structured logs. Entry point: `client/src/logger.ts`.
+Lightweight TypeScript library for sending structured logs. Entry point: `packages/client/src/logger.ts`.
 
 #### Architecture
 
@@ -347,9 +347,9 @@ Uses Provider pattern:
 | Key-Value | `plugins/builtin/kv_plugin.dart` | `custom_type: "kv"` — aligned key-value pairs |
 | Chart | `plugins/builtin/chart_plugin.dart` | `custom_type: "chart"` — inline charts |
 
-### 3.4 MCP Server (`mcp/src/`)
+### 3.4 MCP Server (`packages/mcp/src/`)
 
-A Model Context Protocol server exposing Logger tools for AI agents. Entry point: `mcp/src/index.ts`.
+A Model Context Protocol server exposing Logger tools for AI agents. Entry point: `packages/mcp/src/index.ts`.
 
 #### Purpose
 
@@ -372,9 +372,9 @@ Allows AI agents (e.g., GitHub Copilot, Claude) to query and interact with Logge
 | `LOGGER_URL` | `http://localhost:8080` | Logger server HTTP endpoint |
 | `LOGGER_API_KEY` | *(empty)* | API key for authenticated access |
 
-### 3.5 Docker Sidecar (`docker-sidecar/src/`)
+### 3.5 Docker Sidecar (`packages/docker-sidecar/src/`)
 
-A Docker log collector that reads container stdout/stderr and forwards them as structured Logger entries. Entry point: `docker-sidecar/src/main.ts`.
+A Docker log collector that reads container stdout/stderr and forwards them as structured Logger entries. Entry point: `packages/docker-sidecar/src/main.ts`.
 
 #### How It Works
 
@@ -392,7 +392,7 @@ A Docker log collector that reads container stdout/stderr and forwards them as s
 | `LOGGER_SERVER_URL` | `http://localhost:8080` | Logger server endpoint |
 | `CONTAINER_FILTER` | *(empty)* | Regex filter for container names |
 
-### 3.6 Shared Schemas (`shared/src/`)
+### 3.6 Shared Schemas (`packages/shared/src/`)
 
 Zod schemas that serve as the **single source of truth** for the protocol. Consumed by server, client, and MCP.
 
@@ -405,13 +405,13 @@ Zod schemas that serve as the **single source of truth** for the protocol. Consu
 | `constants.ts` | Shared constants (ports, limits, defaults) |
 | `index.ts` | Re-exports for package consumers |
 
-### 3.7 Demo (`demo/src/`)
+### 3.7 Demo (`packages/demo/src/`)
 
-Generates realistic sample log traffic for development and testing. Entry point: `demo/src/main.ts`.
+Generates realistic sample log traffic for development and testing. Entry point: `packages/demo/src/main.ts`.
 
 #### Scenarios
 
-Located in `demo/src/scenarios/`:
+Located in `packages/demo/src/scenarios/`:
 
 | Scenario | Description |
 |----------|-------------|
@@ -691,7 +691,7 @@ Both fonts are bundled as assets (OFL-licensed). No network font loading.
 
 ## 6. Configuration Reference
 
-All server configuration via environment variables. Server reads from `server/src/core/config.ts`.
+All server configuration via environment variables. Server reads from `packages/server/src/core/config.ts`.
 
 ### Server
 
@@ -778,7 +778,7 @@ Resource limits: Server 512 MB, Loki 4 GB, Grafana 1 GB.
 
 ## 7. Protocol Reference
 
-The Logger protocol uses a unified `LogEntry` Zod schema defined in `shared/src/log-entry.ts`.
+The Logger protocol uses a unified `LogEntry` Zod schema defined in `packages/shared/src/log-entry.ts`.
 
 ### 7.1 Required Fields
 
@@ -879,7 +879,7 @@ The Logger protocol uses a unified `LogEntry` Zod schema defined in `shared/src/
 
 ### 7.10 WebSocket Messages
 
-**Server → Viewer** (`shared/src/server-message.ts`):
+**Server → Viewer** (`packages/shared/src/server-message.ts`):
 
 | Type | Description |
 |------|-------------|
@@ -895,7 +895,7 @@ The Logger protocol uses a unified `LogEntry` Zod schema defined in `shared/src/
 | `rpc_response` | RPC response forwarded from client |
 | `subscribe_ack` | Subscription confirmed |
 
-**Viewer → Server** (`shared/src/viewer-message.ts`):
+**Viewer → Server** (`packages/shared/src/viewer-message.ts`):
 
 | Type | Description |
 |------|-------------|
@@ -946,43 +946,44 @@ logger/
 │   │       └── time_travel/    Time scrubber, time travel controls
 │   └── test/                   Widget & unit tests (mirrors lib/ structure)
 │
-├── server/                     Bun-based log server (TypeScript)
-│   └── src/
-│       ├── main.ts             Entry point, module wiring
-│       ├── core/               Config, pipeline, hooks, rate-limiter
-│       ├── modules/            Ring buffer, Loki forwarder, session mgr, WS hub, RPC bridge
-│       ├── schema/             Zod validation (imports from shared/)
-│       ├── store/              Storage abstractions
-│       └── transport/          HTTP, UDP, TCP, WebSocket handlers, ingest pipeline
-│
-├── client/                     TypeScript client SDK
-│   └── src/
-│       ├── logger.ts           Main Logger class, fluent API
-│       ├── logger-session.ts   Session lifecycle
-│       ├── logger-builders.ts  Fluent log entry builders
-│       ├── logger-types.ts     Client type definitions
-│       ├── queue.ts            Batching queue with flush logic
-│       ├── stack-parser.ts     Cross-runtime stack trace parsing
-│       └── transport/          WebSocket transport option
-│
-├── shared/                     Shared types & schemas (TypeScript/Zod)
-│   └── src/
-│       ├── log-entry.ts        LogEntry Zod schema (source of truth)
-│       ├── server-message.ts   Server → Viewer message types
-│       ├── viewer-message.ts   Viewer → Server message types
-│       ├── custom-renderers.ts Custom renderer type definitions
-│       └── constants.ts        Shared constants
-│
-├── mcp/                        MCP tool server for AI agent access
-│   └── src/index.ts            MCP server with Logger tools
-│
-├── docker-sidecar/             Docker log collector
-│   └── src/main.ts             Reads container logs, forwards to Logger
-│
-├── demo/                       Demo log generator
-│   └── src/
-│       ├── main.ts             Entry point, scenario runner
-│       └── scenarios/          Individual log scenarios
+├── packages/                   All TypeScript packages
+│   ├── server/                 Bun-based log server (TypeScript)
+│   │   └── src/
+│   │       ├── main.ts             Entry point, module wiring
+│   │       ├── core/               Config, pipeline, hooks, rate-limiter
+│   │       ├── modules/            Ring buffer, Loki forwarder, session mgr, WS hub, RPC bridge
+│   │       ├── schema/             Zod validation (imports from shared/)
+│   │       ├── store/              Storage abstractions
+│   │       └── transport/          HTTP, UDP, TCP, WebSocket handlers, ingest pipeline
+│   │
+│   ├── client/                 TypeScript client SDK
+│   │   └── src/
+│   │       ├── logger.ts           Main Logger class, fluent API
+│   │       ├── logger-session.ts   Session lifecycle
+│   │       ├── logger-builders.ts  Fluent log entry builders
+│   │       ├── logger-types.ts     Client type definitions
+│   │       ├── queue.ts            Batching queue with flush logic
+│   │       ├── stack-parser.ts     Cross-runtime stack trace parsing
+│   │       └── transport/          WebSocket transport option
+│   │
+│   ├── shared/                 Shared types & schemas (TypeScript/Zod)
+│   │   └── src/
+│   │       ├── log-entry.ts        LogEntry Zod schema (source of truth)
+│   │       ├── server-message.ts   Server → Viewer message types
+│   │       ├── viewer-message.ts   Viewer → Server message types
+│   │       ├── custom-renderers.ts Custom renderer type definitions
+│   │       └── constants.ts        Shared constants
+│   │
+│   ├── mcp/                    MCP tool server for AI agent access
+│   │   └── src/index.ts            MCP server with Logger tools
+│   │
+│   ├── docker-sidecar/         Docker log collector
+│   │   └── src/main.ts             Reads container logs, forwards to Logger
+│   │
+│   └── demo/                   Demo log generator
+│       └── src/
+│           ├── main.ts             Entry point, scenario runner
+│           └── scenarios/          Individual log scenarios
 │
 ├── docs/                       Documentation
 │   ├── INDEX.md                This document
@@ -1001,13 +1002,14 @@ logger/
 │       ├── color-system.md     Color token reference
 │       └── ux-principles.md    UX design philosophy
 │
-├── grafana/                    Grafana configuration
-│   ├── dashboards/             Dashboard JSON definitions
-│   ├── grafana-datasources.yml Loki datasource config
-│   └── grafana.ini             Grafana settings
-│
-├── loki/
-│   └── loki-config.yml         Loki configuration
+├── deploy/                     Infrastructure configs
+│   ├── grafana/                Grafana configuration
+│   │   ├── dashboards/             Dashboard JSON definitions
+│   │   ├── grafana-datasources.yml Loki datasource config
+│   │   └── grafana.ini             Grafana settings
+│   │
+│   └── loki/
+│       └── loki-config.yml         Loki configuration
 │
 ├── scripts/
 │   └── capture-docs-screenshots.ts  Screenshot automation
@@ -1032,19 +1034,19 @@ cd app && flutter build linux
 ./build/linux/x64/release/bundle/app
 
 # Individual services
-cd server && bun run src/main.ts
-cd demo && bun run src/main.ts
+cd packages/server && bun run src/main.ts
+cd packages/demo && bun run src/main.ts
 cd app && flutter run -d linux
 ```
 
 ### Testing
 
 ```bash
-cd server && bun test      # Server tests
-cd client && bun test      # Client SDK tests
-cd shared && bun test      # Shared schema tests
-cd mcp && bun test         # MCP server tests
-cd app && flutter test     # Flutter widget & unit tests
+cd packages/server && bun test      # Server tests
+cd packages/client && bun test      # Client SDK tests
+cd packages/shared && bun test      # Shared schema tests
+cd packages/mcp && bun test         # MCP server tests
+cd app && flutter test               # Flutter widget & unit tests
 ```
 
 ### Codebase Statistics
@@ -1061,4 +1063,4 @@ cd app && flutter test     # Flutter widget & unit tests
 
 ---
 
-*Generated: 2026-02-08 | Source of truth for schemas: `shared/src/log-entry.ts`*
+*Generated: 2026-02-08 | Source of truth for schemas: `packages/shared/src/log-entry.ts`*

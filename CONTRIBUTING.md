@@ -9,18 +9,18 @@
 ```bash
 git clone https://github.com/<your-fork>/logger.git
 cd logger
-cd shared && bun install && cd ..
-cd client && bun install && cd ..
-cd server && bun install && cd ..
+cd packages/shared && bun install && cd ../..
+cd packages/client && bun install && cd ../..
+cd packages/server && bun install && cd ../..
 cd app && flutter pub get && cd ..
 ```
 
 ## Running Tests
 
 ```bash
-cd shared && bun test
-cd client && bun test
-cd server && bun test
+cd packages/shared && bun test
+cd packages/client && bun test
+cd packages/server && bun test
 cd app && flutter test
 ```
 
@@ -29,8 +29,8 @@ All tests must pass before submitting a PR.
 ## Running Locally
 
 ```bash
-cd server && bun run src/main.ts   # Start log server on :8080
-cd app && flutter run -d linux     # Launch the viewer app
+cd packages/server && bun run src/main.ts   # Start log server on :8080
+cd app && flutter run -d linux               # Launch the viewer app
 ```
 
 Or use Docker Compose for the full stack: `docker compose up -d`
@@ -39,7 +39,7 @@ Or use Docker Compose for the full stack: `docker compose up -d`
 
 - **File size:** target 150 lines, hard max 300 lines per file.
 - **Dart:** use `dart format`. Provider for state management. JetBrains Mono + Inter fonts.
-- **TypeScript:** Zod schemas live in `shared/` as the single source of truth.
+- **TypeScript:** Zod schemas live in `packages/shared/` as the single source of truth.
 - **Tests:** colocated (`foo.test.ts` next to `foo.ts`), or `test/` mirroring `lib/` in Flutter.
 
 ## License

@@ -24,7 +24,7 @@ The fastest path — no Docker required.
 ### 1. Start the Server
 
 ```bash
-cd server && bun install && bun run src/main.ts
+cd packages/server && bun install && bun run src/main.ts
 ```
 
 ### 2. Run the Viewer
@@ -38,7 +38,7 @@ The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. Loki connection
 ### 3. Send Test Logs
 
 ```bash
-cd demo && bun install && bun run src/main.ts
+cd packages/demo && bun install && bun run src/main.ts
 ```
 
 ## Full Stack Setup (Docker)

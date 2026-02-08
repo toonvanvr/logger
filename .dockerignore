@@ -16,11 +16,11 @@ app/build
 app/
 
 # Grafana/Loki configs are mounted, not COPYed
-grafana/
-loki/
+deploy/grafana/
+deploy/loki/
 
 # MCP tool
-mcp/
+packages/mcp/
 
 # AI scratch
 .ai/

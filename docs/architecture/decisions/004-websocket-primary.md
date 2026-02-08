@@ -20,7 +20,7 @@ Alternatives considered:
 
 We will use **WebSocket** as the primary transport between the server and viewer (and MCP server).
 
-WebSocket provides full-duplex communication over a single TCP connection, enabling real-time log streaming server→viewer and control messages viewer→server. The protocol uses JSON-serialized messages defined by Zod schemas in `shared/src/`.
+WebSocket provides full-duplex communication over a single TCP connection, enabling real-time log streaming server→viewer and control messages viewer→server. The protocol uses JSON-serialized messages defined by Zod schemas in `packages/shared/src/`.
 
 ## Consequences
 

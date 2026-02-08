@@ -56,7 +56,7 @@ graph TB
 
 ## Component Overview
 
-### Server (`server/src/`)
+### Server (`packages/server/src/`)
 
 The server is a Bun-based TypeScript application with modular architecture:
 
@@ -73,7 +73,7 @@ The server is a Bun-based TypeScript application with modular architecture:
 | **RPC Bridge** | `modules/rpc-bridge.ts` | Bidirectional RPC between viewers and client apps |
 | **File Store** | `modules/file-store.ts` | Disk-based storage for uploaded images |
 
-### Client SDK (`client/src/`)
+### Client SDK (`packages/client/src/`)
 
 Lightweight TypeScript library for sending structured logs:
 
@@ -98,7 +98,7 @@ Flutter desktop application (Linux-first):
 | `theme/` | Custom dark theme, color tokens, typography |
 | `widgets/` | Reusable UI components (log list, renderers, filters) |
 
-### Shared (`shared/src/`)
+### Shared (`packages/shared/src/`)
 
 Zod schemas that serve as the **single source of truth** for the protocol:
 

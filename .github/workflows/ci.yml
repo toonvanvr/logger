@@ -11,10 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: cd shared && bun install && bun test
-      - run: cd client && bun install && bun test
-      - run: cd server && bun install && bun test
-      - run: cd mcp && bun install && bun test
+      - run: cd packages/shared && bun install && bun test
+      - run: cd packages/client && bun install && bun test
+      - run: cd packages/server && bun install && bun test
+      - run: cd packages/mcp && bun install && bun test
 
   test-flutter:
     runs-on: ubuntu-latest
@@ -32,10 +32,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: cd shared && bun install && bunx tsc --noEmit
-      - run: cd client && bun install && bunx tsc --noEmit
-      - run: cd server && bun install && bunx tsc --noEmit
-      - run: cd mcp && bun install && bunx tsc --noEmit
+      - run: cd packages/shared && bun install && bunx tsc --noEmit
+      - run: cd packages/client && bun install && bunx tsc --noEmit
+      - run: cd packages/server && bun install && bunx tsc --noEmit
+      - run: cd packages/mcp && bun install && bunx tsc --noEmit
 
   audit:
     runs-on: ubuntu-latest
@@ -43,8 +43,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - name: Audit server dependencies
-        run: cd server && bun install && bun pm ls --all
+        run: cd packages/server && bun install && bun pm ls --all
         continue-on-error: true
       - name: Audit client dependencies
-        run: cd client && bun install && bun pm ls --all
+        run: cd packages/client && bun install && bun pm ls --all
         continue-on-error: true

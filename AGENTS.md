@@ -32,34 +32,36 @@ logger/
 │   │       ├── status_bar/   Connection status, counts, active filters
 │   │       └── time_travel/  Time range zoom/pan minimap
 │   └── test/             Widget & unit tests
-├── client/           TypeScript client SDK
-│   └── src/
-│       ├── logger.ts         Client SDK entry point
-│       ├── logger-session.ts Session lifecycle
-│       ├── logger-builders.ts  Fluent log builders
-│       ├── logger-types.ts   Client type definitions
-│       ├── queue.ts          Batching queue
-│       └── stack-parser.ts   Stack trace parser
-├── server/           Bun-based log server (TypeScript)
-│   └── src/
-│       ├── main.ts           Entry point, module wiring
-│       ├── core/             Config, shared utilities
-│       ├── modules/          Ring buffer, Loki forwarder, session mgr, RPC bridge, WS hub
-│       ├── schema/           Zod validation schemas
-│       ├── store/            Storage abstractions
-│       └── transport/        HTTP, WebSocket, UDP, TCP handlers
-├── shared/           Shared types & schemas (TypeScript)
-│   └── src/
-│       ├── log-entry.ts      LogEntry Zod schema (source of truth)
-│       ├── server-message.ts Server→Viewer messages
-│       ├── viewer-message.ts Viewer→Server messages
-│       ├── custom-renderers.ts  Custom renderer type definitions
-│       └── constants.ts      Shared constants
-├── docker-sidecar/   Docker container log forwarding sidecar
-├── mcp/              MCP tool server for AI debugging
-├── demo/             Demo log generator with scenarios
-├── grafana/          Dashboard & datasource configs
-├── loki/             Loki configuration
+├── packages/         All TypeScript packages
+│   ├── client/       TypeScript client SDK
+│   │   └── src/
+│   │       ├── logger.ts         Client SDK entry point
+│   │       ├── logger-session.ts Session lifecycle
+│   │       ├── logger-builders.ts  Fluent log builders
+│   │       ├── logger-types.ts   Client type definitions
+│   │       ├── queue.ts          Batching queue
+│   │       └── stack-parser.ts   Stack trace parser
+│   ├── server/       Bun-based log server (TypeScript)
+│   │   └── src/
+│   │       ├── main.ts           Entry point, module wiring
+│   │       ├── core/             Config, shared utilities
+│   │       ├── modules/          Ring buffer, Loki forwarder, session mgr, RPC bridge, WS hub
+│   │       ├── schema/           Zod validation schemas
+│   │       ├── store/            Storage abstractions
+│   │       └── transport/        HTTP, WebSocket, UDP, TCP handlers
+│   ├── shared/       Shared types & schemas (TypeScript)
+│   │   └── src/
+│   │       ├── log-entry.ts      LogEntry Zod schema (source of truth)
+│   │       ├── server-message.ts Server→Viewer messages
+│   │       ├── viewer-message.ts Viewer→Server messages
+│   │       ├── custom-renderers.ts  Custom renderer type definitions
+│   │       └── constants.ts      Shared constants
+│   ├── docker-sidecar/ Docker container log forwarding sidecar
+│   ├── mcp/          MCP tool server for AI debugging
+│   └── demo/         Demo log generator with scenarios
+├── deploy/           Infrastructure configs
+│   ├── grafana/      Dashboard & datasource configs
+│   └── loki/         Loki configuration
 ├── scripts/          Automation (screenshot capture, etc.)
 ├── docs/             Documentation hub
 │   ├── architecture/ Architecture overview & ADRs
@@ -74,19 +76,19 @@ logger/
 
 | File | Purpose |
 |------|---------|
-| `shared/src/log-entry.ts` | **LogEntry Zod schema** — single source of truth for the log protocol |
-| `shared/src/server-message.ts` | Server→Viewer WebSocket message schema |
-| `shared/src/viewer-message.ts` | Viewer→Server WebSocket message schema |
-| `server/src/main.ts` | Server entry point — wires all modules together |
-| `server/src/core/config.ts` | All server configuration via env vars |
-| `server/src/transport/http.ts` | HTTP route definitions (log ingestion, health, upload) |
-| `server/src/transport/ws.ts` | WebSocket handler for viewer connections |
-| `server/src/transport/ingest.ts` | Log processing pipeline |
-| `server/src/modules/ring-buffer.ts` | In-memory log storage with eviction |
-| `server/src/modules/loki-forwarder.ts` | Async batch forwarding to Loki |
-| `server/src/modules/session-manager.ts` | Session lifecycle tracking |
-| `server/src/modules/rpc-bridge.ts` | Bidirectional RPC between viewer and clients |
-| `client/src/logger.ts` | Client SDK — main Logger class |
+| `packages/shared/src/log-entry.ts` | **LogEntry Zod schema** — single source of truth for the log protocol |
+| `packages/shared/src/server-message.ts` | Server→Viewer WebSocket message schema |
+| `packages/shared/src/viewer-message.ts` | Viewer→Server WebSocket message schema |
+| `packages/server/src/main.ts` | Server entry point — wires all modules together |
+| `packages/server/src/core/config.ts` | All server configuration via env vars |
+| `packages/server/src/transport/http.ts` | HTTP route definitions (log ingestion, health, upload) |
+| `packages/server/src/transport/ws.ts` | WebSocket handler for viewer connections |
+| `packages/server/src/transport/ingest.ts` | Log processing pipeline |
+| `packages/server/src/modules/ring-buffer.ts` | In-memory log storage with eviction |
+| `packages/server/src/modules/loki-forwarder.ts` | Async batch forwarding to Loki |
+| `packages/server/src/modules/session-manager.ts` | Session lifecycle tracking |
+| `packages/server/src/modules/rpc-bridge.ts` | Bidirectional RPC between viewer and clients |
+| `packages/client/src/logger.ts` | Client SDK — main Logger class |
 | `app/lib/main.dart` | Flutter app entry point |
 | `app/lib/plugins/plugin_registry.dart` | Plugin registry singleton |
 | `app/lib/plugins/plugin_types.dart` | Plugin base interfaces (Renderer, Filter, Transform, Tool) |
@@ -99,11 +101,11 @@ logger/
 | `app/lib/widgets/state_view/shelf_card.dart` | Secondary state shelf card |
 | `app/lib/widgets/landing/empty_landing_page.dart` | Empty landing page when no sessions |
 | `app/lib/plugins/builtin/http_request_plugin.dart` | HTTP request tracking renderer plugin |
-| `server/src/store/index.ts` | Store abstraction layer |
-| `server/src/store/adapters/loki-adapter.ts` | Loki storage adapter |
-| `server/src/store/adapters/memory-adapter.ts` | In-memory storage adapter |
-| `server/src/modules/self-logger.ts` | Server self-logging module |
-| `docker-sidecar/src/main.ts` | Docker container log forwarding sidecar |
+| `packages/server/src/store/index.ts` | Store abstraction layer |
+| `packages/server/src/store/adapters/loki-adapter.ts` | Loki storage adapter |
+| `packages/server/src/store/adapters/memory-adapter.ts` | In-memory storage adapter |
+| `packages/server/src/modules/self-logger.ts` | Server self-logging module |
+| `packages/docker-sidecar/src/main.ts` | Docker container log forwarding sidecar |
 
 ## Build, Test, Run
 
@@ -118,19 +120,19 @@ cd app && flutter build linux  # Build viewer
 ### Tests
 
 ```bash
-cd server && bun test          # Server tests
-cd client && bun test          # Client SDK tests
-cd shared && bun test          # Shared schema tests
-cd mcp && bun test             # MCP server tests
-cd app && flutter test          # Flutter widget & unit tests
+cd packages/server && bun test          # Server tests
+cd packages/client && bun test          # Client SDK tests
+cd packages/shared && bun test          # Shared schema tests
+cd packages/mcp && bun test             # MCP server tests
+cd app && flutter test                  # Flutter widget & unit tests
 ```
 
 ### Individual Services
 
 ```bash
-cd server && bun run src/main.ts   # Server standalone
-cd demo && bun run src/main.ts     # Demo log generator
-cd app && flutter run -d linux     # Flutter app (dev mode)
+cd packages/server && bun run src/main.ts   # Server standalone
+cd packages/demo && bun run src/main.ts     # Demo log generator
+cd app && flutter run -d linux              # Flutter app (dev mode)
 ```
 
 ## Architecture Decisions
@@ -149,7 +151,7 @@ Key choices documented in `docs/architecture/decisions/`:
 
 ### TypeScript (server, client, shared, mcp, demo)
 - **Runtime:** Bun (not Node.js) — use `Bun.serve()`, `Bun.udpSocket()`, etc.
-- **Schemas:** Zod in `shared/` — single source of truth consumed by server + client
+- **Schemas:** Zod in `packages/shared/` — single source of truth consumed by server + client
 - **Tests:** Colocated — `foo.test.ts` next to `foo.ts`, run with `bun test`
 - **No ORM:** Direct HTTP to Loki push API
 - **Modules:** Each server module is a class with clear init/dispose lifecycle

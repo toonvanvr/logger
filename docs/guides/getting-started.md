@@ -14,7 +14,7 @@ The quickest way to try Logger — no Docker required.
 ### Start the Server
 
 ```bash
-cd server && bun install && bun run src/main.ts
+cd packages/server && bun install && bun run src/main.ts
 ```
 
 ### Build and Run the Viewer
@@ -28,7 +28,7 @@ The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. You'll see serv
 ### Send Test Logs
 
 ```bash
-cd demo && bun install && bun run src/main.ts
+cd packages/demo && bun install && bun run src/main.ts
 ```
 
 ## Full Setup (Docker)

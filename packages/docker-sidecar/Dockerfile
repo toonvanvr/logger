@@ -2,17 +2,17 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 # Copy shared package (transitive dependency via client)
-COPY shared/ ./shared/
+COPY packages/shared/ ./shared/
 
 # Copy client package
-COPY client/ ./client/
+COPY packages/client/ ./client/
 
 # Copy sidecar package files
-COPY docker-sidecar/package.json ./docker-sidecar/
+COPY packages/docker-sidecar/package.json ./docker-sidecar/
 WORKDIR /app/docker-sidecar
 RUN bun install
 
 # Copy sidecar source
-COPY docker-sidecar/src/ ./src/
+COPY packages/docker-sidecar/src/ ./src/
 
 CMD ["bun", "run", "src/main.ts"]

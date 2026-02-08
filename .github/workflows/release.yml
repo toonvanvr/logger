@@ -16,10 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: cd shared && bun install && bun test
-      - run: cd client && bun install && bun test
-      - run: cd server && bun install && bun test
-      - run: cd mcp && bun install && bun test
+      - run: cd packages/shared && bun install && bun test
+      - run: cd packages/client && bun install && bun test
+      - run: cd packages/server && bun install && bun test
+      - run: cd packages/mcp && bun install && bun test
 
   test-flutter:
     runs-on: ubuntu-latest

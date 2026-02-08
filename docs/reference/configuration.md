@@ -1,6 +1,6 @@
 # Configuration Reference
 
-All Logger server configuration is done via environment variables. The server reads these at startup from `server/src/core/config.ts`.
+All Logger server configuration is done via environment variables. The server reads these at startup from `packages/server/src/core/config.ts`.
 
 ## Server
 

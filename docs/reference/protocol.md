@@ -1,6 +1,6 @@
 # Log Entry Protocol Reference
 
-The Logger protocol uses a unified `LogEntry` schema for all transports (HTTP, UDP, TCP, WebSocket). The schema is defined in Zod at `shared/src/log-entry.ts` — that file is the **single source of truth**.
+The Logger protocol uses a unified `LogEntry` schema for all transports (HTTP, UDP, TCP, WebSocket). The schema is defined in Zod at `packages/shared/src/log-entry.ts` — that file is the **single source of truth**.
 
 ## LogEntry Schema
 
