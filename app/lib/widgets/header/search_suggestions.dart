@@ -120,7 +120,9 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
 
     const itemHeight = 28.0;
     final visibleCount = capped.length.clamp(1, widget.maxVisible);
-    final height = visibleCount * itemHeight;
+    final fitsWithoutScroll = capped.length <= widget.maxVisible;
+    // +2 accounts for the 1px top + 1px bottom border inset.
+    final height = visibleCount * itemHeight + 2;
 
     return Focus(
       onKeyEvent: _handleKey,
@@ -141,6 +143,9 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
         child: ListView.builder(
           controller: _scrollController,
           padding: EdgeInsets.zero,
+          physics: fitsWithoutScroll
+              ? const NeverScrollableScrollPhysics()
+              : null,
           itemCount: capped.length,
           itemExtent: itemHeight,
           itemBuilder: (context, index) {

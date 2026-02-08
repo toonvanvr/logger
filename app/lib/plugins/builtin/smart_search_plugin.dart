@@ -12,7 +12,10 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
   // ─── Known patterns for autocomplete ─────────────────────────────
 
   static final _searchPatterns = <String, RegExp>{
-    'uuid:': RegExp(r'[0-9a-f]{8}-[0-9a-f]{4}', caseSensitive: false),
+    'uuid:': RegExp(
+      r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+      caseSensitive: false,
+    ),
     'url:': RegExp(r'https?://\S+'),
     'email:': RegExp(r'[\w.+-]+@[\w-]+\.[\w.]+'),
     'ip:': RegExp(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'),

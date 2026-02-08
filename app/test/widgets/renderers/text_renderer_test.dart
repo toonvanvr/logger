@@ -43,12 +43,25 @@ void main() {
     );
   });
 
+  testWidgets('uses Text.rich for SelectionArea compatibility', (tester) async {
+    await tester.pumpWidget(
+      _wrap(TextRenderer(entry: _makeTextEntry(text: 'selectable text'))),
+    );
+
+    // TextRenderer should produce a Text widget (via Text.rich), not a
+    // bare RichText, so that it participates in SelectionArea.
+    final textWidgets = find.byWidgetPredicate(
+      (w) => w is Text && w.textSpan != null,
+    );
+    expect(textWidgets, findsOneWidget);
+  });
+
   testWidgets('highlights numbers in text', (tester) async {
     await tester.pumpWidget(
       _wrap(TextRenderer(entry: _makeTextEntry(text: 'count is 42 items'))),
     );
 
-    // The rendered RichText should contain the full text.
+    // The rendered output should contain the full text.
     expect(
       find.byWidgetPredicate(
         (w) => w is RichText && w.text.toPlainText().contains('42'),
@@ -57,13 +70,16 @@ void main() {
     );
 
     // Verify "42" is in its own span (syntax highlight splits it out).
-    final richText = tester.widget<RichText>(
+    // Text.rich stores our TextSpan on the textSpan property.
+    final textWidget = tester.widget<Text>(
       find.byWidgetPredicate(
         (w) =>
-            w is RichText && w.text.toPlainText().contains('count is 42 items'),
+            w is Text &&
+            w.textSpan != null &&
+            w.textSpan!.toPlainText().contains('count is 42 items'),
       ),
     );
-    final root = richText.text as TextSpan;
+    final root = textWidget.textSpan! as TextSpan;
     final spans = root.children!.cast<TextSpan>();
     final numberSpan = spans.firstWhere((s) => s.text == '42');
     expect(numberSpan, isNotNull);

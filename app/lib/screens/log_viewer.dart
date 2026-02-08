@@ -89,87 +89,107 @@ class _LogViewerScreenState extends State<LogViewerScreen>
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsService>();
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          Expanded(
-            child: Column(
-              children: [
-                if (settings.miniMode)
-                  MiniTitleBar(
-                    isFilterExpanded: _isFilterExpanded,
-                    onFilterToggle: () {
-                      setState(() => _isFilterExpanded = !_isFilterExpanded);
-                    },
-                    onSettingsToggle: () {
-                      setState(
-                        () => _settingsPanelVisible = !_settingsPanelVisible,
-                      );
-                    },
-                  )
-                else
-                  SessionSelector(
-                    isFilterExpanded: _isFilterExpanded,
-                    onFilterToggle: () {
-                      setState(() => _isFilterExpanded = !_isFilterExpanded);
-                    },
-                    onRpcToggle: () {
-                      setState(
-                        () => _settingsPanelVisible = !_settingsPanelVisible,
-                      );
-                    },
-                  ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: _isFilterExpanded
-                      ? FilterBar(
-                          activeSeverities: _activeSeverities,
-                          onSeverityChange: (severities) {
-                            setState(() => _activeSeverities = severities);
-                          },
-                          onTextFilterChange: (text) {
-                            setState(() => _textFilter = text);
-                          },
-                          onClear: () {
-                            setState(() {
-                              _activeSeverities = _defaultSeverities;
-                              _textFilter = '';
-                            });
-                          },
-                        )
-                      : const SizedBox.shrink(),
+          Column(
+            children: [
+              if (settings.miniMode)
+                MiniTitleBar(
+                  isFilterExpanded: _isFilterExpanded,
+                  onFilterToggle: () {
+                    setState(() => _isFilterExpanded = !_isFilterExpanded);
+                  },
+                  onSettingsToggle: () {
+                    setState(
+                      () => _settingsPanelVisible = !_settingsPanelVisible,
+                    );
+                  },
+                )
+              else
+                SessionSelector(
+                  isFilterExpanded: _isFilterExpanded,
+                  onFilterToggle: () {
+                    setState(() => _isFilterExpanded = !_isFilterExpanded);
+                  },
+                  onRpcToggle: () {
+                    setState(
+                      () => _settingsPanelVisible = !_settingsPanelVisible,
+                    );
+                  },
                 ),
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final logStore = context.watch<LogStore>();
-                      final connMgr = context.watch<ConnectionManager>();
-                      final showLanding =
-                          logStore.entries.isEmpty && connMgr.activeCount == 0;
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        child: showLanding
-                            ? EmptyLandingPage(
-                                key: const ValueKey('landing'),
-                                onConnect: () {
-                                  setState(() => _settingsPanelVisible = true);
-                                },
-                              )
-                            : _buildMainContent(context),
-                      );
-                    },
-                  ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: _isFilterExpanded
+                    ? FilterBar(
+                        activeSeverities: _activeSeverities,
+                        onSeverityChange: (severities) {
+                          setState(() => _activeSeverities = severities);
+                        },
+                        onTextFilterChange: (text) {
+                          setState(() => _textFilter = text);
+                        },
+                        onClear: () {
+                          setState(() {
+                            _activeSeverities = _defaultSeverities;
+                            _textFilter = '';
+                          });
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final logStore = context.watch<LogStore>();
+                    final connMgr = context.watch<ConnectionManager>();
+                    final showLanding =
+                        logStore.entries.isEmpty && connMgr.activeCount == 0;
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: showLanding
+                          ? EmptyLandingPage(
+                              key: const ValueKey('landing'),
+                              onConnect: () {
+                                setState(() => _settingsPanelVisible = true);
+                              },
+                            )
+                          : _buildMainContent(context),
+                    );
+                  },
                 ),
-                const StatusBar(),
-              ],
+              ),
+              const StatusBar(),
+            ],
+          ),
+          // Scrim backdrop when settings panel is open
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_settingsPanelVisible,
+              child: AnimatedOpacity(
+                opacity: _settingsPanelVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _settingsPanelVisible = false);
+                  },
+                  child: const ColoredBox(color: Color(0x40000000)),
+                ),
+              ),
             ),
           ),
-          SettingsPanel(
-            isVisible: _settingsPanelVisible,
-            onClose: () {
-              setState(() => _settingsPanelVisible = false);
-            },
+          // Settings panel overlay
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: SettingsPanel(
+              isVisible: _settingsPanelVisible,
+              onClose: () {
+                setState(() => _settingsPanelVisible = false);
+              },
+            ),
           ),
         ],
       ),

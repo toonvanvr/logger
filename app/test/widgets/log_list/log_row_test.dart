@@ -1,9 +1,12 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/services/session_store.dart';
+import 'package:app/theme/colors.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/log_list/log_row.dart';
+import 'package:app/widgets/log_list/log_row_content.dart';
 import 'package:app/widgets/log_list/session_dot.dart';
 import 'package:app/widgets/log_list/severity_bar.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -34,6 +37,21 @@ Widget _wrap(Widget child) {
       home: Scaffold(body: child),
     ),
   );
+}
+
+Container _findRowContainer(WidgetTester tester) {
+  return tester
+      .widgetList<Container>(
+        find.descendant(
+          of: find.byType(LogRow),
+          matching: find.byType(Container),
+        ),
+      )
+      .firstWhere(
+        (c) =>
+            c.decoration is BoxDecoration &&
+            (c.decoration as BoxDecoration).border != null,
+      );
 }
 
 void main() {
@@ -87,5 +105,81 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     final opacityAfter = tester.widget<Opacity>(find.byType(Opacity).first);
     expect(opacityAfter.opacity, closeTo(1.0, 0.05));
+  });
+
+  testWidgets('isSelected does not apply bgActive highlight', (tester) async {
+    await tester.pumpWidget(
+      _wrap(LogRow(entry: _makeEntry(), isSelected: true)),
+    );
+    await tester.pump();
+
+    final container = _findRowContainer(tester);
+    final decoration = container.decoration as BoxDecoration;
+    expect(decoration.color, isNot(equals(LoggerColors.bgActive)));
+  });
+
+  testWidgets('hover applies dim highlight', (tester) async {
+    await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry())));
+    await tester.pump();
+
+    final colorBefore =
+        (_findRowContainer(tester).decoration as BoxDecoration).color;
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(tester.getCenter(find.byType(LogRow)));
+    await tester.pump();
+
+    final colorAfter =
+        (_findRowContainer(tester).decoration as BoxDecoration).color;
+    expect(colorAfter, isNot(equals(colorBefore)));
+  });
+
+  testWidgets('copy button shows checkmark after tap', (tester) async {
+    await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry(text: 'copy me'))));
+    await tester.pump();
+
+    // Hover to show copy button
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(tester.getCenter(find.byType(LogRow)));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.content_copy), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.content_copy));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.check), findsOneWidget);
+    expect(find.byIcon(Icons.content_copy), findsNothing);
+
+    // Reverts after 800ms
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.byIcon(Icons.content_copy), findsOneWidget);
+  });
+
+  testWidgets('copy button has pointer cursor on hover', (tester) async {
+    await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry())));
+    await tester.pump();
+
+    // Hover to show copy button
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(tester.getCenter(find.byType(LogRow)));
+    await tester.pump();
+
+    final mouseRegions = tester.widgetList<MouseRegion>(
+      find.descendant(
+        of: find.byType(LogRowContent),
+        matching: find.byType(MouseRegion),
+      ),
+    );
+    final clickCursor = mouseRegions.where(
+      (mr) => mr.cursor == SystemMouseCursors.click,
+    );
+    expect(clickCursor, isNotEmpty);
   });
 }

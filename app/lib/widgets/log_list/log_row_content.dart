@@ -13,7 +13,7 @@ import '../renderers/renderer_factory.dart';
 /// Handles group-open rendering (collapse icon + label), depth indentation
 /// with guide lines, copy-on-hover overlay, and delegates to [buildLogContent]
 /// for standard entries.
-class LogRowContent extends StatelessWidget {
+class LogRowContent extends StatefulWidget {
   final LogEntry entry;
   final int groupDepth;
   final bool isCollapsed;
@@ -30,17 +30,33 @@ class LogRowContent extends StatelessWidget {
   });
 
   @override
+  State<LogRowContent> createState() => _LogRowContentState();
+}
+
+class _LogRowContentState extends State<LogRowContent> {
+  bool _copied = false;
+
+  void _onCopy() {
+    Clipboard.setData(ClipboardData(text: serializeLogEntry(widget.entry)));
+    setState(() => _copied = true);
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) setState(() => _copied = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget content;
 
     // For group open entries, show collapse icon and group label
-    if (entry.type == LogType.group && entry.groupAction == GroupAction.open) {
-      final label = entry.groupLabel ?? entry.groupId ?? 'Group';
+    if (widget.entry.type == LogType.group &&
+        widget.entry.groupAction == GroupAction.open) {
+      final label = widget.entry.groupLabel ?? widget.entry.groupId ?? 'Group';
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isCollapsed ? Icons.chevron_right : Icons.expand_more,
+            widget.isCollapsed ? Icons.chevron_right : Icons.expand_more,
             size: 14,
             color: LoggerColors.fgSecondary,
           ),
@@ -49,12 +65,12 @@ class LogRowContent extends StatelessWidget {
         ],
       );
     } else {
-      content = buildLogContent(entry);
+      content = buildLogContent(widget.entry);
     }
 
-    if (groupDepth > 0) {
+    if (widget.groupDepth > 0) {
       content = Padding(
-        padding: EdgeInsets.only(left: groupDepth * 12.0),
+        padding: EdgeInsets.only(left: widget.groupDepth * 12.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -70,41 +86,44 @@ class LogRowContent extends StatelessWidget {
       );
     }
 
-    if (!isHovered) return content;
-
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         content,
-        Positioned(
-          right: 0,
-          top: 0,
-          bottom: 0,
-          child: SelectionContainer.disabled(
-            child: GestureDetector(
-              onTap: () => Clipboard.setData(
-                ClipboardData(text: serializeLogEntry(entry)),
-              ),
-              child: Container(
-                width: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      backgroundColor.withValues(alpha: 0),
-                      backgroundColor,
-                    ],
+        if (widget.isHovered)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: SelectionContainer.disabled(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: _onCopy,
+                  child: Container(
+                    width: 60,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.backgroundColor.withValues(alpha: 0),
+                          widget.backgroundColor,
+                        ],
+                      ),
+                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      _copied ? Icons.check : Icons.content_copy,
+                      size: 14,
+                      color: _copied
+                          ? LoggerColors.syntaxString
+                          : LoggerColors.fgMuted,
+                    ),
                   ),
-                ),
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 4),
-                child: const Icon(
-                  Icons.content_copy,
-                  size: 14,
-                  color: LoggerColors.fgMuted,
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

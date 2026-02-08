@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/server_message.dart';
 import '../../services/session_store.dart';
 import '../../services/settings_service.dart';
+import '../../services/window_service.dart';
 import '../../theme/colors.dart';
 import 'overflow_menu.dart';
 import 'session_button.dart';
@@ -141,6 +142,16 @@ class _SessionSelectorState extends State<SessionSelector> {
             isActive: widget.isFilterExpanded,
             onTap: widget.onFilterToggle,
           ),
+          // Mini mode toggle
+          HeaderIconButton(
+            icon: Icons.picture_in_picture_alt,
+            tooltip: 'Mini mode (Ctrl+M)',
+            isActive: false,
+            onTap: () {
+              WindowService.setDecorated(false);
+              context.read<SettingsService>().setMiniMode(true);
+            },
+          ),
           // Settings panel toggle
           HeaderIconButton(
             icon: Icons.settings,
@@ -148,17 +159,6 @@ class _SessionSelectorState extends State<SessionSelector> {
             isActive: false,
             onTap: widget.onRpcToggle,
           ),
-          // Mini mode toggle
-          HeaderIconButton(
-            icon: Icons.view_compact_outlined,
-            tooltip: 'Mini mode (Ctrl+M)',
-            isActive: false,
-            onTap: () => context.read<SettingsService>().setMiniMode(true),
-          ),
-          const SizedBox(width: 4),
-          // Always-on-top toggle
-          const AlwaysOnTopButton(),
-          const SizedBox(width: 4),
         ],
       ),
     );

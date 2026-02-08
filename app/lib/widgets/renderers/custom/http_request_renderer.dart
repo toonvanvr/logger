@@ -237,8 +237,9 @@ class _HttpRequestRendererState extends State<HttpRequestRenderer> {
     if (isError || (status != null && status >= 500)) {
       return LoggerColors.severityErrorText;
     }
-    if (status != null && status >= 400)
+    if (status != null && status >= 400) {
       return LoggerColors.severityWarningText;
+    }
     if (status != null && status >= 200 && status < 300) {
       return LoggerColors.severityInfoText;
     }

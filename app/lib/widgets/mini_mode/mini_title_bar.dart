@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/settings_service.dart';
+import '../../services/window_service.dart';
 import '../../theme/colors.dart';
 
 /// Dense 28px titlebar for mini mode, replacing the normal SessionSelector.
@@ -44,7 +45,10 @@ class MiniTitleBar extends StatelessWidget {
           _MiniButton(
             icon: Icons.open_in_full,
             tooltip: 'Exit mini mode (Ctrl+M)',
-            onTap: () => context.read<SettingsService>().setMiniMode(false),
+            onTap: () {
+              WindowService.setDecorated(true);
+              context.read<SettingsService>().setMiniMode(false);
+            },
           ),
           // Center: Drag area for window move
           const Expanded(child: _DragArea()),
@@ -53,17 +57,17 @@ class MiniTitleBar extends StatelessWidget {
           _WindowButton(
             icon: Icons.minimize,
             tooltip: 'Minimize',
-            onTap: () {},
+            onTap: () => WindowService.minimize(),
           ),
           _WindowButton(
             icon: Icons.crop_square,
             tooltip: 'Maximize',
-            onTap: () {},
+            onTap: () => WindowService.maximize(),
           ),
           _WindowButton(
             icon: Icons.close,
             tooltip: 'Close',
-            onTap: () {},
+            onTap: () => WindowService.close(),
             isClose: true,
           ),
         ],
@@ -135,7 +139,10 @@ class _PinButtonState extends State<_PinButton> {
       icon: Icons.push_pin_outlined,
       tooltip: 'Always on top',
       isActive: _pinned,
-      onTap: () => setState(() => _pinned = !_pinned),
+      onTap: () {
+        setState(() => _pinned = !_pinned);
+        WindowService.setAlwaysOnTop(_pinned);
+      },
     );
   }
 }

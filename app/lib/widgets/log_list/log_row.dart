@@ -100,10 +100,13 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   }
 
   Color get _backgroundColor {
-    if (widget.isSelectionSelected) return LoggerColors.bgActive;
-    if (widget.isSelected) return LoggerColors.bgActive;
-    if (widget.isEvenRow) return LoggerColors.bgSurface;
-    return LoggerColors.bgSurface.withValues(alpha: 0.85);
+    final base = widget.isSelectionSelected
+        ? LoggerColors.bgActive
+        : (widget.isEvenRow
+              ? LoggerColors.bgSurface
+              : LoggerColors.bgSurface.withValues(alpha: 0.85));
+    if (_isHovered) return Color.lerp(base, Colors.white, 0.03)!;
+    return base;
   }
 
   @override
@@ -122,7 +125,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
               child: Container(
                 constraints: const BoxConstraints(minHeight: 24),
                 decoration: BoxDecoration(
-                  color: _highlightAnimation.value ?? _backgroundColor,
+                  color: _backgroundColor,
                   border: Border(
                     bottom: BorderSide(
                       color: LoggerColors.borderSubtle,

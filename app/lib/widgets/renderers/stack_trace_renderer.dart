@@ -236,33 +236,47 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
   Widget _buildFrame(BuildContext context, StackFrame frame) {
     final loc = frame.location;
     final isVendor = frame.isVendor ?? false;
-    final color = isVendor ? LoggerColors.fgMuted : LoggerColors.syntaxPath;
     final isUrl =
         loc.uri.startsWith('http://') || loc.uri.startsWith('https://');
 
-    final parts = StringBuffer(loc.uri);
+    final dimStyle = LoggerTypography.logMeta.copyWith(
+      color: LoggerColors.fgMuted,
+    );
+    final symbolStyle = LoggerTypography.logMeta.copyWith(
+      color: isVendor ? LoggerColors.fgMuted : LoggerColors.fgSecondary,
+    );
+    final pathColor = isVendor ? LoggerColors.fgMuted : LoggerColors.syntaxPath;
+
+    final pathBuf = StringBuffer(loc.uri);
     if (loc.line != null) {
-      parts.write(':${loc.line}');
+      pathBuf.write(':${loc.line}');
       if (loc.column != null) {
-        parts.write(':${loc.column}');
+        pathBuf.write(':${loc.column}');
       }
-    }
-    if (loc.symbol != null) {
-      parts.write(' in ${loc.symbol}');
     }
 
     return SelectionContainer.disabled(
-      child: GestureDetector(
-        onTap: () => _onFrameTap(context, loc, isUrl),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Text(
-            parts.toString(),
-            style: LoggerTypography.logMeta.copyWith(
-              color: color,
-              decoration: TextDecoration.underline,
-              decorationColor: color.withAlpha(100),
-            ),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => _onFrameTap(context, loc, isUrl),
+          child: Row(
+            children: [
+              Text('  at ', style: dimStyle),
+              if (loc.symbol != null) Text(loc.symbol!, style: symbolStyle),
+              if (loc.symbol != null) Text(' ', style: dimStyle),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: LoggerColors.bgSurface,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  pathBuf.toString(),
+                  style: LoggerTypography.logMeta.copyWith(color: pathColor),
+                ),
+              ),
+            ],
           ),
         ),
       ),

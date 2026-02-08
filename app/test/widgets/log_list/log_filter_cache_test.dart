@@ -113,5 +113,59 @@ void main() {
 
       expect(result, isEmpty);
     });
+
+    test('state: prefix filter returns matching state entries', () {
+      store.addEntries([
+        _makeEntry(id: '1', type: LogType.text, text: 'hello'),
+        _makeEntry(
+          id: '2',
+          type: LogType.state,
+          stateKey: 'cpu',
+          stateValue: '42%',
+        ),
+        _makeEntry(id: '3', type: LogType.text, text: 'world'),
+        _makeEntry(
+          id: '4',
+          type: LogType.state,
+          stateKey: 'mem',
+          stateValue: '1GB',
+        ),
+      ]);
+
+      final result = cache.getFiltered(
+        logStore: store,
+        timeRange: timeRange,
+        sectionFilter: null,
+        textFilter: 'state:cpu',
+        activeSeverities: {'info'},
+        selectedSessionIds: {},
+      );
+
+      expect(result.length, 1);
+      expect(result.first.id, '2');
+      expect(result.first.stateKey, 'cpu');
+    });
+
+    test('state: prefix with unknown key returns empty', () {
+      store.addEntries([
+        _makeEntry(
+          id: '1',
+          type: LogType.state,
+          stateKey: 'cpu',
+          stateValue: '42%',
+        ),
+      ]);
+
+      final result = cache.getFiltered(
+        logStore: store,
+        timeRange: timeRange,
+        sectionFilter: null,
+        textFilter: 'state:nonexistent',
+        activeSeverities: {'info'},
+        selectedSessionIds: {},
+      );
+
+      expect(result, isEmpty);
+    });
   });
 }

@@ -45,7 +45,7 @@ class TextRenderer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        RichText(text: TextSpan(children: spans)),
+        Text.rich(TextSpan(children: spans)),
         if (entry.exception != null) ...[
           const SizedBox(height: 4),
           StackTraceRenderer(exception: entry.exception!),

@@ -34,6 +34,36 @@ static void window_method_call_handler(FlMethodChannel* channel,
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
     fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "minimize") == 0) {
+    gtk_window_iconify(window);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "maximize") == 0) {
+    if (gtk_window_is_maximized(window)) {
+      gtk_window_unmaximize(window);
+    } else {
+      gtk_window_maximize(window);
+    }
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "close") == 0) {
+    gtk_window_close(window);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "setDecorated") == 0) {
+    FlValue* args = fl_method_call_get_args(method_call);
+    gboolean value = fl_value_get_bool(args);
+    gtk_window_set_decorated(window, value);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
   } else {
     fl_method_call_respond_not_implemented(method_call, NULL);
   }

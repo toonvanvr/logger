@@ -74,15 +74,18 @@ class LogFilterCache {
     var results = logStore
         .filter(section: sectionFilter)
         .where((e) => e.stickyAction != 'unpin')
-        .where((e) => e.type != LogType.state)
         .where((e) => activeSeverities.contains(e.severity.name));
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.
-    if (textFilter != null && textFilter.isNotEmpty) {
-      if (textFilter.startsWith('state:')) {
-        final key = textFilter.substring(6);
-        results = results.where((e) => e.stateKey == key);
-      } else {
+    // When filtering by state: prefix, include state entries; otherwise exclude them.
+    if (textFilter != null && textFilter.startsWith('state:')) {
+      final key = textFilter.substring(6);
+      results = results.where(
+        (e) => e.type == LogType.state && e.stateKey == key,
+      );
+    } else {
+      results = results.where((e) => e.type != LogType.state);
+      if (textFilter != null && textFilter.isNotEmpty) {
         final smartSearch = PluginRegistry.instance
             .getEnabledPlugins<SmartSearchPlugin>()
             .firstOrNull;
