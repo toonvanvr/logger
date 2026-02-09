@@ -68,7 +68,12 @@ static void window_method_call_handler(FlMethodChannel* channel,
   } else if (g_strcmp0(method, "setDecorated") == 0) {
     FlValue* args = fl_method_call_get_args(method_call);
     gboolean value = fl_value_get_bool(args);
-    gtk_window_set_decorated(window, value);
+    GtkWidget* titlebar = gtk_window_get_titlebar(window);
+    if (titlebar != NULL) {
+      gtk_widget_set_visible(titlebar, value);
+    } else {
+      gtk_window_set_decorated(window, value);
+    }
 
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
