@@ -1,0 +1,3 @@
+[tools]
+"gem:activesupport" = "latest"
+ruby = "latest"

@@ -203,6 +203,15 @@ class _LogViewerScreenState extends State<LogViewerScreen>
                         !_hasEverReceivedEntries && connMgr.activeCount == 0;
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
+                      layoutBuilder: (currentChild, previousChildren) {
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: <Widget>[
+                            ...previousChildren,
+                            if (currentChild != null) currentChild,
+                          ],
+                        );
+                      },
                       child: showLanding
                           ? EmptyLandingPage(
                               key: const ValueKey('landing'),
