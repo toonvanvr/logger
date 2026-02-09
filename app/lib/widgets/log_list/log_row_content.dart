@@ -96,35 +96,79 @@ class _LogRowContentState extends State<LogRowContent> {
             top: 0,
             bottom: 0,
             child: SelectionContainer.disabled(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: _onCopy,
-                  child: Container(
-                    width: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.backgroundColor.withValues(alpha: 0),
-                          widget.backgroundColor,
-                        ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IgnorePointer(
+                    child: Container(
+                      width: 32,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.backgroundColor.withValues(alpha: 0),
+                            widget.backgroundColor,
+                          ],
+                        ),
                       ),
                     ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Icon(
-                      _copied ? Icons.check : Icons.content_copy,
-                      size: 14,
-                      color: _copied
-                          ? LoggerColors.syntaxString
-                          : LoggerColors.fgMuted,
-                    ),
                   ),
-                ),
+                  _CopyButton(
+                    copied: _copied,
+                    onTap: _onCopy,
+                    backgroundColor: widget.backgroundColor,
+                  ),
+                ],
               ),
             ),
           ),
       ],
+    );
+  }
+}
+
+class _CopyButton extends StatefulWidget {
+  final bool copied;
+  final VoidCallback onTap;
+  final Color backgroundColor;
+
+  const _CopyButton({
+    required this.copied,
+    required this.onTap,
+    required this.backgroundColor,
+  });
+
+  @override
+  State<_CopyButton> createState() => _CopyButtonState();
+}
+
+class _CopyButtonState extends State<_CopyButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.copied
+        ? LoggerColors.syntaxString
+        : _hovered
+        ? LoggerColors.fgPrimary
+        : LoggerColors.fgMuted;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          width: 24,
+          color: widget.backgroundColor,
+          alignment: Alignment.center,
+          child: Icon(
+            widget.copied ? Icons.check : Icons.content_copy,
+            size: widget.copied ? 12 : 14,
+            color: color,
+          ),
+        ),
+      ),
     );
   }
 }

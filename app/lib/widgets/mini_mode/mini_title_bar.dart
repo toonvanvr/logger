@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +30,7 @@ class MiniTitleBar extends StatelessWidget {
       color: LoggerColors.bgRaised,
       child: Row(
         children: [
-          const SizedBox(width: 8),
+          SizedBox(width: Platform.isMacOS ? 70 : 8),
           SizedBox(
             width: 14,
             height: 14,

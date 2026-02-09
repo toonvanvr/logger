@@ -4,14 +4,21 @@ import '../../../models/log_entry.dart';
 import '../../../theme/colors.dart';
 import '../../../theme/typography.dart';
 
-class TableRenderer extends StatelessWidget {
+class TableRenderer extends StatefulWidget {
   final LogEntry entry;
 
   const TableRenderer({super.key, required this.entry});
 
   @override
+  State<TableRenderer> createState() => _TableRendererState();
+}
+
+class _TableRendererState extends State<TableRenderer> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final data = entry.customData;
+    final data = widget.entry.customData;
     if (data is! Map) {
       return Text(
         '[table: invalid data]',
@@ -47,7 +54,9 @@ class TableRenderer extends StatelessWidget {
           const SizedBox(height: 4),
         ],
         ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
+          constraints: BoxConstraints(
+            maxHeight: _expanded ? double.infinity : 200,
+          ),
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(color: LoggerColors.borderSubtle),
@@ -61,7 +70,7 @@ class TableRenderer extends StatelessWidget {
                   headingRowHeight: 28,
                   dataRowMinHeight: 24,
                   dataRowMaxHeight: 36,
-                  columnSpacing: 16,
+                  columnSpacing: 12,
                   horizontalMargin: 8,
                   headingRowColor: WidgetStateProperty.all(
                     LoggerColors.bgRaised,
@@ -119,6 +128,19 @@ class TableRenderer extends StatelessWidget {
             ),
           ),
         ),
+        if (rows.length > 4)
+          GestureDetector(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                _expanded ? 'Collapse' : 'Expand',
+                style: LoggerTypography.logMeta.copyWith(
+                  color: LoggerColors.borderFocus,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
