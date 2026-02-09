@@ -208,7 +208,7 @@ class _MaximizeButtonState extends State<_MaximizeButton> {
       tooltip: _isMaximized ? 'Restore' : 'Maximize',
       onTap: () async {
         await WindowService.maximize();
-        await _queryState();
+        if (mounted) setState(() => _isMaximized = !_isMaximized);
       },
     );
   }
