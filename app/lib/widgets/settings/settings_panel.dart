@@ -33,7 +33,10 @@ class SettingsPanel extends StatelessWidget {
           left: BorderSide(color: LoggerColors.borderSubtle, width: 1),
         ),
       ),
-      child: isVisible ? _PanelContent(onClose: onClose) : null,
+      child: SizedBox(
+        width: 300,
+        child: _PanelContent(onClose: onClose),
+      ),
     );
   }
 }
