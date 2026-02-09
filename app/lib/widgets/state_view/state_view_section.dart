@@ -111,24 +111,60 @@ class StateViewSection extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (displayEntries.isNotEmpty)
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: displayEntries.entries
-                            .map(
-                              (entry) => StateCard(
-                                stateKey: entry.key,
-                                stateValue: entry.value,
-                                isActiveFilter: activeStateFilters.contains(
-                                  entry.key,
-                                ),
-                                onTap: onStateFilter != null
-                                    ? () => onStateFilter!('state:${entry.key}')
-                                    : null,
-                              ),
+                      displayEntries.length >= 4
+                          ? LayoutBuilder(
+                              builder: (context, constraints) {
+                                final columns = (constraints.maxWidth / 186)
+                                    .floor()
+                                    .clamp(2, 6);
+                                final cellWidth =
+                                    (constraints.maxWidth - (columns - 1) * 6) /
+                                    columns;
+                                return GridView.count(
+                                  crossAxisCount: columns,
+                                  mainAxisSpacing: 4,
+                                  crossAxisSpacing: 6,
+                                  childAspectRatio: cellWidth / 26,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  children: displayEntries.entries
+                                      .map(
+                                        (entry) => StateCard(
+                                          stateKey: entry.key,
+                                          stateValue: entry.value,
+                                          fixedWidth: true,
+                                          isActiveFilter: activeStateFilters
+                                              .contains(entry.key),
+                                          onTap: onStateFilter != null
+                                              ? () => onStateFilter!(
+                                                  'state:${entry.key}',
+                                                )
+                                              : null,
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+                              },
                             )
-                            .toList(),
-                      ),
+                          : Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: displayEntries.entries
+                                  .map(
+                                    (entry) => StateCard(
+                                      stateKey: entry.key,
+                                      stateValue: entry.value,
+                                      isActiveFilter: activeStateFilters
+                                          .contains(entry.key),
+                                      onTap: onStateFilter != null
+                                          ? () => onStateFilter!(
+                                              'state:${entry.key}',
+                                            )
+                                          : null,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
                     if (chartEntries.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       StateChartStrip(

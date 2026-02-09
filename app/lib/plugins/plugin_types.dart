@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../models/log_entry.dart';
 import '../models/status_bar_item.dart';
+import '../widgets/log_list/hover_action_bar.dart';
 import 'plugin_manifest.dart';
 import 'plugin_registry.dart';
 
@@ -104,6 +105,14 @@ abstract class ToolPlugin extends LoggerPlugin {
 
   /// Status bar items contributed by this tool.
   List<StatusBarItem> get statusBarItems => const [];
+}
+
+// ─── Row Action Plugin ────────────────────────────────────────────────
+
+/// A plugin that provides row-level actions on log entries.
+abstract class RowActionPlugin extends LoggerPlugin {
+  /// Build actions for the given entry. May return 0..N actions.
+  List<RowAction> buildActions(LogEntry entry);
 }
 
 /// Standard tool group identifiers for the settings panel.

@@ -156,5 +156,48 @@ void main() {
       // Only 1 display entry, not 2
       expect(find.text('1'), findsOneWidget);
     });
+
+    // ── Test 9: uses GridView when ≥4 display entries ──
+
+    testWidgets('uses GridView layout when 4 or more display entries', (
+      tester,
+    ) async {
+      final store = LogStore()
+        ..addEntry(_stateEntry('a', '1'))
+        ..addEntry(_stateEntry('b', '2'))
+        ..addEntry(_stateEntry('c', '3'))
+        ..addEntry(_stateEntry('d', '4'));
+      await tester.pumpWidget(_wrap(logStore: store));
+
+      expect(find.byType(GridView), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(StateViewSection),
+          matching: find.byType(Wrap),
+        ),
+        findsNothing,
+      );
+    });
+
+    // ── Test 10: uses Wrap when <4 display entries ──
+
+    testWidgets('uses Wrap layout when fewer than 4 display entries', (
+      tester,
+    ) async {
+      final store = LogStore()
+        ..addEntry(_stateEntry('a', '1'))
+        ..addEntry(_stateEntry('b', '2'))
+        ..addEntry(_stateEntry('c', '3'));
+      await tester.pumpWidget(_wrap(logStore: store));
+
+      expect(
+        find.descendant(
+          of: find.byType(StateViewSection),
+          matching: find.byType(Wrap),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(GridView), findsNothing);
+    });
   });
 }

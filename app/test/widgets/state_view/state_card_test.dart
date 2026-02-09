@@ -89,5 +89,48 @@ void main() {
 
       expect(find.text('null'), findsOneWidget);
     });
+
+    testWidgets('fixedWidth uses max main axis size', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: const Scaffold(
+            body: SizedBox(
+              width: 200,
+              child: StateCard(
+                stateKey: 'env',
+                stateValue: 'production',
+                fixedWidth: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final row = tester.widget<Row>(
+        find.descendant(of: find.byType(StateCard), matching: find.byType(Row)),
+      );
+      expect(row.mainAxisSize, MainAxisSize.max);
+    });
+
+    testWidgets('fixedWidth false uses min main axis size', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: const Scaffold(
+            body: StateCard(
+              stateKey: 'env',
+              stateValue: 'production',
+              fixedWidth: false,
+            ),
+          ),
+        ),
+      );
+
+      final row = tester.widget<Row>(
+        find.descendant(of: find.byType(StateCard), matching: find.byType(Row)),
+      );
+      expect(row.mainAxisSize, MainAxisSize.min);
+    });
   });
 }

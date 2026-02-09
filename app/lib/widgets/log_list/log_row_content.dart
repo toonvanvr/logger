@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../models/log_entry.dart';
+import '../../plugins/plugin_registry.dart';
+import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../renderers/renderer_factory.dart';
+import 'hover_action_bar.dart';
 
 /// Content rendering for a log row entry.
 ///
@@ -19,6 +22,8 @@ class LogRowContent extends StatefulWidget {
   final bool isCollapsed;
   final bool isHovered;
   final Color backgroundColor;
+  final void Function(String entryId)? onPin;
+  final void Function(String tag)? onFilterByTag;
 
   const LogRowContent({
     super.key,
@@ -27,6 +32,8 @@ class LogRowContent extends StatefulWidget {
     this.isCollapsed = false,
     this.isHovered = false,
     this.backgroundColor = LoggerColors.bgSurface,
+    this.onPin,
+    this.onFilterByTag,
   });
 
   @override
@@ -42,6 +49,48 @@ class _LogRowContentState extends State<LogRowContent> {
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) setState(() => _copied = false);
     });
+  }
+
+  List<RowAction> _buildActions() {
+    final actions = <RowAction>[
+      RowAction(
+        id: 'copy',
+        icon: _copied ? Icons.check : Icons.content_copy,
+        tooltip: 'Copy',
+        onTap: (_) => _onCopy(),
+        isActive: (_) => _copied,
+      ),
+    ];
+
+    if (widget.onPin != null) {
+      actions.add(
+        RowAction(
+          id: 'pin',
+          icon: Icons.push_pin_outlined,
+          tooltip: 'Pin',
+          onTap: (entry) => widget.onPin!(entry.id),
+        ),
+      );
+    }
+
+    if (widget.onFilterByTag != null && widget.entry.tag != null) {
+      actions.add(
+        RowAction(
+          id: 'filter_tag',
+          icon: Icons.filter_alt,
+          tooltip: 'Filter by tag',
+          onTap: (entry) => widget.onFilterByTag!(entry.tag!),
+        ),
+      );
+    }
+
+    final plugins = PluginRegistry.instance
+        .getEnabledPlugins<RowActionPlugin>();
+    for (final plugin in plugins) {
+      actions.addAll(plugin.buildActions(widget.entry));
+    }
+
+    return actions;
   }
 
   @override
@@ -111,63 +160,16 @@ class _LogRowContentState extends State<LogRowContent> {
                       ),
                     ),
                   ),
-                  _CopyButton(
-                    copied: _copied,
-                    onTap: _onCopy,
+                  HoverActionBar(
+                    entry: widget.entry,
                     backgroundColor: widget.backgroundColor,
+                    actions: _buildActions(),
                   ),
                 ],
               ),
             ),
           ),
       ],
-    );
-  }
-}
-
-class _CopyButton extends StatefulWidget {
-  final bool copied;
-  final VoidCallback onTap;
-  final Color backgroundColor;
-
-  const _CopyButton({
-    required this.copied,
-    required this.onTap,
-    required this.backgroundColor,
-  });
-
-  @override
-  State<_CopyButton> createState() => _CopyButtonState();
-}
-
-class _CopyButtonState extends State<_CopyButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = widget.copied
-        ? LoggerColors.syntaxString
-        : _hovered
-        ? LoggerColors.fgPrimary
-        : LoggerColors.fgMuted;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          width: 24,
-          color: widget.backgroundColor,
-          alignment: Alignment.center,
-          child: Icon(
-            widget.copied ? Icons.check : Icons.content_copy,
-            size: widget.copied ? 12 : 14,
-            color: color,
-          ),
-        ),
-      ),
     );
   }
 }

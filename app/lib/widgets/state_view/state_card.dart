@@ -9,6 +9,7 @@ class StateCard extends StatefulWidget {
   final dynamic stateValue;
   final VoidCallback? onTap;
   final bool isActiveFilter;
+  final bool fixedWidth;
 
   const StateCard({
     super.key,
@@ -16,6 +17,7 @@ class StateCard extends StatefulWidget {
     required this.stateValue,
     this.onTap,
     this.isActiveFilter = false,
+    this.fixedWidth = false,
   });
 
   @override
@@ -41,7 +43,11 @@ class _StateCardState extends State<StateCard> {
           decoration: BoxDecoration(
             color: Color.lerp(
               widget.isActiveFilter
-                  ? Color.lerp(LoggerColors.bgSurface, LoggerColors.severityInfoBar, 0.15)!
+                  ? Color.lerp(
+                      LoggerColors.bgSurface,
+                      LoggerColors.severityInfoBar,
+                      0.15,
+                    )!
                   : LoggerColors.bgSurface,
               Colors.white,
               _isHovered ? 0.05 : 0.0,
@@ -60,7 +66,9 @@ class _StateCardState extends State<StateCard> {
             ),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: widget.fixedWidth
+                ? MainAxisSize.max
+                : MainAxisSize.min,
             children: [
               Text(
                 widget.stateKey,
@@ -72,21 +80,37 @@ class _StateCardState extends State<StateCard> {
                 ),
               ),
               const SizedBox(width: 4),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 200),
-                child: Tooltip(
-                  message: displayValue,
-                  child: Text(
-                    displayValue,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: LoggerTypography.logMeta.copyWith(
-                      color: LoggerColors.fgPrimary,
-                      fontSize: 10,
+              if (widget.fixedWidth)
+                Expanded(
+                  child: Tooltip(
+                    message: displayValue,
+                    child: Text(
+                      displayValue,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LoggerTypography.logMeta.copyWith(
+                        color: LoggerColors.fgPrimary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 200),
+                  child: Tooltip(
+                    message: displayValue,
+                    child: Text(
+                      displayValue,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LoggerTypography.logMeta.copyWith(
+                        color: LoggerColors.fgPrimary,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
                 ),
-              ),
               if (widget.isActiveFilter) ...[
                 const SizedBox(width: 4),
                 Icon(Icons.close, size: 10, color: LoggerColors.fgMuted),
