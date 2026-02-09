@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -84,9 +85,13 @@ class _DragArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Listener(
       behavior: HitTestBehavior.translucent,
-      onPanStart: (_) => WindowService.startDrag(),
+      onPointerDown: (event) {
+        if (event.buttons == kPrimaryButton) {
+          WindowService.startDrag();
+        }
+      },
       child: const SizedBox.expand(),
     );
   }

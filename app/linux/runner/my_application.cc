@@ -80,7 +80,7 @@ static void window_method_call_handler(FlMethodChannel* channel,
     GdkDevice* device = gdk_seat_get_pointer(seat);
     gint x, y;
     gdk_device_get_position(device, NULL, &x, &y);
-    gtk_window_begin_move_drag(window, 1, x, y, GDK_CURRENT_TIME);
+    gtk_window_begin_move_drag(window, 1, x, y, gtk_get_current_event_time());
 
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
