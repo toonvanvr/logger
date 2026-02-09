@@ -2,6 +2,7 @@
   "name": "logger-workspace",
   "version": "1.0.0-alpha.1",
   "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
     "docs:screenshots": "bun run scripts/capture-docs-screenshots.ts"
   }
