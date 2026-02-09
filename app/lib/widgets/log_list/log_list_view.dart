@@ -32,6 +32,7 @@ class LogListView extends StatefulWidget {
   onEntryRangeSelected;
   final Set<String> bookmarkedEntryIds;
   final Set<String> stickyOverrideIds;
+  final VoidCallback? onFilterClear;
 
   const LogListView({
     super.key,
@@ -51,6 +52,7 @@ class LogListView extends StatefulWidget {
     this.onEntryRangeSelected,
     this.bookmarkedEntryIds = const {},
     this.stickyOverrideIds = const {},
+    this.onFilterClear,
   });
 
   @override
@@ -120,12 +122,12 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
     _trackNewEntries(displayEntries.length);
 
     if (_isLiveMode && displayEntries.isNotEmpty) {
+      _isAutoScrolling = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
-          _isAutoScrolling = true;
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-          _isAutoScrolling = false;
         }
+        _isAutoScrolling = false;
       });
     }
 
@@ -170,7 +172,11 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
             child: NewLogsButton(count: _newLogCount, onTap: _scrollToBottom),
           ),
         if (_isLiveMode)
-          const Positioned(bottom: 8, right: 8, child: LivePill()),
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: LivePill(onTap: widget.onFilterClear),
+          ),
       ],
     );
   }

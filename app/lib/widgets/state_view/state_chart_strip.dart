@@ -27,47 +27,7 @@ class StateChartStrip extends StatelessWidget {
           final data = _parseChartData(entry.value);
           if (data == null) return const SizedBox.shrink();
 
-          return Container(
-            width: 160,
-            height: 72,
-            margin: const EdgeInsets.only(right: 6),
-            padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-            decoration: BoxDecoration(
-              color: LoggerColors.bgSurface,
-              border: Border.all(color: LoggerColors.borderSubtle),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (data.title != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      data.title!,
-                      style: LoggerTypography.logMeta.copyWith(
-                        color: LoggerColors.fgSecondary,
-                        fontSize: 9,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                Expanded(
-                  child: CustomPaint(
-                    painter: ChartPainter(
-                      variant: data.type,
-                      values: data.values,
-                      color: data.color ?? LoggerColors.syntaxKey,
-                      textColor: LoggerColors.fgMuted,
-                      showTicks: true,
-                    ),
-                    size: Size.infinite,
-                  ),
-                ),
-              ],
-            ),
-          );
+          return _ChartCard(data: data);
         },
       ),
     );
@@ -94,6 +54,74 @@ class StateChartStrip extends StatelessWidget {
     }
 
     return _ChartData(type: type, values: values, title: title, color: color);
+  }
+}
+
+class _ChartCard extends StatefulWidget {
+  final _ChartData data;
+
+  const _ChartCard({required this.data});
+
+  @override
+  State<_ChartCard> createState() => _ChartCardState();
+}
+
+class _ChartCardState extends State<_ChartCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        width: 160,
+        height: 72,
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+        decoration: BoxDecoration(
+          color: LoggerColors.bgSurface,
+          border: Border.all(
+            color: Color.lerp(
+              LoggerColors.borderSubtle,
+              Colors.white,
+              _isHovered ? 0.1 : 0.0,
+            )!,
+          ),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.data.title != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  widget.data.title!,
+                  style: LoggerTypography.logMeta.copyWith(
+                    color: LoggerColors.fgSecondary,
+                    fontSize: 9,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            Expanded(
+              child: CustomPaint(
+                painter: ChartPainter(
+                  variant: widget.data.type,
+                  values: widget.data.values,
+                  color: widget.data.color ?? LoggerColors.syntaxKey,
+                  textColor: LoggerColors.fgMuted,
+                  showTicks: true,
+                ),
+                size: Size.infinite,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

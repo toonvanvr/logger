@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
@@ -99,6 +100,8 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  Offset? _pointerDownPosition;
+
   Color get _backgroundColor {
     final base = widget.isSelectionSelected
         ? LoggerColors.bgActive
@@ -107,6 +110,38 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
               : LoggerColors.bgSurface.withValues(alpha: 0.85));
     if (_isHovered) return Color.lerp(base, Colors.white, 0.03)!;
     return base;
+  }
+
+  /// Wraps [child] in either a [GestureDetector] (selection mode) or a
+  /// [Listener] (normal mode). Using [Listener] for raw pointer events
+  /// avoids entering the gesture arena so that an ancestor [SelectionArea]
+  /// can still recognise double-click (word) and triple-click (paragraph)
+  /// text selection.
+  Widget _buildTapHandler({required Widget child}) {
+    if (widget.selectionMode) {
+      return GestureDetector(onTap: widget.onSelect, child: child);
+    }
+    return Listener(
+      onPointerDown: _handlePointerDown,
+      onPointerUp: _handlePointerUp,
+      child: child,
+    );
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (event.buttons == kPrimaryButton) {
+      _pointerDownPosition = event.position;
+    }
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    if (_pointerDownPosition != null) {
+      final distance = (event.position - _pointerDownPosition!).distance;
+      _pointerDownPosition = null;
+      if (distance < kTouchSlop) {
+        (widget.onGroupToggle ?? widget.onTap)?.call();
+      }
+    }
   }
 
   @override
@@ -118,10 +153,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           offset: Offset(0, _slideAnimation.value),
           child: Opacity(
             opacity: _opacityAnimation.value,
-            child: GestureDetector(
-              onTap: widget.selectionMode
-                  ? widget.onSelect
-                  : (widget.onGroupToggle ?? widget.onTap),
+            child: _buildTapHandler(
               child: Container(
                 constraints: const BoxConstraints(minHeight: 24),
                 decoration: BoxDecoration(

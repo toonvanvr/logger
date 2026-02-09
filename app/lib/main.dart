@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'plugins/builtin/chart_plugin.dart';
@@ -21,9 +24,15 @@ import 'services/session_store.dart';
 import 'services/settings_service.dart';
 import 'services/sticky_state.dart';
 import 'services/time_range_service.dart';
+import 'services/uri_handler.dart';
+import 'services/window_service.dart';
 import 'theme/theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Default to mini mode — hide window decoration at startup
+  WindowService.setDecorated(false);
+
   // Register built-in plugins
   PluginRegistry.instance.register(ProgressRendererPlugin());
   PluginRegistry.instance.register(TableRendererPlugin());
@@ -39,14 +48,68 @@ void main() {
   runApp(const LoggerApp());
 }
 
-class LoggerApp extends StatelessWidget {
+class LoggerApp extends StatefulWidget {
   const LoggerApp({super.key});
+
+  @override
+  State<LoggerApp> createState() => _LoggerAppState();
+}
+
+class _LoggerAppState extends State<LoggerApp> {
+  static const _uriChannel = MethodChannel('com.logger/uri');
+
+  final _connectionManager = ConnectionManager();
+  String? _launchUri;
+
+  @override
+  void initState() {
+    super.initState();
+    _launchUri = UriHandler.extractFromArgs(Platform.executableArguments);
+    _handleLaunchConnect();
+    _uriChannel.setMethodCallHandler(_onUriMethodCall);
+  }
+
+  /// Process `logger://connect` URIs immediately (before widget tree exists).
+  void _handleLaunchConnect() {
+    if (_launchUri == null) return;
+    final parsed = Uri.tryParse(_launchUri!);
+    if (parsed != null &&
+        parsed.scheme == 'logger' &&
+        parsed.host == 'connect') {
+      UriHandler.handleUri(
+        _launchUri!,
+        connectionManager: _connectionManager,
+        onFilter: (_) {},
+        onTab: (_) {},
+        onClear: () {},
+      );
+    }
+  }
+
+  /// Handle URI forwarded from native side via method channel.
+  Future<void> _onUriMethodCall(MethodCall call) async {
+    if (call.method == 'handleUri' && call.arguments is String) {
+      UriHandler.handleUri(
+        call.arguments as String,
+        connectionManager: _connectionManager,
+        onFilter: (_) {},
+        onTab: (_) {},
+        onClear: () {},
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _uriChannel.setMethodCallHandler(null);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ConnectionManager()),
+        ChangeNotifierProvider.value(value: _connectionManager),
         ChangeNotifierProvider(create: (_) => LogStore()),
         ChangeNotifierProvider(create: (_) => SessionStore()),
         ChangeNotifierProvider(create: (_) => RpcService()),
@@ -59,7 +122,7 @@ class LoggerApp extends StatelessWidget {
         title: 'Logger',
         debugShowCheckedModeBanner: false,
         theme: createLoggerTheme(),
-        home: const LogViewerScreen(),
+        home: LogViewerScreen(launchUri: _launchUri),
       ),
     );
   }

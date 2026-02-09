@@ -85,3 +85,16 @@ Used for structured content rendering in log entries:
 | `syntax.error` | `#F07668` | Error type names |
 | `syntax.path` | `#8DA4EF` | File paths in stack traces |
 | `syntax.lineNumber` | `#636D83` | Line:column references |
+
+## Interactive State Colors
+
+Colors for hover, active, and focus states on interactive elements. These supplement the background layer tokens with interaction-specific guidance.
+
+| State | Technique | Usage |
+|-------|-----------|-------|
+| Hover (bg) | `Color.lerp(base, Colors.white, 0.04)` | Subtle brightness lift on any hoverable element |
+| Hover (icon) | `fg.muted` → `fg.primary` | Icon brightness increase on hover |
+| Active filter | Dedicated accent — avoid reusing severity tokens | Left-border or badge on elements with an active filter |
+| Focus ring | `border.focus` (`#E6B455`) | Keyboard focus indicator (WCAG AA at 4.5:1 on `bg.base`) |
+
+**Design note:** The filter-active accent should not reuse `severityInfoBar` blue. Severity colors carry semantic meaning (log level) and should not double as interaction indicators. Use `border.focus` amber or introduce a dedicated `accent` token to avoid the collision.

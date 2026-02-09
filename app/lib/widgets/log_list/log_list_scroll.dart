@@ -38,7 +38,7 @@ mixin _LogListScrollMixin on State<LogListView> {
     if (!_scrollController.hasClients || _isAutoScrolling) return;
     final pos = _scrollController.position;
     final atBottom =
-        pos.pixels >= pos.maxScrollExtent - _estimatedRowHeight * 1.5;
+        pos.pixels >= pos.maxScrollExtent - _estimatedRowHeight * 3.0;
     final newFirst = (pos.pixels / _estimatedRowHeight).floor().clamp(
       0,
       1 << 30,

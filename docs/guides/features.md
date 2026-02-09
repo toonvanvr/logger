@@ -159,6 +159,42 @@ State keys can be organized into named shelves for grouping related state. Shelf
 
 When no sessions are active, the viewer displays a friendly landing page with connection status and quick-start guidance instead of a blank screen.
 
+## Mini Mode
+
+Logger launches in mini mode by default — a compact window designed to sit alongside your editor or dashboard as a monitoring companion rather than a primary application. Mini mode provides:
+
+- **Icon-only controls** at 32dp for comfortable targeting
+- **Severity bar scanning** — see error patterns at a glance without expanding
+- **Always-on-top pinning** — keep Logger visible while working in other windows
+- **Draggable title bar** — reposition freely without a system title bar
+
+Resize or double-click the title bar to expand into compact or full mode for detailed investigation, then shrink back to mini mode when done.
+
+## Filter Stack
+
+Interactive elements throughout the UI act as filter shortcuts. Clicking a state tag, session badge, or severity indicator adds a filter — no typing required.
+
+- **Click to add** — click any state tag or badge to add it as a filter; the filter bar appears automatically
+- **Visual pills** — each active filter shows as a removable pill in the filter bar
+- **Stacking** — filters combine with AND logic (like `grep A | grep B`); add more to narrow results
+- **Click to remove** — click the × on any pill to remove that filter without clearing others
+- **Clear all** — the live pill button clears the entire filter stack in one click
+- **Visual feedback** — filtered source elements show an accent indicator so you can see what's active
+
+## URI Scheme
+
+Logger registers a `logger://` URI scheme for automation and sharing. URIs can be used in shell scripts, Makefiles, CI annotations, Slack messages, and runbook links.
+
+**Examples:**
+
+| URI | Action |
+|-----|--------|
+| `logger://connect?host=localhost&port=8080` | Open Logger and connect to a server |
+| `logger://filter?severity=error` | Set the severity filter to error and above |
+| `logger://clear` | Clear the current log view |
+
+On Linux, the URI scheme requires a `.desktop` file to be registered (included in release builds). From a shell: `xdg-open 'logger://connect?host=staging&port=8080'`.
+
 ## Self-Logging
 
 The server can log its own internal events (startup, connections, errors) as structured log entries visible in the viewer. This aids in debugging the Logger infrastructure itself.

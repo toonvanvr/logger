@@ -13,8 +13,13 @@ import 'state_chart_strip.dart';
 /// Placed between SectionTabs and LogListView.
 class StateViewSection extends StatelessWidget {
   final ValueChanged<String>? onStateFilter;
+  final Set<String> activeStateFilters;
 
-  const StateViewSection({super.key, this.onStateFilter});
+  const StateViewSection({
+    super.key,
+    this.onStateFilter,
+    this.activeStateFilters = const {},
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +119,9 @@ class StateViewSection extends StatelessWidget {
                               (entry) => StateCard(
                                 stateKey: entry.key,
                                 stateValue: entry.value,
+                                isActiveFilter: activeStateFilters.contains(
+                                  entry.key,
+                                ),
                                 onTap: onStateFilter != null
                                     ? () => onStateFilter!('state:${entry.key}')
                                     : null,

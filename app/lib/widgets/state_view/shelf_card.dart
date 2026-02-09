@@ -7,7 +7,7 @@ import '../../theme/typography.dart';
 ///
 /// Visual distinction from primary [StateCard]: fgMuted key, fgSecondary
 /// value, 60% opacity background, left accent border.
-class ShelfCard extends StatelessWidget {
+class ShelfCard extends StatefulWidget {
   final String stateKey;
   final dynamic stateValue;
   final VoidCallback? onTap;
@@ -20,23 +20,36 @@ class ShelfCard extends StatelessWidget {
   });
 
   @override
+  State<ShelfCard> createState() => _ShelfCardState();
+}
+
+class _ShelfCardState extends State<ShelfCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final displayKey = stateKey.replaceFirst('_shelf.', '');
-    final displayValue = stateValue?.toString() ?? 'null';
+    final displayKey = widget.stateKey.replaceFirst('_shelf.', '');
+    final displayValue = widget.stateValue?.toString() ?? 'null';
     final truncated = displayValue.length > 120
         ? '${displayValue.substring(0, 120)}…'
         : displayValue;
 
     return MouseRegion(
-      cursor: onTap != null
+      cursor: widget.onTap != null
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
           decoration: BoxDecoration(
-            color: LoggerColors.bgSurface.withValues(alpha: 0.6),
+            color: Color.lerp(
+              LoggerColors.bgSurface.withValues(alpha: 0.6),
+              Colors.white,
+              _isHovered ? 0.05 : 0.0,
+            )!,
             borderRadius: BorderRadius.circular(3),
             border: const Border(
               left: BorderSide(color: LoggerColors.borderSubtle, width: 2),

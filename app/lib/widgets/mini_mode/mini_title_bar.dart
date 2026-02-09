@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../services/settings_service.dart';
 import '../../services/window_service.dart';
 import '../../theme/colors.dart';
+import '../landing/landing_helpers.dart';
 
 /// Dense 28px titlebar for mini mode, replacing the normal SessionSelector.
 ///
@@ -28,6 +29,12 @@ class MiniTitleBar extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 8),
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CustomPaint(painter: LogoPainter()),
+          ),
+          const SizedBox(width: 4),
           // Filter toggle
           _MiniButton(
             icon: Icons.filter_list,
@@ -59,11 +66,7 @@ class MiniTitleBar extends StatelessWidget {
             tooltip: 'Minimize',
             onTap: () => WindowService.minimize(),
           ),
-          _WindowButton(
-            icon: Icons.crop_square,
-            tooltip: 'Maximize',
-            onTap: () => WindowService.maximize(),
-          ),
+          const _MaximizeButton(),
           _WindowButton(
             icon: Icons.close,
             tooltip: 'Close',
@@ -83,13 +86,13 @@ class _DragArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onPanStart: (_) {},
+      onPanStart: (_) => WindowService.startDrag(),
       child: const SizedBox.expand(),
     );
   }
 }
 
-class _MiniButton extends StatelessWidget {
+class _MiniButton extends StatefulWidget {
   final IconData icon;
   final String tooltip;
   final bool isActive;
@@ -103,19 +106,39 @@ class _MiniButton extends StatelessWidget {
   });
 
   @override
+  State<_MiniButton> createState() => _MiniButtonState();
+}
+
+class _MiniButtonState extends State<_MiniButton> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 24,
-          height: 28,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 12,
-            color: isActive ? LoggerColors.borderFocus : LoggerColors.fgMuted,
+    final color = widget.isActive
+        ? LoggerColors.borderFocus
+        : _isHovered
+        ? LoggerColors.fgPrimary
+        : LoggerColors.fgMuted;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Tooltip(
+        message: widget.tooltip,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            width: 32,
+            height: 28,
+            alignment: Alignment.center,
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: color),
+              duration: const Duration(milliseconds: 150),
+              builder: (context, value, child) {
+                return Icon(widget.icon, size: 12, color: value);
+              },
+            ),
           ),
         ),
       ),
@@ -139,9 +162,48 @@ class _PinButtonState extends State<_PinButton> {
       icon: Icons.push_pin_outlined,
       tooltip: 'Always on top',
       isActive: _pinned,
-      onTap: () {
-        setState(() => _pinned = !_pinned);
-        WindowService.setAlwaysOnTop(_pinned);
+      onTap: () async {
+        final newState = !_pinned;
+        try {
+          await WindowService.setAlwaysOnTop(newState);
+          setState(() => _pinned = newState);
+        } catch (e) {
+          debugPrint('Always-on-top not supported: $e');
+        }
+      },
+    );
+  }
+}
+
+class _MaximizeButton extends StatefulWidget {
+  const _MaximizeButton();
+
+  @override
+  State<_MaximizeButton> createState() => _MaximizeButtonState();
+}
+
+class _MaximizeButtonState extends State<_MaximizeButton> {
+  bool _isMaximized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _queryState();
+  }
+
+  Future<void> _queryState() async {
+    final maximized = await WindowService.isMaximized();
+    if (mounted) setState(() => _isMaximized = maximized);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _WindowButton(
+      icon: _isMaximized ? Icons.filter_none : Icons.crop_square,
+      tooltip: _isMaximized ? 'Restore' : 'Maximize',
+      onTap: () async {
+        await WindowService.maximize();
+        await _queryState();
       },
     );
   }

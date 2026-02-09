@@ -4,39 +4,66 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
 /// Compact card showing a single state key:value pair.
-class StateCard extends StatelessWidget {
+class StateCard extends StatefulWidget {
   final String stateKey;
   final dynamic stateValue;
   final VoidCallback? onTap;
+  final bool isActiveFilter;
 
   const StateCard({
     super.key,
     required this.stateKey,
     required this.stateValue,
     this.onTap,
+    this.isActiveFilter = false,
   });
 
   @override
+  State<StateCard> createState() => _StateCardState();
+}
+
+class _StateCardState extends State<StateCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final displayValue = stateValue?.toString() ?? 'null';
+    final displayValue = widget.stateValue?.toString() ?? 'null';
     return MouseRegion(
-      cursor: onTap != null
+      cursor: widget.onTap != null
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: LoggerColors.bgSurface,
+            color: Color.lerp(
+              widget.isActiveFilter
+                  ? LoggerColors.severityInfoBar.withValues(alpha: 0.10)
+                  : LoggerColors.bgSurface,
+              Colors.white,
+              _isHovered ? 0.05 : 0.0,
+            )!,
             borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: LoggerColors.borderSubtle),
+            border: Border(
+              left: BorderSide(
+                color: widget.isActiveFilter
+                    ? LoggerColors.severityInfoBar
+                    : LoggerColors.borderSubtle,
+                width: widget.isActiveFilter ? 2.0 : 1.0,
+              ),
+              top: BorderSide(color: LoggerColors.borderSubtle),
+              right: BorderSide(color: LoggerColors.borderSubtle),
+              bottom: BorderSide(color: LoggerColors.borderSubtle),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                stateKey,
+                widget.stateKey,
                 style: LoggerTypography.logMeta.copyWith(
                   color: LoggerColors.fgMuted,
                   fontSize: 10,

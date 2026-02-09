@@ -29,7 +29,10 @@ static void window_method_call_handler(FlMethodChannel* channel,
   if (g_strcmp0(method, "setAlwaysOnTop") == 0) {
     FlValue* args = fl_method_call_get_args(method_call);
     gboolean value = fl_value_get_bool(args);
-    gtk_window_set_keep_above(window, value);
+    // Fetch active window at call time to ensure valid pointer (T15 fix).
+    GtkWindow* active = GTK_WINDOW(gtk_application_get_active_window(
+        GTK_APPLICATION(g_application_get_default())));
+    gtk_window_set_keep_above(active != NULL ? active : window, value);
 
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
@@ -56,10 +59,28 @@ static void window_method_call_handler(FlMethodChannel* channel,
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
     fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "isMaximized") == 0) {
+    gboolean maximized = gtk_window_is_maximized(window);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(maximized)));
+    fl_method_call_respond(method_call, response, NULL);
   } else if (g_strcmp0(method, "setDecorated") == 0) {
     FlValue* args = fl_method_call_get_args(method_call);
     gboolean value = fl_value_get_bool(args);
     gtk_window_set_decorated(window, value);
+
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (g_strcmp0(method, "startDrag") == 0) {
+    GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(window));
+    GdkDisplay* display = gdk_window_get_display(gdk_window);
+    GdkSeat* seat = gdk_display_get_default_seat(display);
+    GdkDevice* device = gdk_seat_get_pointer(seat);
+    gint x, y;
+    gdk_device_get_position(device, NULL, &x, &y);
+    gtk_window_begin_move_drag(window, 1, x, y, GDK_CURRENT_TIME);
 
     g_autoptr(FlMethodResponse) response =
         FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
@@ -84,11 +105,14 @@ static void my_application_activate(GApplication* application) {
   // if future cases occur).
   gboolean use_header_bar = TRUE;
 #ifdef GDK_WINDOWING_X11
-  GdkScreen* screen = gtk_window_get_screen(window);
-  if (GDK_IS_X11_SCREEN(screen)) {
-    const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
-    if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
-      use_header_bar = FALSE;
+  GdkDisplay* display = gdk_display_get_default();
+  if (GDK_IS_X11_DISPLAY(display)) {
+    GdkScreen* screen = gtk_window_get_screen(window);
+    if (GDK_IS_X11_SCREEN(screen)) {
+      const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
+      if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
+        use_header_bar = FALSE;
+      }
     }
   }
 #endif
@@ -132,6 +156,25 @@ static void my_application_activate(GApplication* application) {
       "com.logger/window", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(
       window_channel, window_method_call_handler, window, NULL);
+
+  // Register URI method channel for logger:// deep-link forwarding.
+  g_autoptr(FlStandardMethodCodec) uri_codec = fl_standard_method_codec_new();
+  FlMethodChannel* uri_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "com.logger/uri", FL_METHOD_CODEC(uri_codec));
+
+  // Forward any logger:// URIs from command-line arguments to Dart.
+  if (self->dart_entrypoint_arguments != NULL) {
+    for (gint i = 0; self->dart_entrypoint_arguments[i] != NULL; i++) {
+      if (g_str_has_prefix(self->dart_entrypoint_arguments[i], "logger://")) {
+        g_autoptr(FlValue) uri_value =
+            fl_value_new_string(self->dart_entrypoint_arguments[i]);
+        fl_method_channel_invoke_method(uri_channel, "handleUri", uri_value,
+                                        NULL, NULL, NULL);
+        break;
+      }
+    }
+  }
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

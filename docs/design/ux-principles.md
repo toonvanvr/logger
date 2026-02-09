@@ -69,10 +69,55 @@ Important log entries (or group headers) can be marked `sticky: true`, causing t
 
 Both fonts are bundled as assets (OFL-licensed). No network font loading.
 
+## Interaction Design
+
+### 8. Hover Affordance Consistency
+
+Every interactive element must communicate its clickability before the user clicks. This prevents "dead UI" syndrome where users can't distinguish interactive from inert elements.
+
+- Pointer cursor (`SystemMouseCursors.click`) on all clickable elements — no exceptions
+- Subtle brightness increase on hover via `Color.lerp(base, Colors.white, 0.04)`
+- Smooth transitions using `TweenAnimationBuilder<Color?>` — 150ms for standard elements, 100ms for density-sensitive compact areas
+- One shared pattern across all components — avoid per-widget hover reimplementation
+
+### 9. Click Target Minimums
+
+All interactive elements must have a minimum 32×28dp hit area, even when the visual element is smaller. Padding extends the clickable region invisibly. This ensures comfortable targeting on desktop displays without inflating visual density.
+
+### 10. Filter Discovery
+
+When a filter is programmatically activated (by clicking a tag, badge, or link rather than typing), the filter bar must become visible automatically. Active filters are indicated visually on their source elements (e.g., accent border on a filtered state tag). Users should never have hidden, invisible filter state — if something is filtering the view, it must be apparent.
+
+### 11. Progressive Disclosure
+
+Default to the most compact useful view. Reveal complexity on interaction:
+
+- Mini mode is the default window state — compact companion, not a primary application
+- Filter bar is hidden until a filter is active or the user focuses it
+- Settings and panels slide out on demand and retract when dismissed
+- Section details expand in-place rather than navigating to new views
+
+### 12. Instant Response
+
+Window-level operations (close, minimize, maximize, pin) must feel instantaneous. Use fire-and-forget for platform channel calls — update visual state optimistically before waiting for async confirmation. Users perceive even 100ms of delay on window chrome as sluggishness.
+
+### 13. Scriptability
+
+Support the `logger://` URI scheme for major operations (connect, filter, clear). CLI-oriented and automation-focused users integrate tools via scripts, Makefiles, CI annotations, and runbook links. Every action that can be triggered from the UI should eventually be expressible as a URI or command.
+
+### 14. Connection Resilience
+
+Reconnection must be silent and automatic. No toast spam during transient network failures. Only surface connection state changes that persist beyond one backoff cycle. The status bar is the single source of connection truth — never flash or flicker between states. This matters especially during rolling deploys where brief disconnects are expected.
+
+### 15. Text Selection Priority
+
+Log content text must be selectable with standard OS gestures: click-drag for range, double-click for word, triple-click for line. Interactive gestures (tap to expand, click to select row) must not interfere with text selection. Where selection and interaction conflict, wrap the interactive element with `SelectionContainer.disabled` to preserve selection on surrounding content.
+
 ## Interaction Patterns
 
 - **Click session** → filter log view to that session
 - **Click severity badge** → toggle severity filter
+- **Click state tag** → add/remove filter for that state key; filter bar auto-shows
 - **Scroll up** → pause auto-scroll; "Jump to bottom" button appears
 - **Ctrl+F / search bar** → smart text search with autocomplete
 - **Collapse/expand groups** → toggle group bodies

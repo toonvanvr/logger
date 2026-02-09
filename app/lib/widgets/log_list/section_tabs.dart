@@ -158,7 +158,7 @@ class _ArrowButton extends StatelessWidget {
   }
 }
 
-class _SectionTab extends StatelessWidget {
+class _SectionTab extends StatefulWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
@@ -170,26 +170,43 @@ class _SectionTab extends StatelessWidget {
   });
 
   @override
+  State<_SectionTab> createState() => _SectionTabState();
+}
+
+class _SectionTabState extends State<_SectionTab> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? LoggerColors.borderFocus : Colors.transparent,
-              width: 2,
+    final color = widget.isSelected
+        ? LoggerColors.fgPrimary
+        : _isHovered
+        ? LoggerColors.fgPrimary
+        : LoggerColors.fgSecondary;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: widget.isSelected
+                    ? LoggerColors.borderFocus
+                    : Colors.transparent,
+                width: 2,
+              ),
             ),
           ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: LoggerTypography.sectionH.copyWith(
-            color: isSelected
-                ? LoggerColors.fgPrimary
-                : LoggerColors.fgSecondary,
+          alignment: Alignment.center,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 100),
+            style: LoggerTypography.sectionH.copyWith(color: color),
+            child: Text(widget.label),
           ),
         ),
       ),

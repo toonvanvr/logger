@@ -19,13 +19,23 @@ class WindowService {
     await _channel.invokeMethod('maximize');
   }
 
-  /// Close the window.
-  static Future<void> close() async {
-    await _channel.invokeMethod('close');
+  /// Close the window (fire-and-forget to avoid response lag).
+  static void close() {
+    _channel.invokeMethod('close');
+  }
+
+  /// Query whether the window is currently maximized.
+  static Future<bool> isMaximized() async {
+    return await _channel.invokeMethod<bool>('isMaximized') ?? false;
   }
 
   /// Show or hide the native window decoration (title bar).
   static Future<void> setDecorated(bool value) async {
     await _channel.invokeMethod('setDecorated', value);
+  }
+
+  /// Initiate a window drag via the native GTK API.
+  static Future<void> startDrag() async {
+    await _channel.invokeMethod('startDrag');
   }
 }

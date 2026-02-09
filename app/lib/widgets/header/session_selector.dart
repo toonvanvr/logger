@@ -7,6 +7,7 @@ import '../../services/session_store.dart';
 import '../../services/settings_service.dart';
 import '../../services/window_service.dart';
 import '../../theme/colors.dart';
+import '../landing/landing_helpers.dart';
 import 'overflow_menu.dart';
 import 'session_button.dart';
 import 'window_controls.dart';
@@ -71,6 +72,13 @@ class _SessionSelectorState extends State<SessionSelector> {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CustomPaint(painter: LogoPainter()),
+          ),
+          const SizedBox(width: 4),
           // Session buttons with horizontal scroll
           Expanded(
             child: LayoutBuilder(

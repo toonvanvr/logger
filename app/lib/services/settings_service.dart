@@ -29,7 +29,7 @@ class SettingsService extends ChangeNotifier {
 
   // ─── Layout & Connection Settings ──────────────────────────────
 
-  bool _miniMode = false;
+  bool _miniMode = true;
   bool _stateViewCollapsed = false;
   bool _shelfCollapsed = true;
   List<Map<String, dynamic>> _connections = [];

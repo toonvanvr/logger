@@ -202,6 +202,7 @@ class ConnectionManager extends ChangeNotifier {
     final jitter = (baseDelay * 0.25 * (Random().nextDouble() * 2 - 1)).toInt();
     final delay = Duration(milliseconds: baseDelay + jitter);
 
+    final oldState = conn.config.state;
     _connections[id] = _ActiveConnection(
       config: conn.config.copyWith(
         state: ServerConnectionState.reconnecting,
@@ -209,7 +210,9 @@ class ConnectionManager extends ChangeNotifier {
       ),
       reconnectTimer: Timer(delay, () => _connect(id)),
     );
-    notifyListeners();
+    if (oldState != ServerConnectionState.reconnecting) {
+      notifyListeners();
+    }
   }
 
   @override
