@@ -7,9 +7,14 @@ class LogStore extends ChangeNotifier {
   /// Maximum number of entries before FIFO eviction kicks in.
   static const int maxEntries = 100000;
 
+  /// Maximum number of versions retained per stack.
+  static const int maxStackDepth = 500;
+
   final List<LogEntry> _entries = [];
   final Map<String, int> _idIndex = {};
   final Map<String, Map<String, dynamic>> _stateStore = {};
+  final Map<String, List<LogEntry>> _stacks = {};
+  final Map<String, String> _idToStack = {};
   int _version = 0;
 
   /// Monotonically increasing version number, incremented on each mutation.
@@ -37,7 +42,38 @@ class LogStore extends ChangeNotifier {
     return bytes;
   }
 
-  /// Add a single log entry, handling replace/upsert by id.
+  /// Compute the stack key for an entry, or null if not stackable.
+  String? stackKeyFor(LogEntry entry) {
+    if (entry.kind == EntryKind.event && entry.replace) {
+      return '${entry.sessionId}::${entry.id}';
+    }
+    if (entry.kind == EntryKind.data && entry.key != null && entry.override_) {
+      return '${entry.sessionId}::data::${entry.key}';
+    }
+    return null;
+  }
+
+  /// Number of versions in the stack for the given entry id.
+  int stackDepth(String entryId) {
+    final key = _idToStack[entryId];
+    if (key == null) return 1;
+    return _stacks[key]?.length ?? 1;
+  }
+
+  /// Full version list (oldest→newest) for the given entry id.
+  List<LogEntry> getStack(String entryId) {
+    final key = _idToStack[entryId];
+    if (key != null && _stacks.containsKey(key)) {
+      return List.unmodifiable(_stacks[key]!);
+    }
+    final idx = _idIndex[entryId];
+    if (idx != null && idx < _entries.length) {
+      return [_entries[idx]];
+    }
+    return [];
+  }
+
+  /// Add a single log entry, handling replace/upsert by id and stacking.
   void addEntry(LogEntry entry) {
     // Handle state updates
     if (entry.kind == EntryKind.data && entry.key != null) {
@@ -49,7 +85,39 @@ class LogStore extends ChangeNotifier {
       }
     }
 
-    // Upsert: replace existing entry with same id
+    // Stacking: compute stack key and handle existing stacks
+    final stackKey = stackKeyFor(entry);
+    if (stackKey != null && _stacks.containsKey(stackKey)) {
+      final stack = _stacks[stackKey]!;
+      final oldHead = stack.last;
+      stack.add(entry);
+      _idToStack[entry.id] = stackKey;
+      while (stack.length > maxStackDepth) {
+        final removed = stack.removeAt(0);
+        if (removed.id != entry.id) {
+          _idToStack.remove(removed.id);
+        }
+      }
+      if (_idIndex.containsKey(oldHead.id)) {
+        final index = _idIndex[oldHead.id]!;
+        _entries[index] = entry;
+        if (oldHead.id != entry.id) {
+          _idIndex.remove(oldHead.id);
+          _idIndex[entry.id] = index;
+        }
+      }
+      _version++;
+      notifyListeners();
+      return;
+    }
+
+    // New stack for stackable entries
+    if (stackKey != null) {
+      _stacks[stackKey] = [entry];
+      _idToStack[entry.id] = stackKey;
+    }
+
+    // Upsert: replace existing entry with same id (non-stacked)
     if (entry.replace == true && _idIndex.containsKey(entry.id)) {
       final index = _idIndex[entry.id]!;
       _entries[index] = entry;
@@ -79,6 +147,34 @@ class LogStore extends ChangeNotifier {
         }
       }
 
+      final stackKey = stackKeyFor(entry);
+      if (stackKey != null && _stacks.containsKey(stackKey)) {
+        final stack = _stacks[stackKey]!;
+        final oldHead = stack.last;
+        stack.add(entry);
+        _idToStack[entry.id] = stackKey;
+        while (stack.length > maxStackDepth) {
+          final removed = stack.removeAt(0);
+          if (removed.id != entry.id) {
+            _idToStack.remove(removed.id);
+          }
+        }
+        if (_idIndex.containsKey(oldHead.id)) {
+          final index = _idIndex[oldHead.id]!;
+          _entries[index] = entry;
+          if (oldHead.id != entry.id) {
+            _idIndex.remove(oldHead.id);
+            _idIndex[entry.id] = index;
+          }
+        }
+        continue;
+      }
+
+      if (stackKey != null) {
+        _stacks[stackKey] = [entry];
+        _idToStack[entry.id] = stackKey;
+      }
+
       if (entry.replace == true && _idIndex.containsKey(entry.id)) {
         final index = _idIndex[entry.id]!;
         _entries[index] = entry;
@@ -101,6 +197,27 @@ class LogStore extends ChangeNotifier {
     final toInsert = <LogEntry>[];
     for (final entry in entries) {
       if (_idIndex.containsKey(entry.id)) continue;
+
+      // If entry belongs to an existing stack, add to history only
+      final stackKey = stackKeyFor(entry);
+      if (stackKey != null && _stacks.containsKey(stackKey)) {
+        final stack = _stacks[stackKey]!;
+        var insertIdx = 0;
+        while (insertIdx < stack.length - 1 &&
+            stack[insertIdx].timestamp.compareTo(entry.timestamp) < 0) {
+          insertIdx++;
+        }
+        stack.insert(insertIdx, entry);
+        _idToStack[entry.id] = stackKey;
+        while (stack.length > maxStackDepth) {
+          final removed = stack.removeAt(0);
+          if (removed.id != entry.id) {
+            _idToStack.remove(removed.id);
+          }
+        }
+        continue;
+      }
+
       toInsert.add(entry);
     }
     if (toInsert.isEmpty) return 0;
@@ -115,6 +232,17 @@ class LogStore extends ChangeNotifier {
     _idIndex.clear();
     for (var i = 0; i < _entries.length; i++) {
       _idIndex[_entries[i].id] = i;
+    }
+
+    // Set up stacks for new historical entries
+    for (final entry in toInsert) {
+      final stackKey = stackKeyFor(entry);
+      if (stackKey != null && !_stacks.containsKey(stackKey)) {
+        _stacks[stackKey] = [entry];
+        _idToStack[entry.id] = stackKey;
+      } else if (stackKey != null) {
+        _idToStack[entry.id] = stackKey;
+      }
     }
 
     // Handle state updates for historical entries
@@ -140,7 +268,16 @@ class LogStore extends ChangeNotifier {
     if (_entries.length <= maxEntries) return;
     final excess = _entries.length - maxEntries;
     for (var i = 0; i < excess; i++) {
-      _idIndex.remove(_entries[i].id);
+      final evictedId = _entries[i].id;
+      _idIndex.remove(evictedId);
+      // Clean up entire stack when evicting a head entry
+      final stackKey = _idToStack.remove(evictedId);
+      if (stackKey != null && _stacks.containsKey(stackKey)) {
+        final stack = _stacks.remove(stackKey)!;
+        for (final e in stack) {
+          _idToStack.remove(e.id);
+        }
+      }
     }
     _entries.removeRange(0, excess);
     _idIndex.clear();
@@ -154,6 +291,8 @@ class LogStore extends ChangeNotifier {
     _entries.clear();
     _idIndex.clear();
     _stateStore.clear();
+    _stacks.clear();
+    _idToStack.clear();
     _version++;
     notifyListeners();
   }

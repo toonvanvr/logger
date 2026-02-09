@@ -10,6 +10,7 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../renderers/renderer_factory.dart';
 import 'hover_action_bar.dart';
+import 'stack_badge.dart';
 
 /// Content rendering for a log row entry.
 ///
@@ -22,6 +23,8 @@ class LogRowContent extends StatefulWidget {
   final bool isCollapsed;
   final bool isHovered;
   final Color backgroundColor;
+  final int stackDepth;
+  final VoidCallback? onStackToggle;
   final void Function(String entryId)? onPin;
   final void Function(String tag)? onFilterByTag;
 
@@ -32,6 +35,8 @@ class LogRowContent extends StatefulWidget {
     this.isCollapsed = false,
     this.isHovered = false,
     this.backgroundColor = LoggerColors.bgSurface,
+    this.stackDepth = 1,
+    this.onStackToggle,
     this.onPin,
     this.onFilterByTag,
   });
@@ -131,6 +136,15 @@ class _LogRowContentState extends State<LogRowContent> {
             Expanded(child: content),
           ],
         ),
+      );
+    }
+
+    if (widget.stackDepth > 1) {
+      content = Row(
+        children: [
+          Expanded(child: content),
+          StackBadge(depth: widget.stackDepth, onTap: widget.onStackToggle),
+        ],
       );
     }
 

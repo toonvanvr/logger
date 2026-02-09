@@ -13,6 +13,7 @@ import 'live_pill.dart';
 import 'log_filter_cache.dart';
 import 'log_list_builder.dart';
 import 'log_row.dart';
+import 'stack_expansion.dart';
 import 'sticky_header.dart';
 import 'sticky_section_builder.dart';
 
@@ -62,6 +63,8 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
   final LogFilterCache _filterCache = LogFilterCache();
   final Set<String> _seenEntryIds = {};
   final Set<String> _collapsedGroups = {};
+  final Set<String> _expandedStacks = {};
+  final Map<String, int> _stackActiveIndices = {};
   final Set<String> _processedUnpinIds = {};
   List<DisplayEntry> _currentDisplayEntries = [];
   int _selectedIndex = -1;
@@ -105,6 +108,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       textFilter: widget.textFilter,
       collapsedGroups: _collapsedGroups,
       stickyOverrideIds: widget.stickyOverrideIds,
+      logStore: logStore,
     );
     _currentDisplayEntries = displayEntries;
     final stickySections = computeStickySections(
@@ -157,7 +161,8 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
                     controller: _scrollController,
                     physics: const ClampingScrollPhysics(),
                     itemCount: displayEntries.length,
-                    itemBuilder: (ctx, i) => _buildItem(displayEntries[i], i),
+                    itemBuilder: (ctx, i) =>
+                        _buildItem(displayEntries[i], i, logStore),
                   ),
                 ),
               ),
@@ -180,10 +185,11 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
     );
   }
 
-  Widget _buildItem(DisplayEntry display, int index) {
+  Widget _buildItem(DisplayEntry display, int index, LogStore logStore) {
     final entry = display.entry;
     final isNew = _seenEntryIds.add(entry.id);
-    return LogRow(
+    final isExpanded = _expandedStacks.contains(entry.id);
+    final row = LogRow(
       key: ValueKey(entry.id),
       entry: entry,
       isNew: isNew,
@@ -203,6 +209,19 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       },
       isBookmarked: widget.bookmarkedEntryIds.contains(entry.id),
       groupDepth: display.depth,
+      stackDepth: display.stackDepth,
+      onStackToggle: display.stackDepth > 1
+          ? () => setState(() {
+              if (_expandedStacks.contains(entry.id)) {
+                _expandedStacks.remove(entry.id);
+                _stackActiveIndices.remove(entry.id);
+              } else {
+                _expandedStacks.add(entry.id);
+                final stack = logStore.getStack(entry.id);
+                _stackActiveIndices[entry.id] = stack.length - 1;
+              }
+            })
+          : null,
       onTap: () {
         setState(() {
           _selectedIndex = _selectedIndex == index ? -1 : index;
@@ -220,6 +239,24 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
           entry.groupId != null &&
           !display.isStandalone &&
           _collapsedGroups.contains(entry.groupId!),
+    );
+
+    if (!isExpanded) return row;
+
+    final stack = logStore.getStack(entry.id);
+    final activeIdx = _stackActiveIndices[entry.id] ?? (stack.length - 1);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        row,
+        StackExpansionPanel(
+          stack: stack,
+          activeIndex: activeIdx,
+          onVersionSelected: (i) => setState(() {
+            _stackActiveIndices[entry.id] = i;
+          }),
+        ),
+      ],
     );
   }
 }

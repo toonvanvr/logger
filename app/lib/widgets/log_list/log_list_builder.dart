@@ -1,9 +1,11 @@
 import '../../models/log_entry.dart';
+import '../../services/log_store.dart';
 
 /// A display-ready entry with computed group depth and state.
 class DisplayEntry {
   final LogEntry entry;
   final int depth;
+  final int stackDepth;
   final bool isSticky;
   final String? parentGroupId;
 
@@ -14,6 +16,7 @@ class DisplayEntry {
   const DisplayEntry({
     required this.entry,
     required this.depth,
+    this.stackDepth = 1,
     this.isSticky = false,
     this.parentGroupId,
     this.isStandalone = false,
@@ -31,6 +34,7 @@ List<DisplayEntry> processGrouping({
   required String? textFilter,
   required Set<String> collapsedGroups,
   Set<String>? stickyOverrideIds,
+  LogStore? logStore,
 }) {
   // Pre-scan: collect group hierarchy and find groups with children.
   final groupIdsWithChildren = <String>{};
@@ -105,6 +109,7 @@ List<DisplayEntry> processGrouping({
         DisplayEntry(
           entry: entry,
           depth: depth,
+          stackDepth: logStore?.stackDepth(entry.id) ?? 1,
           isSticky: isSticky,
           parentGroupId: parentId,
           isStandalone: !hasChildren && hasTextFilter,
@@ -115,6 +120,7 @@ List<DisplayEntry> processGrouping({
         DisplayEntry(
           entry: entry,
           depth: depth,
+          stackDepth: logStore?.stackDepth(entry.id) ?? 1,
           isSticky: isSticky,
           parentGroupId: parentId,
         ),

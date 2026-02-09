@@ -323,5 +323,187 @@ void main() {
         expect(store.entries.last.id, 'batch9');
       });
     });
+
+    // ── Stacking tests ──
+
+    group('stacking', () {
+      test('stackKeyFor returns key for event with replace=true', () {
+        final entry = _makeEntry(id: 'e1', sessionId: 'sess-1', replace: true);
+        expect(store.stackKeyFor(entry), 'sess-1::e1');
+      });
+
+      test('stackKeyFor returns key for data with key and override', () {
+        final entry = _makeEntry(
+          id: 'd1',
+          kind: EntryKind.data,
+          key: 'theme',
+          value: 'dark',
+        );
+        // override_ defaults to true in makeTestEntry
+        expect(store.stackKeyFor(entry), 'sess-1::data::theme');
+      });
+
+      test('stackKeyFor returns null for normal event', () {
+        final entry = _makeEntry(id: 'e1');
+        expect(store.stackKeyFor(entry), isNull);
+      });
+
+      test('stackKeyFor returns null for data without key', () {
+        final entry = _makeEntry(id: 'd1', kind: EntryKind.data, value: 42);
+        expect(store.stackKeyFor(entry), isNull);
+      });
+
+      test(
+        'addEntry with replace=true creates stack and preserves history',
+        () {
+          store.addEntry(_makeEntry(id: 'e1', message: 'v1', replace: true));
+          store.addEntry(_makeEntry(id: 'e1', message: 'v2', replace: true));
+          store.addEntry(_makeEntry(id: 'e1', message: 'v3', replace: true));
+
+          expect(store.length, 1);
+          expect(store.entries.first.message, 'v3');
+          expect(store.stackDepth('e1'), 3);
+
+          final stack = store.getStack('e1');
+          expect(stack.length, 3);
+          expect(stack[0].message, 'v1');
+          expect(stack[1].message, 'v2');
+          expect(stack[2].message, 'v3');
+        },
+      );
+
+      test('data entries with same key stack', () {
+        store.addEntry(
+          _makeEntry(id: 'd1', kind: EntryKind.data, key: 'count', value: 1),
+        );
+        store.addEntry(
+          _makeEntry(id: 'd2', kind: EntryKind.data, key: 'count', value: 2),
+        );
+        store.addEntry(
+          _makeEntry(id: 'd3', kind: EntryKind.data, key: 'count', value: 3),
+        );
+
+        // Only head (d3) in _entries
+        expect(store.length, 1);
+        expect(store.entries.first.value, 3);
+
+        expect(store.stackDepth('d3'), 3);
+        final stack = store.getStack('d3');
+        expect(stack.length, 3);
+        expect(stack[0].value, 1);
+        expect(stack[2].value, 3);
+      });
+
+      test('stackDepth returns 1 for non-stacked entry', () {
+        store.addEntry(_makeEntry(id: 'e1'));
+        expect(store.stackDepth('e1'), 1);
+      });
+
+      test('getStack returns singleton for non-stacked entry', () {
+        store.addEntry(_makeEntry(id: 'e1', message: 'hello'));
+        final stack = store.getStack('e1');
+        expect(stack.length, 1);
+        expect(stack.first.message, 'hello');
+      });
+
+      test('getStack returns empty list for unknown id', () {
+        expect(store.getStack('unknown'), isEmpty);
+      });
+
+      test('eviction clears entire stack', () {
+        // Fill to near cap
+        final entries = List.generate(
+          LogStore.maxEntries - 1,
+          (i) => _makeEntry(id: 'e$i'),
+        );
+        store.addEntries(entries);
+
+        // Add a stacked entry at the front position (index 0)
+        // First add the stackable entry (it gets appended at end)
+        store.addEntry(_makeEntry(id: 'stack1', message: 'v1', replace: true));
+        // Now at maxEntries exactly
+
+        // Add versions to the stack
+        store.addEntry(_makeEntry(id: 'stack1', message: 'v2', replace: true));
+        store.addEntry(_makeEntry(id: 'stack1', message: 'v3', replace: true));
+
+        expect(store.stackDepth('stack1'), 3);
+
+        // Add enough new entries to push stack1 past eviction
+        final overflow = List.generate(
+          LogStore.maxEntries,
+          (i) => _makeEntry(id: 'overflow$i'),
+        );
+        store.addEntries(overflow);
+
+        // Stack should be fully evicted
+        expect(store.stackDepth('stack1'), 1);
+        expect(store.getStack('stack1'), isEmpty);
+      });
+
+      test('clear removes all stacks', () {
+        store.addEntry(_makeEntry(id: 'e1', message: 'v1', replace: true));
+        store.addEntry(_makeEntry(id: 'e1', message: 'v2', replace: true));
+        expect(store.stackDepth('e1'), 2);
+
+        store.clear();
+        expect(store.stackDepth('e1'), 1);
+        expect(store.getStack('e1'), isEmpty);
+      });
+
+      test('max stack depth of 500 enforced', () {
+        // Add 505 versions
+        for (var i = 0; i < 505; i++) {
+          store.addEntry(_makeEntry(id: 'e1', message: 'v$i', replace: true));
+        }
+
+        expect(store.stackDepth('e1'), LogStore.maxStackDepth);
+        final stack = store.getStack('e1');
+        expect(stack.length, LogStore.maxStackDepth);
+        // Oldest entries should be pruned; first kept is v5
+        expect(stack.first.message, 'v5');
+        expect(stack.last.message, 'v504');
+      });
+
+      test('different sessions with same key create separate stacks', () {
+        store.addEntry(
+          _makeEntry(
+            id: 'd1',
+            sessionId: 'sess-1',
+            kind: EntryKind.data,
+            key: 'theme',
+            value: 'dark',
+          ),
+        );
+        store.addEntry(
+          _makeEntry(
+            id: 'd2',
+            sessionId: 'sess-2',
+            kind: EntryKind.data,
+            key: 'theme',
+            value: 'light',
+          ),
+        );
+
+        // Two separate entries (different sessions, different stack keys)
+        expect(store.length, 2);
+        expect(store.stackDepth('d1'), 1);
+        expect(store.stackDepth('d2'), 1);
+      });
+
+      test('addEntries batch handles stacking', () {
+        store.addEntry(
+          _makeEntry(id: 'd1', kind: EntryKind.data, key: 'count', value: 1),
+        );
+
+        store.addEntries([
+          _makeEntry(id: 'd2', kind: EntryKind.data, key: 'count', value: 2),
+          _makeEntry(id: 'd3', kind: EntryKind.data, key: 'count', value: 3),
+        ]);
+
+        expect(store.length, 1);
+        expect(store.stackDepth('d3'), 3);
+      });
+    });
   });
 }

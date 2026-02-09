@@ -21,6 +21,8 @@ class LogRow extends StatefulWidget {
   final bool isSelectionSelected;
   final VoidCallback? onSelect;
   final bool isBookmarked;
+  final int stackDepth;
+  final VoidCallback? onStackToggle;
 
   const LogRow({
     super.key,
@@ -36,6 +38,8 @@ class LogRow extends StatefulWidget {
     this.isSelectionSelected = false,
     this.onSelect,
     this.isBookmarked = false,
+    this.stackDepth = 1,
+    this.onStackToggle,
   });
 
   @override
@@ -222,6 +226,8 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                         isCollapsed: widget.isCollapsed,
                         isHovered: isHovered,
                         backgroundColor: _computeBackgroundColor(isHovered),
+                        stackDepth: widget.stackDepth,
+                        onStackToggle: widget.onStackToggle,
                       );
                     },
                   ),
