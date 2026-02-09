@@ -200,7 +200,7 @@ logger/
 │   ├── demo/        Demo log generator
 │   ├── mcp/         MCP tool server
 │   └── docker-sidecar/ Docker log collector
-├── deploy/          Infrastructure configs
+├── infra/           Infrastructure configs
 │   ├── grafana/     Dashboard and datasource configs
 │   └── loki/        Loki configuration
 ├── docs/           Documentation and screenshots

@@ -1002,7 +1002,7 @@ logger/
 │       ├── color-system.md     Color token reference
 │       └── ux-principles.md    UX design philosophy
 │
-├── deploy/                     Infrastructure configs
+├── infra/                      Infrastructure configs
 │   ├── grafana/                Grafana configuration
 │   │   ├── dashboards/             Dashboard JSON definitions
 │   │   ├── grafana-datasources.yml Loki datasource config

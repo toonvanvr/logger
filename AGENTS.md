@@ -59,7 +59,7 @@ logger/
 │   ├── docker-sidecar/ Docker container log forwarding sidecar
 │   ├── mcp/          MCP tool server for AI debugging
 │   └── demo/         Demo log generator with scenarios
-├── deploy/           Infrastructure configs
+├── infra/            Infrastructure configs
 │   ├── grafana/      Dashboard & datasource configs
 │   └── loki/         Loki configuration
 ├── scripts/          Automation (screenshot capture, etc.)
