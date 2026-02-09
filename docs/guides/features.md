@@ -8,6 +8,8 @@ Log entries are categorised by severity: `debug`, `info`, `warning`, `error`, `c
 
 ## Custom Renderers
 
+![Custom Renderers](../screenshots/02-custom-renderers.png)
+
 The viewer detects structured content types and renders them with purpose-built widgets:
 
 - **Progress** — renders a progress bar with percentage
@@ -40,6 +42,8 @@ Hovering over a log row reveals a gradient overlay on the right edge with a copy
 
 ## Stack Trace Expansion
 
+![Error with Stack Trace](../screenshots/03-error-stack-trace.png)
+
 Stack traces support incremental expansion. Instead of toggling the full trace, controls let you:
 
 - **Expand 5 more** — reveal the next 5 frames
@@ -65,9 +69,13 @@ Supported chart types: `bar`, `sparkline`, `area`, `dense_bar`. See the [Protoco
 
 ## Session Management
 
+![Session Selection](../screenshots/04-session-selection.png)
+
 Every log entry belongs to a session. The sidebar lists all active and historical sessions, and clicking a session filters the log view to only that session's entries.
 
 ## Filtering
+
+![Filter Bar](../screenshots/05-filter-bar.png)
 
 The filter bar at the top of the viewer supports:
 
@@ -148,6 +156,8 @@ The viewer includes a status bar showing:
 The viewer can retrieve historical logs from Loki when scrolling back beyond the in-memory ring buffer. This provides seamless access to older log entries without losing real-time streaming for new entries.
 
 ## HTTP Request Tracking
+
+![HTTP Requests](../screenshots/08-http-requests.png)
 
 Log entries with `custom_type: "http_request"` are rendered as expandable HTTP request/response panels in HAR-inspired format. The HTTP request plugin displays method, URL, status code, headers, and body with syntax highlighting.
 

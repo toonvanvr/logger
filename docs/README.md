@@ -115,7 +115,6 @@ Log text with ANSI escape codes is rendered with matching colors and styles. The
 
 Text in log rows is selectable via mouse drag. A gradient copy overlay appears on hover for quick single-row copying.
 
-<!--
 ### Screenshots
 
 > Screenshots are auto-generated. Run `bun run docs:screenshots` to update.
@@ -126,7 +125,8 @@ Text in log rows is selectable via mouse drag. A gradient copy overlay appears o
 ![Session Selection](screenshots/04-session-selection.png)
 ![Filter Bar](screenshots/05-filter-bar.png)
 ![Sticky Grouping](screenshots/06-sticky-grouping.png)
--->
+![State Panel](screenshots/07-state-panel.png)
+![HTTP Requests](screenshots/08-http-requests.png)
 
 ### Session Management
 
