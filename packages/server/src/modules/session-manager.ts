@@ -1,24 +1,25 @@
-import type { ApplicationInfo, LogEntry, SessionAction } from '@logger/shared';
+import type { ApplicationInfo, LogEntry, SessionAction } from '@logger/shared'
+import type { StoredEntry } from '@logger/shared/src/v2/index.ts'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
 export interface SessionInfo {
-  sessionId: string;
-  application: ApplicationInfo;
-  startedAt: string;
-  lastHeartbeat: string;
-  isActive: boolean;
-  logCount: number;
-  colorIndex: number;
+  sessionId: string
+  application: ApplicationInfo
+  startedAt: string
+  lastHeartbeat: string
+  isActive: boolean
+  logCount: number
+  colorIndex: number
 }
 
-export type SessionEvent = 'session-start' | 'session-end' | 'session-update';
-export type SessionEventListener = (event: SessionEvent, session: SessionInfo) => void;
+export type SessionEvent = 'session-start' | 'session-end' | 'session-update'
+export type SessionEventListener = (event: SessionEvent, session: SessionInfo) => void
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-const COLOR_POOL_SIZE = 12;
-const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const COLOR_POOL_SIZE = 12
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 
 // ─── Session Manager ─────────────────────────────────────────────────
 
@@ -27,57 +28,90 @@ export class SessionManager {
   private nextColorIndex = 0;
   private listeners: SessionEventListener[] = [];
   private timeoutTimer: Timer | null = null;
-  private readonly timeoutMs: number;
+  private readonly timeoutMs: number
 
   constructor(options?: { timeoutMs?: number; checkIntervalMs?: number }) {
-    this.timeoutMs = options?.timeoutMs ?? SESSION_TIMEOUT_MS;
-    const checkInterval = options?.checkIntervalMs ?? 60_000;
-    this.timeoutTimer = setInterval(() => this.checkTimeouts(), checkInterval);
+    this.timeoutMs = options?.timeoutMs ?? SESSION_TIMEOUT_MS
+    const checkInterval = options?.checkIntervalMs ?? 60_000
+    this.timeoutTimer = setInterval(() => this.checkTimeouts(), checkInterval)
   }
 
   /** Register an event listener. */
   on(listener: SessionEventListener): void {
-    this.listeners.push(listener);
+    this.listeners.push(listener)
   }
 
   /** Process a session-type log entry (start/end/heartbeat). */
   handleSessionAction(entry: LogEntry): void {
-    const action = entry.session_action as SessionAction | undefined;
-    if (!action) return;
+    const action = entry.session_action as SessionAction | undefined
+    if (!action) return
 
     switch (action) {
       case 'start': {
-        const session = this.getOrCreate(entry.session_id, entry.application);
-        session.isActive = true;
-        session.lastHeartbeat = entry.timestamp;
-        this.emit('session-start', session);
-        break;
+        const session = this.getOrCreate(entry.session_id, entry.application)
+        session.isActive = true
+        session.lastHeartbeat = entry.timestamp
+        this.emit('session-start', session)
+        break
       }
       case 'end': {
-        const session = this.sessions.get(entry.session_id);
+        const session = this.sessions.get(entry.session_id)
         if (session) {
-          session.isActive = false;
-          session.lastHeartbeat = entry.timestamp;
-          this.emit('session-end', session);
+          session.isActive = false
+          session.lastHeartbeat = entry.timestamp
+          this.emit('session-end', session)
         }
-        break;
+        break
       }
       case 'heartbeat': {
-        const session = this.sessions.get(entry.session_id);
+        const session = this.sessions.get(entry.session_id)
         if (session) {
-          this.updateHeartbeat(session.sessionId, entry.timestamp);
+          this.updateHeartbeat(session.sessionId, entry.timestamp)
         }
-        break;
+        break
+      }
+    }
+  }
+
+  /** Process a v2 StoredEntry with kind=session. */
+  handleV2Session(entry: StoredEntry): void {
+    const action = entry.session_action
+    if (!action) return
+
+    switch (action) {
+      case 'start': {
+        const app = entry.application ?? undefined
+        const session = this.getOrCreate(entry.session_id, app)
+        session.isActive = true
+        session.lastHeartbeat = entry.timestamp
+        this.emit('session-start', session)
+        break
+      }
+      case 'end': {
+        const session = this.sessions.get(entry.session_id)
+        if (session) {
+          session.isActive = false
+          session.lastHeartbeat = entry.timestamp
+          this.emit('session-end', session)
+        }
+        break
+      }
+      case 'heartbeat': {
+        const session = this.sessions.get(entry.session_id)
+        if (session) {
+          this.updateHeartbeat(session.sessionId, entry.timestamp)
+        }
+        break
       }
     }
   }
 
   /** Get existing session or create a new one. */
   getOrCreate(sessionId: string, application?: ApplicationInfo): SessionInfo {
-    let session = this.sessions.get(sessionId);
-    if (session) return session;
+    let session = this.sessions.get(sessionId)
+    if (session) return session
 
-    const now = new Date().toISOString();
+    const now = new Date().toISOString()
     session = {
       sessionId,
       application: application ?? { name: 'unknown' },
@@ -86,43 +120,43 @@ export class SessionManager {
       isActive: true,
       logCount: 0,
       colorIndex: this.assignColor(),
-    };
-    this.sessions.set(sessionId, session);
-    return session;
+    }
+    this.sessions.set(sessionId, session)
+    return session
   }
 
   /** Get a session by ID. */
   getSession(sessionId: string): SessionInfo | undefined {
-    return this.sessions.get(sessionId);
+    return this.sessions.get(sessionId)
   }
 
   /** List all sessions. */
   getSessions(): SessionInfo[] {
-    return Array.from(this.sessions.values());
+    return Array.from(this.sessions.values())
   }
 
   /** Refresh a session's heartbeat timestamp. */
   updateHeartbeat(sessionId: string, timestamp?: string): void {
-    const session = this.sessions.get(sessionId);
+    const session = this.sessions.get(sessionId)
     if (session) {
-      session.lastHeartbeat = timestamp ?? new Date().toISOString();
-      this.emit('session-update', session);
+      session.lastHeartbeat = timestamp ?? new Date().toISOString()
+      this.emit('session-update', session)
     }
   }
 
   /** Increment a session's log counter. */
   incrementLogCount(sessionId: string): void {
-    const session = this.sessions.get(sessionId);
+    const session = this.sessions.get(sessionId)
     if (session) {
-      session.logCount++;
+      session.logCount++
     }
   }
 
   /** Shutdown: clear the timeout check timer. */
   shutdown(): void {
     if (this.timeoutTimer) {
-      clearInterval(this.timeoutTimer);
-      this.timeoutTimer = null;
+      clearInterval(this.timeoutTimer)
+      this.timeoutTimer = null
     }
   }
 
@@ -130,20 +164,20 @@ export class SessionManager {
 
   /** Assign next color index from the pool (round-robin). */
   private assignColor(): number {
-    const index = this.nextColorIndex;
-    this.nextColorIndex = (this.nextColorIndex + 1) % COLOR_POOL_SIZE;
-    return index;
+    const index = this.nextColorIndex
+    this.nextColorIndex = (this.nextColorIndex + 1) % COLOR_POOL_SIZE
+    return index
   }
 
   /** Check sessions for heartbeat timeout. */
   checkTimeouts(): void {
-    const now = Date.now();
+    const now = Date.now()
     for (const session of this.sessions.values()) {
-      if (!session.isActive) continue;
-      const elapsed = now - new Date(session.lastHeartbeat).getTime();
+      if (!session.isActive) continue
+      const elapsed = now - new Date(session.lastHeartbeat).getTime()
       if (elapsed > this.timeoutMs) {
-        session.isActive = false;
-        this.emit('session-end', session);
+        session.isActive = false
+        this.emit('session-end', session)
       }
     }
   }
@@ -151,7 +185,7 @@ export class SessionManager {
   /** Emit event to all listeners. */
   private emit(event: SessionEvent, session: SessionInfo): void {
     for (const listener of this.listeners) {
-      listener(event, session);
+      listener(event, session)
     }
   }
 }
