@@ -119,6 +119,7 @@ class ConnectionManager extends ChangeNotifier {
         (data) => _onData(id, data),
         onError: (error) => _onError(id, error),
         onDone: () => _onDone(id),
+        cancelOnError: true,
       );
       _connections[id] = _ActiveConnection(
         config: conn.config.copyWith(
@@ -165,7 +166,11 @@ class ConnectionManager extends ChangeNotifier {
   }
 
   void _onError(String id, Object error) {
-    debugPrint('ConnectionManager[$id]: error: $error');
+    final conn = _connections[id];
+    // Only log first error, suppress during reconnect
+    if (conn != null && conn.config.retryCount == 0) {
+      debugPrint('ConnectionManager[$id]: connection error: $error');
+    }
     _scheduleReconnect(id);
   }
 
