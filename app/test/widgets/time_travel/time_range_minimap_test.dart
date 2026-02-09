@@ -32,7 +32,7 @@ TimeRangeService _readyService({int entryCount = 10}) {
       timestamp: ts.toIso8601String(),
       sessionId: 's1',
       severity: i.isEven ? Severity.info : Severity.debug,
-      type: LogType.text,
+      kind: EntryKind.event,
     );
   });
   svc.updateBuckets(entries);

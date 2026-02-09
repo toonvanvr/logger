@@ -39,7 +39,7 @@ class _StubRendererPlugin extends RendererPlugin with EnableablePlugin {
     Map<String, dynamic> data,
     LogEntry entry,
   ) {
-    return Text('stub:${entry.customType}');
+    return Text('stub:${entry.widget?.type}');
   }
 
   @override

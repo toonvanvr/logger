@@ -23,7 +23,7 @@ class _HtmlRendererState extends State<HtmlRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    final raw = widget.entry.html ?? '';
+    final raw = widget.entry.widget?.data['content'] as String? ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

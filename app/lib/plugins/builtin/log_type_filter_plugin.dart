@@ -72,16 +72,23 @@ class LogTypeFilterPlugin extends FilterPlugin with EnableablePlugin {
   @override
   bool matches(LogEntry entry, String query) {
     if (_activeTypes.isEmpty) return true;
-    return _activeTypes.contains(entry.type.name);
+    return _activeTypes.contains(_entryTypeString(entry));
   }
 
   @override
   List<String> getSuggestions(String partialQuery, List<LogEntry> entries) {
-    final available = entries.map((e) => e.type.name).toSet().toList()..sort();
+    final available = entries.map(_entryTypeString).toSet().toList()..sort();
     if (partialQuery.isEmpty) return available;
     final lower = partialQuery.toLowerCase();
     return available.where((t) => t.contains(lower)).toList();
   }
+
+  /// Map a v2 entry to a human-readable type string.
+  static String _entryTypeString(LogEntry entry) => switch (entry.kind) {
+    EntryKind.session => 'session',
+    EntryKind.data => 'data',
+    EntryKind.event => entry.widget?.type ?? 'text',
+  };
 
   // ─── Lifecycle ─────────────────────────────────────────────────────
 

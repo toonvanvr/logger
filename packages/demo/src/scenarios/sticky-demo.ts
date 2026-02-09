@@ -17,16 +17,23 @@ export async function runStickyDemo() {
     const steps = ['Compiling', 'Linking', 'Optimizing', 'Packaging', 'Signing']
     for (let i = 0; i < steps.length; i++) {
       const value = Math.round((i / steps.length) * 100)
-      const builder = i === 0
-        ? logger.withId(buildId).sticky()
-        : logger.withId(buildId).replace()
-      builder.custom('progress', {
-        value,
-        max: 100,
-        label: `Build: ${steps[i]}...`,
-        sublabel: `Step ${i + 1}/${steps.length}`,
-        color: '#E6B455',
-      })
+      if (i === 0) {
+        logger.withId(buildId).sticky().custom('progress', {
+          value,
+          max: 100,
+          label: `Build: ${steps[i]}...`,
+          sublabel: `Step ${i + 1}/${steps.length}`,
+          color: '#E6B455',
+        })
+      } else {
+        logger.withId(buildId).custom('progress', {
+          value,
+          max: 100,
+          label: `Build: ${steps[i]}...`,
+          sublabel: `Step ${i + 1}/${steps.length}`,
+          color: '#E6B455',
+        }, { replace: true })
+      }
       await delay(400)
 
       // Emit some normal logs while progress is pinned
@@ -35,14 +42,14 @@ export async function runStickyDemo() {
     }
 
     // Complete
-    logger.withId(buildId).replace().custom('progress', {
+    logger.withId(buildId).custom('progress', {
       value: 100,
       max: 100,
       label: 'Build complete',
       sublabel: 'All 5 steps succeeded',
       color: '#A8CC7E',
       style: 'bar',
-    })
+    }, { replace: true })
     await delay(500)
     logger.info('Build finished — unpinning progress bar')
     logger.unsticky('', buildId)

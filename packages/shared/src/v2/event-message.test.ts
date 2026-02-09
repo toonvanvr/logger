@@ -21,7 +21,7 @@ describe('EventMessage', () => {
   })
 
   it('parses event with all severity levels', () => {
-    for (const sev of ['debug', 'info', 'warning', 'error', 'critical']) {
+    for (const sev of ['debug', 'info', 'warning', 'error', 'critical'] as const) {
       expect(EventMessage.parse({ ...base, severity: sev }).severity).toBe(sev)
     }
   })

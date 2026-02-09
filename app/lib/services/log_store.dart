@@ -32,7 +32,7 @@ class LogStore extends ChangeNotifier {
     var bytes = 0;
     for (final entry in _entries) {
       bytes += 256; // object overhead estimate
-      if (entry.text != null) bytes += entry.text!.length * 2;
+      if (entry.message != null) bytes += entry.message!.length * 2;
     }
     return bytes;
   }
@@ -40,12 +40,12 @@ class LogStore extends ChangeNotifier {
   /// Add a single log entry, handling replace/upsert by id.
   void addEntry(LogEntry entry) {
     // Handle state updates
-    if (entry.type == LogType.state && entry.stateKey != null) {
+    if (entry.kind == EntryKind.data && entry.key != null) {
       _stateStore.putIfAbsent(entry.sessionId, () => {});
-      if (entry.stateValue == null) {
-        _stateStore[entry.sessionId]!.remove(entry.stateKey);
+      if (entry.value == null) {
+        _stateStore[entry.sessionId]!.remove(entry.key);
       } else {
-        _stateStore[entry.sessionId]![entry.stateKey!] = entry.stateValue;
+        _stateStore[entry.sessionId]![entry.key!] = entry.value;
       }
     }
 
@@ -70,12 +70,12 @@ class LogStore extends ChangeNotifier {
   void addEntries(List<LogEntry> entries) {
     for (final entry in entries) {
       // Handle state updates
-      if (entry.type == LogType.state && entry.stateKey != null) {
+      if (entry.kind == EntryKind.data && entry.key != null) {
         _stateStore.putIfAbsent(entry.sessionId, () => {});
-        if (entry.stateValue == null) {
-          _stateStore[entry.sessionId]!.remove(entry.stateKey);
+        if (entry.value == null) {
+          _stateStore[entry.sessionId]!.remove(entry.key);
         } else {
-          _stateStore[entry.sessionId]![entry.stateKey!] = entry.stateValue;
+          _stateStore[entry.sessionId]![entry.key!] = entry.value;
         }
       }
 
@@ -119,12 +119,12 @@ class LogStore extends ChangeNotifier {
 
     // Handle state updates for historical entries
     for (final entry in toInsert) {
-      if (entry.type == LogType.state && entry.stateKey != null) {
+      if (entry.kind == EntryKind.data && entry.key != null) {
         _stateStore.putIfAbsent(entry.sessionId, () => {});
-        if (entry.stateValue == null) {
-          _stateStore[entry.sessionId]!.remove(entry.stateKey);
+        if (entry.value == null) {
+          _stateStore[entry.sessionId]!.remove(entry.key);
         } else {
-          _stateStore[entry.sessionId]![entry.stateKey!] = entry.stateValue;
+          _stateStore[entry.sessionId]![entry.key!] = entry.value;
         }
       }
     }
@@ -190,10 +190,10 @@ class LogStore extends ChangeNotifier {
       if (minSeverity != null && entry.severity.index < minSeverity.index) {
         return false;
       }
-      if (section != null && entry.section != section) return false;
+      if (section != null && entry.tag != section) return false;
       if (textSearch != null && textSearch.isNotEmpty) {
         final query = textSearch.toLowerCase();
-        final text = entry.text?.toLowerCase() ?? '';
+        final text = entry.message?.toLowerCase() ?? '';
         if (!text.contains(query)) return false;
       }
       return true;

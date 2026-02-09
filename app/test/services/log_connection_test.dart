@@ -72,15 +72,15 @@ void main() {
           'timestamp': '2026-02-07T12:00:00Z',
           'session_id': 'sess-1',
           'severity': 'info',
-          'type': 'text',
-          'text': 'hello',
+          'kind': 'event',
+          'message': 'hello',
         },
       };
       final msg = ServerMessage.fromJson(json);
 
-      expect(msg.type, ServerMessageType.log);
+      expect(msg.type, ServerMessageType.event);
       expect(msg.entry, isNotNull);
-      expect(msg.entry!.text, 'hello');
+      expect(msg.entry!.message, 'hello');
     });
 
     // ── Test 31: invalid JSON doesn't crash ──

@@ -24,7 +24,7 @@ class StickyGroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = entry.groupLabel ?? entry.groupId ?? 'Group';
+    final label = entry.message ?? entry.groupId ?? 'Group';
 
     return Container(
       constraints: const BoxConstraints(minHeight: 22),

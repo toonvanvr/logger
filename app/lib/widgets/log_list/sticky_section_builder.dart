@@ -18,15 +18,14 @@ List<StickySection> computeStickySections(
 
   final grouped = <String?, List<DisplayEntry>>{};
   for (final entry in stickyEntries) {
-    if (entry.entry.type == LogType.group) continue;
+    if (entry.entry.groupId != null) continue; // skip group headers
     if (dismissedIds.contains(entry.entry.id)) continue;
     grouped.putIfAbsent(entry.parentGroupId, () => []).add(entry);
   }
 
   for (final entry in stickyEntries) {
-    if (entry.entry.type == LogType.group &&
-        entry.entry.groupAction == GroupAction.open) {
-      final gid = entry.entry.groupId ?? entry.entry.id;
+    if (entry.entry.groupId != null) {
+      final gid = entry.entry.groupId!;
       grouped.putIfAbsent(gid, () => []);
     }
   }
@@ -47,9 +46,7 @@ List<StickySection> computeStickySections(
     if (parentId != null) {
       for (int i = 0; i < entries.length; i++) {
         final d = entries[i];
-        if (d.entry.type == LogType.group &&
-            d.entry.groupAction == GroupAction.open &&
-            (d.entry.groupId ?? d.entry.id) == parentId) {
+        if (d.entry.groupId != null && d.entry.groupId == parentId) {
           groupHeader = d.entry;
           groupDepth = d.depth;
           groupHeaderIndex = i;
@@ -67,7 +64,7 @@ List<StickySection> computeStickySections(
             (d) =>
                 d.parentGroupId == parentId &&
                 !d.isSticky &&
-                d.entry.type != LogType.group,
+                d.entry.groupId == null,
           )
           .length;
     }
@@ -86,7 +83,7 @@ List<StickySection> computeStickySections(
           .where(
             (d) =>
                 d.parentGroupId == parentId &&
-                d.entry.type != LogType.group &&
+                d.entry.groupId == null &&
                 !dismissedIds.contains(d.entry.id),
           )
           .take(10)
@@ -97,7 +94,7 @@ List<StickySection> computeStickySections(
           .where(
             (d) =>
                 d.parentGroupId == parentId &&
-                d.entry.type != LogType.group &&
+                d.entry.groupId == null &&
                 !dismissedIds.contains(d.entry.id),
           )
           .length;
@@ -121,31 +118,11 @@ List<StickySection> computeStickySections(
   return sections;
 }
 
-/// Auto-dismiss entries that arrive with sticky_action: 'unpin'.
+/// No-op in v2: stickyAction was removed from the schema.
 void processUnpinEntries({
   required LogStore logStore,
   required StickyStateService stickyState,
   required Set<String> processedUnpinIds,
 }) {
-  final groupsToIgnore = <String>[];
-  final idsToDismiss = <String>[];
-
-  for (final entry in logStore.entries) {
-    if (entry.stickyAction == 'unpin' &&
-        !processedUnpinIds.contains(entry.id)) {
-      processedUnpinIds.add(entry.id);
-      final groupId = entry.groupId;
-      if (groupId != null) groupsToIgnore.add(groupId);
-      idsToDismiss.add(entry.id);
-    }
-  }
-
-  if (groupsToIgnore.isNotEmpty || idsToDismiss.isNotEmpty) {
-    for (final gid in groupsToIgnore) {
-      stickyState.ignore(gid);
-    }
-    for (final id in idsToDismiss) {
-      stickyState.dismiss(id);
-    }
-  }
+  // v2 schema removed stickyAction; unpin is handled externally.
 }

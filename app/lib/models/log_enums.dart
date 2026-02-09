@@ -1,4 +1,4 @@
-/// Enum types for the log entry schema.
+/// Enum types for the v2 log entry schema.
 ///
 /// Shared between [LogEntry] and various widgets/services.
 library;
@@ -7,24 +7,11 @@ library;
 
 enum Severity { debug, info, warning, error, critical }
 
-enum LogType {
-  text,
-  json,
-  html,
-  binary,
-  image,
-  state,
-  group,
-  rpc,
-  session,
-  custom,
-}
+enum EntryKind { session, event, data }
 
-enum GroupAction { open, close }
+enum DisplayLocation { defaultLoc, static_, shelf }
 
 enum SessionAction { start, end, heartbeat }
-
-enum RpcDirection { request, response, error }
 
 // ─── Helper: enum ↔ string ──────────────────────────────────────────
 
@@ -33,31 +20,24 @@ Severity parseSeverity(String value) => Severity.values.firstWhere(
   orElse: () => Severity.debug,
 );
 
-LogType parseLogType(String value) => LogType.values.firstWhere(
-  (e) => e.name == value,
-  orElse: () => LogType.text,
-);
+EntryKind parseEntryKind(String value) => switch (value) {
+  'session' => EntryKind.session,
+  'event' => EntryKind.event,
+  'data' => EntryKind.data,
+  _ => EntryKind.event,
+};
 
-GroupAction? parseGroupAction(String? value) {
-  if (value == null) return null;
-  return GroupAction.values.firstWhere(
-    (e) => e.name == value,
-    orElse: () => GroupAction.open,
-  );
-}
+DisplayLocation parseDisplayLocation(String value) => switch (value) {
+  'default' => DisplayLocation.defaultLoc,
+  'static' => DisplayLocation.static_,
+  'shelf' => DisplayLocation.shelf,
+  _ => DisplayLocation.defaultLoc,
+};
 
 SessionAction? parseSessionAction(String? value) {
   if (value == null) return null;
   return SessionAction.values.firstWhere(
     (e) => e.name == value,
     orElse: () => SessionAction.start,
-  );
-}
-
-RpcDirection? parseRpcDirection(String? value) {
-  if (value == null) return null;
-  return RpcDirection.values.firstWhere(
-    (e) => e.name == value,
-    orElse: () => RpcDirection.request,
   );
 }

@@ -208,7 +208,7 @@ class _LogViewerScreenState extends State<LogViewerScreen>
                           alignment: Alignment.center,
                           children: <Widget>[
                             ...previousChildren,
-                            if (currentChild != null) currentChild,
+                            ?currentChild,
                           ],
                         );
                       },
@@ -271,13 +271,9 @@ class _LogViewerScreenState extends State<LogViewerScreen>
         Builder(
           builder: (context) {
             final logStore = context.watch<LogStore>();
-            final sections =
-                logStore.entries
-                    .map((e) => e.section)
-                    .whereType<String>()
-                    .toSet()
-                    .toList()
-                  ..sort();
+            final sections = <String>{
+              for (final e in logStore.entries) ?e.tag,
+            }.toList()..sort();
             return SectionTabs(
               sections: sections,
               selectedSection: _selectedSection,

@@ -17,8 +17,8 @@ class StateRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final key = entry.stateKey ?? 'unknown';
-    final value = entry.stateValue;
+    final key = entry.key ?? 'unknown';
+    final value = entry.value;
     final isDeleted = value == null;
 
     return Row(

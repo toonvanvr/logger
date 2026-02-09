@@ -7,7 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../test_helpers.dart';
 
 LogEntry _makeHtmlEntry({String? html}) {
-  return makeTestEntry(type: LogType.html, html: html);
+  return makeTestEntry(
+    kind: EntryKind.event,
+    widget: html != null
+        ? WidgetPayload(type: 'html', data: {'content': html})
+        : null,
+  );
 }
 
 Widget _wrap(Widget child) {

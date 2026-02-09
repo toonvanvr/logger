@@ -35,7 +35,7 @@ void main() {
         store.addEntry(
           makeTestEntry(
             id: 'e$i',
-            text: 'log line $i',
+            message: 'log line $i',
             severity: Severity.info,
           ),
         );
@@ -58,7 +58,7 @@ void main() {
         store.addEntry(
           makeTestEntry(
             id: 'e$i',
-            text: 'log $i',
+            message: 'log $i',
             severity: i.isEven ? Severity.info : Severity.debug,
           ),
         );

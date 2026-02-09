@@ -18,24 +18,6 @@ import 'package:provider/provider.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeEntry(LogType type) {
-  return makeTestEntry(
-    type: type,
-    text: 'test',
-    jsonData: type == LogType.json ? <String, dynamic>{} : null,
-    html: type == LogType.html ? '<p>hi</p>' : null,
-    binary: type == LogType.binary ? 'AQID' : null,
-    groupAction: type == LogType.group ? GroupAction.open : null,
-    groupLabel: type == LogType.group ? 'G' : null,
-    sessionAction: type == LogType.session ? SessionAction.start : null,
-    application: type == LogType.session
-        ? const ApplicationInfo(name: 'App')
-        : null,
-    rpcDirection: type == LogType.rpc ? RpcDirection.request : null,
-    rpcMethod: type == LogType.rpc ? 'ping' : null,
-  );
-}
-
 Widget _wrap(Widget child) {
   return MultiProvider(
     providers: [ChangeNotifierProvider(create: (_) => SessionStore())],
@@ -47,25 +29,89 @@ Widget _wrap(Widget child) {
 }
 
 void main() {
-  final cases = <LogType, Type>{
-    LogType.text: TextRenderer,
-    LogType.json: JsonRenderer,
-    LogType.html: HtmlRenderer,
-    LogType.binary: BinaryRenderer,
-    LogType.image: ImageRenderer,
-    LogType.state: StateRenderer,
-    LogType.group: GroupRenderer,
-    LogType.rpc: RpcRenderer,
-    LogType.session: SessionRenderer,
-    LogType.custom: CustomRenderer,
+  final cases = <String, (LogEntry, Type)>{
+    'text': (
+      makeTestEntry(kind: EntryKind.event, message: 'test'),
+      TextRenderer,
+    ),
+    'json': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(type: 'json', data: {'data': {}}),
+      ),
+      JsonRenderer,
+    ),
+    'html': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(
+          type: 'html',
+          data: {'content': '<p>hi</p>'},
+        ),
+      ),
+      HtmlRenderer,
+    ),
+    'binary': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(
+          type: 'binary',
+          data: {'data': 'AQID'},
+        ),
+      ),
+      BinaryRenderer,
+    ),
+    'image': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(
+          type: 'image',
+          data: {'ref': 'https://example.com/image.png'},
+        ),
+      ),
+      ImageRenderer,
+    ),
+    'state': (
+      makeTestEntry(kind: EntryKind.data, key: 'k', value: 'v'),
+      StateRenderer,
+    ),
+    'group': (
+      makeTestEntry(kind: EntryKind.event, groupId: 'g1', message: 'G'),
+      GroupRenderer,
+    ),
+    'rpc': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(
+          type: 'rpc_request',
+          data: {'direction': 'request', 'method': 'ping'},
+        ),
+      ),
+      RpcRenderer,
+    ),
+    'session': (
+      makeTestEntry(
+        kind: EntryKind.session,
+        sessionAction: SessionAction.start,
+        application: const ApplicationInfo(name: 'App'),
+      ),
+      SessionRenderer,
+    ),
+    'custom': (
+      makeTestEntry(
+        kind: EntryKind.event,
+        widget: const WidgetPayload(type: 'metric', data: {}),
+      ),
+      CustomRenderer,
+    ),
   };
 
   for (final entry in cases.entries) {
     testWidgets(
-      'buildLogContent returns ${entry.value} for ${entry.key.name}',
+      'buildLogContent returns ${entry.value.$2} for ${entry.key}',
       (tester) async {
-        final widget = buildLogContent(_makeEntry(entry.key));
-        expect(widget.runtimeType, entry.value);
+        final widget = buildLogContent(entry.value.$1);
+        expect(widget.runtimeType, entry.value.$2);
 
         // Also verify it renders without errors.
         await tester.pumpWidget(_wrap(widget));

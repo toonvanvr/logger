@@ -38,9 +38,9 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
     final sessionStore = context.read<SessionStore>();
 
     switch (msg.type) {
-      case ServerMessageType.log:
+      case ServerMessageType.event:
         if (msg.entry != null) logStore.addEntry(msg.entry!);
-      case ServerMessageType.logs:
+      case ServerMessageType.eventBatch:
         if (msg.entries != null) logStore.addEntries(msg.entries!);
       case ServerMessageType.history:
         if (msg.historyEntries != null) {
@@ -54,8 +54,8 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
           const ViewerMessage(type: ViewerMessageType.sessionList),
         );
         break;
-      case ServerMessageType.stateSnapshot:
-        // State snapshots are handled via LogStore state tracking
+      case ServerMessageType.dataSnapshot:
+        // Data snapshots are handled via LogStore state tracking
         break;
       case ServerMessageType.rpcResponse:
         if (msg.rpcId != null) {

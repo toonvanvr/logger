@@ -12,7 +12,7 @@ LogEntry _makeSessionEntry({
   String? version,
 }) {
   return makeTestEntry(
-    type: LogType.session,
+    kind: EntryKind.session,
     sessionAction: action,
     application: ApplicationInfo(name: appName, version: version),
   );

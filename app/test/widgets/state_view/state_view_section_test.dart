@@ -28,9 +28,9 @@ LogEntry _stateEntry(String key, dynamic value, {String session = 's1'}) {
     id: 'state-$key',
     timestamp: '2026-01-01T00:00:00Z',
     sessionId: session,
-    type: LogType.state,
-    stateKey: key,
-    stateValue: value,
+    kind: EntryKind.data,
+    key: key,
+    value: value,
   );
 }
 

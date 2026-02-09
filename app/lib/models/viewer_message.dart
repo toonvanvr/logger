@@ -1,4 +1,4 @@
-/// Dart equivalent of the shared TypeScript ViewerMessage schema.
+/// Dart equivalent of the v2 ViewerMessage schema.
 library;
 
 import 'dart:convert';
@@ -11,7 +11,7 @@ enum ViewerMessageType {
   historyQuery,
   rpcRequest,
   sessionList,
-  stateQuery,
+  dataQuery,
 }
 
 String _viewerMessageTypeToJson(ViewerMessageType type) {
@@ -21,7 +21,7 @@ String _viewerMessageTypeToJson(ViewerMessageType type) {
     ViewerMessageType.historyQuery => 'history_query',
     ViewerMessageType.rpcRequest => 'rpc_request',
     ViewerMessageType.sessionList => 'session_list',
-    ViewerMessageType.stateQuery => 'state_query',
+    ViewerMessageType.dataQuery => 'data_query',
   };
 }
 
@@ -33,7 +33,7 @@ class ViewerMessage {
   // subscribe / unsubscribe
   final List<String>? sessionIds;
   final String? minSeverity;
-  final List<String>? sections;
+  final List<String>? tags;
   final String? textFilter;
 
   // history_query
@@ -54,14 +54,14 @@ class ViewerMessage {
   final String? rpcMethod;
   final dynamic rpcArgs;
 
-  // state_query
-  final String? stateSessionId;
+  // data_query
+  final String? dataSessionId;
 
   const ViewerMessage({
     required this.type,
     this.sessionIds,
     this.minSeverity,
-    this.sections,
+    this.tags,
     this.textFilter,
     this.queryId,
     this.from,
@@ -75,7 +75,7 @@ class ViewerMessage {
     this.targetSessionId,
     this.rpcMethod,
     this.rpcArgs,
-    this.stateSessionId,
+    this.dataSessionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -83,7 +83,7 @@ class ViewerMessage {
 
     if (sessionIds != null) map['session_ids'] = sessionIds;
     if (minSeverity != null) map['min_severity'] = minSeverity;
-    if (sections != null) map['sections'] = sections;
+    if (tags != null) map['tags'] = tags;
     if (textFilter != null) map['text_filter'] = textFilter;
     if (queryId != null) map['query_id'] = queryId;
     if (from != null) map['from'] = from;
@@ -97,7 +97,7 @@ class ViewerMessage {
     if (targetSessionId != null) map['target_session_id'] = targetSessionId;
     if (rpcMethod != null) map['rpc_method'] = rpcMethod;
     if (rpcArgs != null) map['rpc_args'] = rpcArgs;
-    if (stateSessionId != null) map['state_session_id'] = stateSessionId;
+    if (dataSessionId != null) map['data_session_id'] = dataSessionId;
 
     return map;
   }

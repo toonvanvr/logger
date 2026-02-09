@@ -8,42 +8,47 @@ import '../../test_helpers.dart';
 
 void main() {
   group('serializeLogEntry', () {
-    test('returns text for text entry', () {
-      final entry = makeTestEntry(text: 'hello world');
+    test('returns message for event entry', () {
+      final entry = makeTestEntry(message: 'hello world');
       expect(serializeLogEntry(entry), 'hello world');
     });
 
-    test('returns formatted JSON for json entry', () {
+    test('returns formatted JSON for json widget entry', () {
       final entry = makeTestEntry(
-        type: LogType.json,
-        jsonData: {'key': 'value'},
+        kind: EntryKind.event,
+        widget: WidgetPayload(
+          type: 'json',
+          data: {
+            'data': {'key': 'value'},
+          },
+        ),
       );
       expect(serializeLogEntry(entry), contains('"key": "value"'));
     });
 
-    test('returns text + JSON when both present', () {
+    test('returns message + JSON when both present', () {
       final entry = makeTestEntry(
-        type: LogType.json,
-        text: 'prefix',
-        jsonData: {'a': 1},
+        kind: EntryKind.event,
+        message: 'prefix',
+        widget: WidgetPayload(
+          type: 'json',
+          data: {
+            'data': {'a': 1},
+          },
+        ),
       );
       final result = serializeLogEntry(entry);
       expect(result, startsWith('prefix'));
       expect(result, contains('"a": 1'));
     });
 
-    test('returns group label for group entry', () {
-      final entry = makeTestEntry(
-        type: LogType.group,
-        groupAction: GroupAction.open,
-        groupLabel: 'My Group',
-        groupId: 'g1',
-      );
+    test('returns group label for group header entry', () {
+      final entry = makeTestEntry(groupId: 'g1', message: 'My Group');
       expect(serializeLogEntry(entry), 'My Group');
     });
 
-    test('returns empty string for entry with no text', () {
-      final entry = makeTestEntry(text: null);
+    test('returns empty string for entry with no message', () {
+      final entry = makeTestEntry(message: null);
       expect(serializeLogEntry(entry), '');
     });
   });
@@ -54,7 +59,9 @@ void main() {
         MaterialApp(
           theme: createLoggerTheme(),
           home: Scaffold(
-            body: LogRowContent(entry: makeTestEntry(text: 'log message here')),
+            body: LogRowContent(
+              entry: makeTestEntry(message: 'log message here'),
+            ),
           ),
         ),
       );
@@ -75,12 +82,7 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(
-                type: LogType.group,
-                groupAction: GroupAction.open,
-                groupLabel: 'HTTP',
-                groupId: 'g1',
-              ),
+              entry: makeTestEntry(groupId: 'g1', message: 'HTTP'),
             ),
           ),
         ),
@@ -96,12 +98,7 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(
-                type: LogType.group,
-                groupAction: GroupAction.open,
-                groupLabel: 'Collapsed',
-                groupId: 'g2',
-              ),
+              entry: makeTestEntry(groupId: 'g2', message: 'Collapsed'),
               isCollapsed: true,
             ),
           ),
@@ -117,7 +114,7 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(text: 'nested'),
+              entry: makeTestEntry(message: 'nested'),
               groupDepth: 2,
             ),
           ),

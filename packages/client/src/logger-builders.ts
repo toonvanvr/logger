@@ -1,181 +1,180 @@
-import type { ExceptionData, LogEntry, Severity as SeverityType } from '@logger/shared';
-import { parseStackTrace } from './stack-parser.js';
+import type { QueuedMessage } from './logger-types.js'
+
+// ─── Severity type ───────────────────────────────────────────────────
+
+export type Severity = 'debug' | 'info' | 'warning' | 'error' | 'critical'
 
 // ─── Base fields ─────────────────────────────────────────────────────
 
 export function baseFields(
   sessionId: string,
-  app: string,
-  environment: string,
-  severity: SeverityType,
-  section?: string,
+  _app: string,
+  _environment: string,
+  severity: Severity,
+  tag?: string,
   groupId?: string,
-): LogEntry {
+): QueuedMessage {
   return {
-    id: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
+    kind: 'event',
     session_id: sessionId,
+    id: crypto.randomUUID(),
     severity,
-    type: 'text',
-    application: { name: app, environment },
-    ...(section ? { section } : {}),
+    generated_at: new Date().toISOString(),
+    ...(tag ? { tag } : {}),
     ...(groupId ? { group_id: groupId } : {}),
-  };
+  }
 }
 
 // ─── Text / error ────────────────────────────────────────────────────
 
 export function buildTextEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   message: string,
-  tags?: Record<string, string>,
-): LogEntry {
-  return { ...base, type: 'text', text: message, ...(tags ? { tags } : {}) };
+  labels?: Record<string, string>,
+): QueuedMessage {
+  return { ...base, message, ...(labels ? { labels } : {}) }
 }
 
-export function buildErrorException(err: Error): ExceptionData {
+export function buildErrorException(err: Error): Record<string, unknown> {
   return {
     type: err.constructor.name,
     message: err.message,
-    ...(err.stack ? { stackTrace: parseStackTrace(err.stack) } : {}),
+    ...(err.stack ? { stack_trace: err.stack } : {}),
+    handled: true,
     ...(err.cause instanceof Error
-      ? {
-          cause: {
-            type: (err.cause as Error).constructor.name,
-            message: (err.cause as Error).message,
-            ...((err.cause as Error).stack
-              ? { stackTrace: parseStackTrace((err.cause as Error).stack!) }
-              : {}),
-          },
-        }
+      ? { inner: buildErrorException(err.cause as Error) }
       : {}),
-  };
+  }
 }
 
 // ─── Structured entries ──────────────────────────────────────────────
 
-export function buildJsonEntry(base: LogEntry, data: unknown): LogEntry {
-  return { ...base, type: 'json', json: data };
+export function buildJsonEntry(base: QueuedMessage, data: unknown): QueuedMessage {
+  return { ...base, widget: { type: 'json', data } }
 }
 
-export function buildHtmlEntry(base: LogEntry, content: string): LogEntry {
-  return { ...base, type: 'html', html: content };
+export function buildHtmlEntry(base: QueuedMessage, content: string): QueuedMessage {
+  return { ...base, widget: { type: 'html', content } }
 }
 
-export function buildBinaryEntry(base: LogEntry, data: Uint8Array): LogEntry {
-  const b64 = Buffer.from(data).toString('base64');
-  return { ...base, type: 'binary', binary: b64 };
+export function buildBinaryEntry(base: QueuedMessage, data: Uint8Array): QueuedMessage {
+  const b64 = Buffer.from(data).toString('base64')
+  return { ...base, widget: { type: 'binary', data: b64, encoding: 'base64' } }
 }
 
 // ─── Group ───────────────────────────────────────────────────────────
 
 export function buildGroupOpenEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   groupId: string,
   name: string,
-  options?: { sticky?: boolean },
-): LogEntry {
+  _options?: { sticky?: boolean },
+): QueuedMessage {
   return {
     ...base,
-    type: 'group',
+    id: groupId,
+    message: name,
     group_id: groupId,
-    group_action: 'open',
-    group_label: name,
-    ...(options?.sticky ? { sticky: true } : {}),
-  };
+  }
 }
 
 export function buildGroupCloseEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   groupId: string,
-): LogEntry {
+): QueuedMessage {
   return {
     ...base,
-    type: 'group',
     group_id: groupId,
-    group_action: 'close',
-  };
+    message: '',
+  }
 }
 
 // ─── Sticky actions ──────────────────────────────────────────────────
 
 export function buildUnstickyEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   groupId: string,
   entryId?: string,
-): LogEntry {
+): QueuedMessage {
   return {
     ...base,
-    type: 'text',
-    text: '',
+    message: '',
     group_id: groupId,
-    sticky_action: 'unpin',
+    labels: { _sticky_action: 'unpin' },
     ...(entryId ? { id: entryId } : {}),
-  };
+  }
 }
 
-// ─── State / Image / Custom ─────────────────────────────────────────
+// ─── State (→ DataMessage) ───────────────────────────────────────────
 
 export function buildStateEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   key: string,
   value: unknown,
-): LogEntry {
-  return { ...base, type: 'state', state_key: key, state_value: value };
+): QueuedMessage {
+  return {
+    kind: 'data',
+    session_id: base.session_id as string,
+    key,
+    value,
+    override: true,
+    display: 'default',
+  }
 }
 
+// ─── Image ───────────────────────────────────────────────────────────
+
 export function buildImageEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   data: Buffer | Uint8Array | string,
   mime: string,
   id?: string,
-): LogEntry {
+): QueuedMessage {
   const b64 =
-    typeof data === 'string' ? data : Buffer.from(data).toString('base64');
+    typeof data === 'string' ? data : Buffer.from(data).toString('base64')
   return {
     ...base,
     ...(id ? { id, replace: true } : {}),
-    type: 'image',
-    image: { data: b64, mimeType: mime },
-  };
+    widget: { type: 'image', data: b64, mime_type: mime },
+  }
 }
 
+// ─── Custom (→ EventMessage with widget) ─────────────────────────────
+
 export function buildCustomEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   type: string,
   data: unknown,
   options?: { id?: string; replace?: boolean },
-): LogEntry {
+): QueuedMessage {
   return {
     ...base,
     ...(options?.id ? { id: options.id } : {}),
     ...(options?.replace || options?.id ? { replace: true } : {}),
-    type: 'custom',
-    custom_type: type,
-    custom_data: data,
-  };
+    widget: { type, ...(data && typeof data === 'object' ? data : { data }) },
+  }
 }
 
 // ─── HTTP Request ────────────────────────────────────────────────────
 
 export function buildHttpEntry(
-  base: LogEntry,
+  base: QueuedMessage,
   data: {
-    method: string;
-    url: string;
-    status?: number;
-    duration_ms?: number;
-    request_headers?: Record<string, string>;
-    response_headers?: Record<string, string>;
-    request_body?: string;
-    response_body?: string;
-    request_id?: string;
-    started_at?: string;
+    method: string
+    url: string
+    status?: number
+    duration_ms?: number
+    request_headers?: Record<string, string>
+    response_headers?: Record<string, string>
+    request_body?: string
+    response_body?: string
+    request_id?: string
+    started_at?: string
   },
-): LogEntry {
+): QueuedMessage {
   const contentType = data.response_headers?.['content-type']
-    ?? data.response_headers?.['Content-Type'];
-  const isError = data.status != null ? data.status >= 400 : undefined;
+    ?? data.response_headers?.['Content-Type']
+  const isError = data.status != null ? data.status >= 400 : undefined
 
   return buildCustomEntry(base, 'http_request', {
     method: data.method,
@@ -190,7 +189,7 @@ export function buildHttpEntry(
     started_at: data.started_at ?? new Date().toISOString(),
     ...(contentType ? { content_type: contentType } : {}),
     ...(isError != null ? { is_error: isError } : {}),
-  });
+  })
 }
 
 // ─── Utility ─────────────────────────────────────────────────────────
@@ -198,9 +197,9 @@ export function buildHttpEntry(
 export function stringifyTags(
   meta: Record<string, unknown>,
 ): Record<string, string> {
-  const tags: Record<string, string> = {};
+  const tags: Record<string, string> = {}
   for (const [k, v] of Object.entries(meta)) {
-    tags[k] = typeof v === 'string' ? v : JSON.stringify(v);
+    tags[k] = typeof v === 'string' ? v : JSON.stringify(v)
   }
-  return tags;
+  return tags
 }

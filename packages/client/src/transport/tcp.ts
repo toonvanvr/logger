@@ -1,10 +1,12 @@
-import type { LogEntry } from '@logger/shared';
-import { DEFAULT_HOST, DEFAULT_TCP_PORT } from '@logger/shared';
-import type { TransportAdapter } from './types.js';
+import type { QueuedMessage } from '../logger-types.js'
+import type { TransportAdapter } from './types.js'
+
+const DEFAULT_HOST = 'localhost'
+const DEFAULT_TCP_PORT = 8082
 
 export interface TcpTransportOptions {
-  host?: string;
-  port?: number;
+  host?: string
+  port?: number
 }
 
 /**
@@ -15,32 +17,32 @@ export interface TcpTransportOptions {
 export class TcpTransport implements TransportAdapter {
   private _connected = false;
   private socket: any = null;
-  private readonly host: string;
-  private readonly port: number;
+  private readonly host: string
+  private readonly port: number
   private shouldReconnect = true;
   private reconnectDelay = 1000;
   private static readonly MAX_RECONNECT_DELAY = 30_000;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options?: TcpTransportOptions) {
-    this.host = options?.host ?? DEFAULT_HOST;
-    this.port = options?.port ?? DEFAULT_TCP_PORT;
+    this.host = options?.host ?? DEFAULT_HOST
+    this.port = options?.port ?? DEFAULT_TCP_PORT
   }
 
   get connected(): boolean {
-    return this._connected;
+    return this._connected
   }
 
   async connect(): Promise<void> {
-    this.shouldReconnect = true;
-    return this.doConnect();
+    this.shouldReconnect = true
+    return this.doConnect()
   }
 
   private doConnect(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (typeof Bun === 'undefined' || typeof Bun.connect !== 'function') {
-        reject(new Error('TCP transport requires Bun runtime'));
-        return;
+        reject(new Error('TCP transport requires Bun runtime'))
+        return
       }
 
       Bun.connect({
@@ -48,57 +50,60 @@ export class TcpTransport implements TransportAdapter {
         port: this.port,
         socket: {
           open: (socket: any) => {
-            this.socket = socket;
-            this._connected = true;
-            this.reconnectDelay = 1000;
-            resolve();
+            this.socket = socket
+            this._connected = true
+            this.reconnectDelay = 1000
+            resolve()
           },
           data: () => {
             // TCP transport is send-only; ignore incoming data.
           },
           close: () => {
-            this._connected = false;
-            this.socket = null;
-            this.scheduleReconnect();
+            this._connected = false
+            this.socket = null
+            this.scheduleReconnect()
           },
           error: (_socket: any, err: Error) => {
             if (!this._connected) {
-              reject(err);
+              reject(err)
             }
           },
         },
-      }).catch(reject);
-    });
+      }).catch(reject)
+    })
   }
 
   private scheduleReconnect(): void {
-    if (!this.shouldReconnect) return;
+    if (!this.shouldReconnect) return
     this.reconnectTimer = setTimeout(() => {
       this.doConnect().catch(() => {
         // Will schedule another reconnect via close handler.
-      });
-      this.reconnectDelay = Math.min(this.reconnectDelay * 2, TcpTransport.MAX_RECONNECT_DELAY);
-    }, this.reconnectDelay);
+      })
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, TcpTransport.MAX_RECONNECT_DELAY)
+    }, this.reconnectDelay)
   }
 
-  async send(entries: LogEntry[]): Promise<void> {
+  async send(messages: QueuedMessage[]): Promise<void> {
     if (!this.socket || !this._connected) {
-      throw new Error('TCP socket not connected');
+      throw new Error('TCP socket not connected')
     }
-    const ndjson = entries.map((e) => JSON.stringify(e)).join('\n') + '\n';
-    this.socket.write(ndjson);
+    const ndjson = messages.map((m) => {
+      const { kind, ...payload } = m
+      return JSON.stringify({ type: kind, ...payload })
+    }).join('\n') + '\n'
+    this.socket.write(ndjson)
   }
 
   async close(): Promise<void> {
-    this.shouldReconnect = false;
+    this.shouldReconnect = false
     if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
     }
     if (this.socket) {
-      this.socket.end();
-      this.socket = null;
+      this.socket.end()
+      this.socket = null
     }
-    this._connected = false;
+    this._connected = false
   }
 }

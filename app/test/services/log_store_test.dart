@@ -8,22 +8,22 @@ LogEntry _makeEntry({
   String id = 'e1',
   String sessionId = 'sess-1',
   Severity severity = Severity.info,
-  LogType type = LogType.text,
-  String? text,
-  String? section,
-  String? stateKey,
-  dynamic stateValue,
-  bool? replace,
+  EntryKind kind = EntryKind.event,
+  String? message,
+  String? tag,
+  String? key,
+  dynamic value,
+  bool replace = false,
 }) {
   return makeTestEntry(
     id: id,
     sessionId: sessionId,
     severity: severity,
-    type: type,
-    text: text,
-    section: section,
-    stateKey: stateKey,
-    stateValue: stateValue,
+    kind: kind,
+    message: message,
+    tag: tag,
+    key: key,
+    value: value,
     replace: replace,
   );
 }
@@ -60,11 +60,11 @@ void main() {
     // ── Test 3: addEntry upserts when replace=true and id exists ──
 
     test('addEntry upserts when replace=true and id exists', () {
-      store.addEntry(_makeEntry(id: 'e1', text: 'original'));
-      store.addEntry(_makeEntry(id: 'e1', text: 'updated', replace: true));
+      store.addEntry(_makeEntry(id: 'e1', message: 'original'));
+      store.addEntry(_makeEntry(id: 'e1', message: 'updated', replace: true));
 
       expect(store.length, 1);
-      expect(store.entries.first.text, 'updated');
+      expect(store.entries.first.message, 'updated');
     });
 
     // ── Test 4: addEntries batch adds multiple entries ──
@@ -82,16 +82,16 @@ void main() {
     // ── Test 5: addEntries handles mix of new + replace entries ──
 
     test('addEntries handles mix of new and replace entries', () {
-      store.addEntry(_makeEntry(id: 'e1', text: 'original'));
+      store.addEntry(_makeEntry(id: 'e1', message: 'original'));
 
       store.addEntries([
-        _makeEntry(id: 'e1', text: 'replaced', replace: true),
-        _makeEntry(id: 'e2', text: 'new'),
+        _makeEntry(id: 'e1', message: 'replaced', replace: true),
+        _makeEntry(id: 'e2', message: 'new'),
       ]);
 
       expect(store.length, 2);
-      expect(store.entries[0].text, 'replaced');
-      expect(store.entries[1].text, 'new');
+      expect(store.entries[0].message, 'replaced');
+      expect(store.entries[1].message, 'new');
     });
 
     // ── Test 6: addEntries calls notifyListeners once per batch ──
@@ -109,35 +109,20 @@ void main() {
 
     test('state tracking stores stateKey and stateValue per session', () {
       store.addEntry(
-        _makeEntry(
-          id: 'e1',
-          type: LogType.state,
-          stateKey: 'theme',
-          stateValue: 'dark',
-        ),
+        _makeEntry(id: 'e1', kind: EntryKind.data, key: 'theme', value: 'dark'),
       );
 
       expect(store.getState('sess-1'), {'theme': 'dark'});
     });
 
-    // ── Test 8: state tracking — null stateValue removes key ──
+    // ── Test 8: state tracking — null value removes key ──
 
-    test('state tracking removes key when stateValue is null', () {
+    test('state tracking removes key when value is null', () {
       store.addEntry(
-        _makeEntry(
-          id: 'e1',
-          type: LogType.state,
-          stateKey: 'theme',
-          stateValue: 'dark',
-        ),
+        _makeEntry(id: 'e1', kind: EntryKind.data, key: 'theme', value: 'dark'),
       );
       store.addEntry(
-        _makeEntry(
-          id: 'e2',
-          type: LogType.state,
-          stateKey: 'theme',
-          stateValue: null,
-        ),
+        _makeEntry(id: 'e2', kind: EntryKind.data, key: 'theme', value: null),
       );
 
       expect(store.getState('sess-1').containsKey('theme'), isFalse);
@@ -177,23 +162,23 @@ void main() {
 
     test('filter by section', () {
       store.addEntries([
-        _makeEntry(id: 'e1', section: 'network'),
-        _makeEntry(id: 'e2', section: 'ui'),
-        _makeEntry(id: 'e3', section: 'network'),
+        _makeEntry(id: 'e1', tag: 'network'),
+        _makeEntry(id: 'e2', tag: 'ui'),
+        _makeEntry(id: 'e3', tag: 'network'),
       ]);
 
       final result = store.filter(section: 'network');
       expect(result.length, 2);
-      expect(result.every((e) => e.section == 'network'), isTrue);
+      expect(result.every((e) => e.tag == 'network'), isTrue);
     });
 
     // ── Test 12: filter by textSearch (case-insensitive) ──
 
     test('filter by textSearch is case-insensitive', () {
       store.addEntries([
-        _makeEntry(id: 'e1', text: 'Hello World'),
-        _makeEntry(id: 'e2', text: 'goodbye world'),
-        _makeEntry(id: 'e3', text: 'no match'),
+        _makeEntry(id: 'e1', message: 'Hello World'),
+        _makeEntry(id: 'e2', message: 'goodbye world'),
+        _makeEntry(id: 'e3', message: 'no match'),
       ]);
 
       final result = store.filter(textSearch: 'WORLD');
@@ -208,22 +193,22 @@ void main() {
           id: 'e1',
           sessionId: 'sess-1',
           severity: Severity.error,
-          section: 'network',
-          text: 'timeout error',
+          tag: 'network',
+          message: 'timeout error',
         ),
         _makeEntry(
           id: 'e2',
           sessionId: 'sess-1',
           severity: Severity.debug,
-          section: 'network',
-          text: 'debug trace',
+          tag: 'network',
+          message: 'debug trace',
         ),
         _makeEntry(
           id: 'e3',
           sessionId: 'sess-2',
           severity: Severity.error,
-          section: 'ui',
-          text: 'render error',
+          tag: 'ui',
+          message: 'render error',
         ),
       ]);
 
@@ -241,12 +226,7 @@ void main() {
 
     test('clear removes all entries and state', () {
       store.addEntry(
-        _makeEntry(
-          id: 'e1',
-          type: LogType.state,
-          stateKey: 'k',
-          stateValue: 'v',
-        ),
+        _makeEntry(id: 'e1', kind: EntryKind.data, key: 'k', value: 'v'),
       );
       store.clear();
 
@@ -259,20 +239,10 @@ void main() {
 
     test('getState returns session state map', () {
       store.addEntry(
-        _makeEntry(
-          id: 'e1',
-          type: LogType.state,
-          stateKey: 'count',
-          stateValue: 42,
-        ),
+        _makeEntry(id: 'e1', kind: EntryKind.data, key: 'count', value: 42),
       );
       store.addEntry(
-        _makeEntry(
-          id: 'e2',
-          type: LogType.state,
-          stateKey: 'name',
-          stateValue: 'test',
-        ),
+        _makeEntry(id: 'e2', kind: EntryKind.data, key: 'name', value: 'test'),
       );
 
       final state = store.getState('sess-1');
@@ -327,10 +297,12 @@ void main() {
         expect(store.length, LogStore.maxEntries);
 
         // Upsert via replace should still find the correct entry by id
-        store.addEntry(_makeEntry(id: 'new0', text: 'updated', replace: true));
+        store.addEntry(
+          _makeEntry(id: 'new0', message: 'updated', replace: true),
+        );
         final idx = store.entries.indexWhere((e) => e.id == 'new0');
         expect(idx, isNonNegative);
-        expect(store.entries[idx].text, 'updated');
+        expect(store.entries[idx].message, 'updated');
         // Length should not change from a replace
         expect(store.length, LogStore.maxEntries);
       });

@@ -6,11 +6,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeCustomEntry({String? customType, dynamic customData}) {
+LogEntry _makeCustomEntry({
+  String? customType,
+  Map<String, dynamic>? customData,
+}) {
   return makeTestEntry(
-    type: LogType.custom,
-    customType: customType,
-    customData: customData,
+    kind: EntryKind.event,
+    widget: customType != null
+        ? WidgetPayload(type: customType, data: customData ?? {})
+        : null,
   );
 }
 

@@ -28,7 +28,7 @@ class _BinaryRendererState extends State<BinaryRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    final raw = widget.entry.binary ?? '';
+    final raw = widget.entry.widget?.data['data'] as String? ?? '';
 
     Uint8List bytes;
     try {

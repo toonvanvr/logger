@@ -5,14 +5,47 @@ import 'package:flutter_test/flutter_test.dart';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-LogEntry _entry({required LogType type}) => LogEntry(
-  id: 'e1',
-  timestamp: '2026-01-01T00:00:00Z',
-  sessionId: 's1',
-  severity: Severity.info,
-  type: type,
-  text: 'test',
-);
+/// Creates a test entry whose "type string" (as computed by the plugin) matches
+/// the given [typeStr]. For event entries with a widget type, a WidgetPayload
+/// is attached. Plain text events omit the widget.
+LogEntry _entry({required String typeStr}) {
+  switch (typeStr) {
+    case 'session':
+      return LogEntry(
+        id: 'e1',
+        timestamp: '2026-01-01T00:00:00Z',
+        sessionId: 's1',
+        kind: EntryKind.session,
+        severity: Severity.info,
+      );
+    case 'data':
+      return LogEntry(
+        id: 'e1',
+        timestamp: '2026-01-01T00:00:00Z',
+        sessionId: 's1',
+        kind: EntryKind.data,
+        severity: Severity.info,
+      );
+    case 'text':
+      return LogEntry(
+        id: 'e1',
+        timestamp: '2026-01-01T00:00:00Z',
+        sessionId: 's1',
+        kind: EntryKind.event,
+        severity: Severity.info,
+        message: 'test',
+      );
+    default:
+      return LogEntry(
+        id: 'e1',
+        timestamp: '2026-01-01T00:00:00Z',
+        sessionId: 's1',
+        kind: EntryKind.event,
+        severity: Severity.info,
+        widget: WidgetPayload(type: typeStr, data: const {}),
+      );
+  }
+}
 
 void main() {
   late LogTypeFilterPlugin plugin;
@@ -53,21 +86,21 @@ void main() {
 
   group('matches', () {
     test('returns true for any entry when no active types', () {
-      expect(plugin.matches(_entry(type: LogType.text), ''), isTrue);
-      expect(plugin.matches(_entry(type: LogType.json), ''), isTrue);
-      expect(plugin.matches(_entry(type: LogType.html), ''), isTrue);
+      expect(plugin.matches(_entry(typeStr: 'text'), ''), isTrue);
+      expect(plugin.matches(_entry(typeStr: 'json'), ''), isTrue);
+      expect(plugin.matches(_entry(typeStr: 'html'), ''), isTrue);
     });
 
     test('returns true when entry type is in active set', () {
       plugin.setActiveTypes({'text', 'json'});
-      expect(plugin.matches(_entry(type: LogType.text), ''), isTrue);
-      expect(plugin.matches(_entry(type: LogType.json), ''), isTrue);
+      expect(plugin.matches(_entry(typeStr: 'text'), ''), isTrue);
+      expect(plugin.matches(_entry(typeStr: 'json'), ''), isTrue);
     });
 
     test('returns false when entry type is not in active set', () {
       plugin.setActiveTypes({'text'});
-      expect(plugin.matches(_entry(type: LogType.json), ''), isFalse);
-      expect(plugin.matches(_entry(type: LogType.html), ''), isFalse);
+      expect(plugin.matches(_entry(typeStr: 'json'), ''), isFalse);
+      expect(plugin.matches(_entry(typeStr: 'html'), ''), isFalse);
     });
   });
 
@@ -107,10 +140,10 @@ void main() {
 
   group('getSuggestions', () {
     final entries = [
-      _entry(type: LogType.text),
-      _entry(type: LogType.json),
-      _entry(type: LogType.text),
-      _entry(type: LogType.html),
+      _entry(typeStr: 'text'),
+      _entry(typeStr: 'json'),
+      _entry(typeStr: 'text'),
+      _entry(typeStr: 'html'),
     ];
 
     test('returns sorted unique types from entries', () {

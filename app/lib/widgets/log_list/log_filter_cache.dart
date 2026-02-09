@@ -73,7 +73,6 @@ class LogFilterCache {
   }) {
     var results = logStore
         .filter(section: sectionFilter)
-        .where((e) => e.stickyAction != 'unpin')
         .where((e) => activeSeverities.contains(e.severity.name));
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.
@@ -95,17 +94,17 @@ class LogFilterCache {
 
     if (stateKeys.isNotEmpty) {
       results = results.where(
-        (e) => e.type == LogType.state && stateKeys.contains(e.stateKey),
+        (e) => e.kind == EntryKind.data && stateKeys.contains(e.key),
       );
       if (remainingFilter != null && remainingFilter.isNotEmpty) {
         final lower = remainingFilter.toLowerCase();
         results = results.where((e) {
-          final text = e.text?.toLowerCase() ?? '';
+          final text = e.message?.toLowerCase() ?? '';
           return text.contains(lower);
         });
       }
     } else {
-      results = results.where((e) => e.type != LogType.state);
+      results = results.where((e) => e.kind != EntryKind.data);
       if (textFilter != null && textFilter.isNotEmpty) {
         final smartSearch = PluginRegistry.instance
             .getEnabledPlugins<SmartSearchPlugin>()
@@ -115,7 +114,7 @@ class LogFilterCache {
         } else {
           final lower = textFilter.toLowerCase();
           results = results.where((e) {
-            final text = e.text?.toLowerCase() ?? '';
+            final text = e.message?.toLowerCase() ?? '';
             return text.contains(lower);
           });
         }

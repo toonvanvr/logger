@@ -6,12 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeStateEntry({String? stateKey, dynamic stateValue}) {
-  return makeTestEntry(
-    type: LogType.state,
-    stateKey: stateKey,
-    stateValue: stateValue,
-  );
+LogEntry _makeStateEntry({String? key, dynamic value}) {
+  return makeTestEntry(kind: EntryKind.data, key: key, value: value);
 }
 
 Widget _wrap(Widget child) {
@@ -29,7 +25,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           StateRenderer(
-            entry: _makeStateEntry(stateKey: 'theme', stateValue: 'dark'),
+            entry: _makeStateEntry(key: 'theme', value: 'dark'),
           ),
         ),
       );
@@ -42,11 +38,7 @@ void main() {
 
     testWidgets('shows deleted indicator for null value', (tester) async {
       await tester.pumpWidget(
-        _wrap(
-          StateRenderer(
-            entry: _makeStateEntry(stateKey: 'theme', stateValue: null),
-          ),
-        ),
+        _wrap(StateRenderer(entry: _makeStateEntry(key: 'theme', value: null))),
       );
 
       expect(find.text('theme: '), findsOneWidget);
@@ -59,7 +51,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           StateRenderer(
-            entry: _makeStateEntry(stateKey: 'config', stateValue: {'a': 1}),
+            entry: _makeStateEntry(key: 'config', value: {'a': 1}),
           ),
         ),
       );

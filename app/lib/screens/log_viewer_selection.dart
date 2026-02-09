@@ -91,7 +91,7 @@ mixin _SelectionMixin on State<LogViewerScreen> {
     final logStore = context.read<LogStore>();
     final entries = logStore.entries
         .where((e) => _selectedEntryIds.contains(e.id))
-        .map((e) => e.text ?? '')
+        .map((e) => e.message ?? '')
         .join('\n');
     Clipboard.setData(ClipboardData(text: entries));
   }
@@ -105,7 +105,7 @@ mixin _SelectionMixin on State<LogViewerScreen> {
             'id': e.id,
             'timestamp': e.timestamp,
             'severity': e.severity.name,
-            'text': e.text,
+            'message': e.message,
             'sessionId': e.sessionId,
           },
         )

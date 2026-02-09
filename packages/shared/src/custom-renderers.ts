@@ -1,14 +1,14 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 // ─── TreeNode (recursive) ────────────────────────────────────────────
 
 export interface TreeNode {
-  label: string;
-  icon?: string;
-  meta?: string;
-  color?: string;
-  children?: TreeNode[];
-  expanded?: boolean;
+  label: string
+  icon?: string
+  meta?: string
+  color?: string
+  children?: TreeNode[]
+  expanded?: boolean
 }
 
 export const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
@@ -23,7 +23,7 @@ export const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
     .lazy(() => z.array(TreeNodeSchema).max(500))
     .optional(),
   expanded: z.boolean().optional(),
-});
+})
 
 // ─── Individual Custom Renderer Schemas ──────────────────────────────
 
@@ -38,7 +38,7 @@ export const TableRendererData = z.object({
     sortable: z.boolean().optional(),
     caption: z.string().max(256).optional(),
   }),
-});
+})
 
 export const ProgressRendererData = z.object({
   custom_type: z.literal('progress'),
@@ -53,7 +53,7 @@ export const ProgressRendererData = z.object({
       .optional(),
     style: z.enum(['bar', 'ring']).optional(),
   }),
-});
+})
 
 export const KvRendererData = z.object({
   custom_type: z.literal('kv'),
@@ -74,7 +74,7 @@ export const KvRendererData = z.object({
       .max(50),
     layout: z.enum(['inline', 'stacked']).optional(),
   }),
-});
+})
 
 export const ChartRendererData = z.object({
   custom_type: z.literal('chart'),
@@ -91,7 +91,7 @@ export const ChartRendererData = z.object({
     max: z.number().optional(),
     title: z.string().max(256).optional(),
   }),
-});
+})
 
 export const DiffRendererData = z.object({
   custom_type: z.literal('diff'),
@@ -101,7 +101,7 @@ export const DiffRendererData = z.object({
     language: z.enum(['json', 'yaml', 'sql', 'text']).optional(),
     context_lines: z.number().int().min(0).max(20).optional(),
   }),
-});
+})
 
 export const TreeRendererData = z.object({
   custom_type: z.literal('tree'),
@@ -109,7 +109,7 @@ export const TreeRendererData = z.object({
     root: TreeNodeSchema,
     default_expanded_depth: z.number().int().min(0).max(10).optional(),
   }),
-});
+})
 
 export const TimelineRendererData = z.object({
   custom_type: z.literal('timeline'),
@@ -133,19 +133,19 @@ export const TimelineRendererData = z.object({
     show_duration: z.boolean().optional(),
     total_label: z.string().max(256).optional(),
   }),
-});
+})
 
 export const HttpRequestRendererData = z.object({
   custom_type: z.literal('http_request'),
   custom_data: z.object({
     method: z.string(),
     url: z.string(),
-    request_headers: z.record(z.string()).optional(),
+    request_headers: z.record(z.string(), z.string()).optional(),
     request_body: z.string().optional(),
     request_body_size: z.number().optional(),
     status: z.number().optional(),
     status_text: z.string().optional(),
-    response_headers: z.record(z.string()).optional(),
+    response_headers: z.record(z.string(), z.string()).optional(),
     response_body: z.string().optional(),
     response_body_size: z.number().optional(),
     started_at: z.string(),
@@ -155,7 +155,7 @@ export const HttpRequestRendererData = z.object({
     content_type: z.string().optional(),
     is_error: z.boolean().optional(),
   }),
-});
+})
 
 // ─── Discriminated Union ─────────────────────────────────────────────
 
@@ -168,5 +168,5 @@ export const CustomRendererData = z.discriminatedUnion('custom_type', [
   TreeRendererData,
   TimelineRendererData,
   HttpRequestRendererData,
-]);
-export type CustomRendererData = z.infer<typeof CustomRendererData>;
+])
+export type CustomRendererData = z.infer<typeof CustomRendererData>

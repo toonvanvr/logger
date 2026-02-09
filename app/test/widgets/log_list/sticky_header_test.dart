@@ -32,8 +32,8 @@ void main() {
     testWidgets('renders section with sticky entry', (tester) async {
       final entry = makeTestEntry(
         id: 'sticky-1',
-        text: 'pinned entry',
-        sticky: true,
+        message: 'pinned entry',
+        display: DisplayLocation.static_,
       );
 
       await tester.pumpWidget(
@@ -57,17 +57,15 @@ void main() {
     testWidgets('renders group header label', (tester) async {
       final groupHeader = makeTestEntry(
         id: 'g1',
-        type: LogType.group,
-        groupAction: GroupAction.open,
-        groupLabel: 'HTTP Requests',
         groupId: 'g1',
-        sticky: true,
+        message: 'HTTP Requests',
+        display: DisplayLocation.static_,
       );
       final entry = makeTestEntry(
         id: 's1',
-        text: 'GET /api',
-        groupId: 'g1',
-        sticky: true,
+        message: 'GET /api',
+        parentId: 'g1',
+        display: DisplayLocation.static_,
       );
 
       await tester.pumpWidget(
@@ -84,7 +82,11 @@ void main() {
     });
 
     testWidgets('shows hidden count badge', (tester) async {
-      final entry = makeTestEntry(id: 's1', text: 'visible', sticky: true);
+      final entry = makeTestEntry(
+        id: 's1',
+        message: 'visible',
+        display: DisplayLocation.static_,
+      );
 
       await tester.pumpWidget(
         _wrap(
@@ -102,8 +104,16 @@ void main() {
     testWidgets('shows section count bar for multiple sections', (
       tester,
     ) async {
-      final e1 = makeTestEntry(id: 's1', text: 'a', sticky: true);
-      final e2 = makeTestEntry(id: 's2', text: 'b', sticky: true);
+      final e1 = makeTestEntry(
+        id: 's1',
+        message: 'a',
+        display: DisplayLocation.static_,
+      );
+      final e2 = makeTestEntry(
+        id: 's2',
+        message: 'b',
+        display: DisplayLocation.static_,
+      );
 
       await tester.pumpWidget(
         _wrap(
@@ -124,8 +134,8 @@ void main() {
       final stickyState = StickyStateService();
       final entry = makeTestEntry(
         id: 'dismiss-me',
-        text: 'will be dismissed',
-        sticky: true,
+        message: 'will be dismissed',
+        display: DisplayLocation.static_,
       );
 
       await tester.pumpWidget(

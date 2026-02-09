@@ -1,4 +1,4 @@
-/// Dart equivalents of the shared TypeScript ServerMessage schema.
+/// Dart equivalents of the v2 ServerMessage schema.
 library;
 
 import 'log_entry.dart';
@@ -8,13 +8,14 @@ import 'log_entry.dart';
 enum ServerMessageType {
   ack,
   error,
-  log,
-  logs,
+  event,
+  eventBatch,
   rpcRequest,
   rpcResponse,
   sessionList,
   sessionUpdate,
-  stateSnapshot,
+  dataSnapshot,
+  dataUpdate,
   history,
   subscribeAck,
 }
@@ -23,13 +24,17 @@ ServerMessageType parseServerMessageType(String value) {
   return switch (value) {
     'ack' => ServerMessageType.ack,
     'error' => ServerMessageType.error,
-    'log' => ServerMessageType.log,
-    'logs' => ServerMessageType.logs,
+    'event' => ServerMessageType.event,
+    'log' => ServerMessageType.event, // v1 compat
+    'event_batch' => ServerMessageType.eventBatch,
+    'logs' => ServerMessageType.eventBatch, // v1 compat
     'rpc_request' => ServerMessageType.rpcRequest,
     'rpc_response' => ServerMessageType.rpcResponse,
     'session_list' => ServerMessageType.sessionList,
     'session_update' => ServerMessageType.sessionUpdate,
-    'state_snapshot' => ServerMessageType.stateSnapshot,
+    'data_snapshot' => ServerMessageType.dataSnapshot,
+    'state_snapshot' => ServerMessageType.dataSnapshot, // v1 compat
+    'data_update' => ServerMessageType.dataUpdate,
     'history' => ServerMessageType.history,
     'subscribe_ack' => ServerMessageType.subscribeAck,
     _ => ServerMessageType.error,
@@ -85,10 +90,10 @@ class ServerMessage {
   final String? errorMessage;
   final String? errorEntryId;
 
-  // log
+  // event (single entry)
   final LogEntry? entry;
 
-  // logs
+  // event_batch (multiple entries)
   final List<LogEntry>? entries;
 
   // rpc
@@ -106,8 +111,14 @@ class ServerMessage {
   final SessionAction? sessionAction;
   final ApplicationInfo? application;
 
-  // state_snapshot
-  final Map<String, dynamic>? state;
+  // data_snapshot
+  final Map<String, DataState>? data;
+
+  // data_update
+  final String? dataKey;
+  final dynamic dataValue;
+  final DisplayLocation? dataDisplay;
+  final WidgetPayload? dataWidget;
 
   // history
   final String? queryId;
@@ -138,7 +149,11 @@ class ServerMessage {
     this.sessionId,
     this.sessionAction,
     this.application,
-    this.state,
+    this.data,
+    this.dataKey,
+    this.dataValue,
+    this.dataDisplay,
+    this.dataWidget,
     this.queryId,
     this.historyEntries,
     this.hasMore,
@@ -175,7 +190,17 @@ class ServerMessage {
               json['application'] as Map<String, dynamic>,
             )
           : null,
-      state: (json['state'] as Map<String, dynamic>?),
+      data: (json['data'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, DataState.fromJson(v as Map<String, dynamic>)),
+      ),
+      dataKey: json['data_key'] as String?,
+      dataValue: json['data_value'],
+      dataDisplay: json['data_display'] != null
+          ? parseDisplayLocation(json['data_display'] as String)
+          : null,
+      dataWidget: json['data_widget'] != null
+          ? WidgetPayload.fromJson(json['data_widget'] as Map<String, dynamic>)
+          : null,
       queryId: json['query_id'] as String?,
       historyEntries: (json['history_entries'] as List<dynamic>?)
           ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))

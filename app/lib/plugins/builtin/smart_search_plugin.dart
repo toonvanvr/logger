@@ -105,7 +105,7 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
     // Fallback: show any entry text that contains the partial query
     final results = <String>{};
     for (final entry in entries) {
-      final text = entry.text ?? '';
+      final text = entry.message ?? '';
       if (text.toLowerCase().contains(lower) && text.length <= 120) {
         results.add(text);
         if (results.length >= 8) break;
@@ -127,11 +127,11 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
   /// Gather all searchable text from an entry.
   static String _entryText(LogEntry entry) {
     final buf = StringBuffer();
-    if (entry.text != null) buf.write(entry.text);
-    if (entry.section != null) {
+    if (entry.message != null) buf.write(entry.message);
+    if (entry.tag != null) {
       buf
         ..write(' ')
-        ..write(entry.section);
+        ..write(entry.tag);
     }
     if (entry.exception != null) {
       buf

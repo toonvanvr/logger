@@ -14,15 +14,17 @@ LogEntry _httpEntry({
   bool isError = false,
 }) {
   return makeTestEntry(
-    type: LogType.custom,
-    customType: 'http_request',
-    customData: {
-      'method': method,
-      'url': url,
-      'status': ?status,
-      'duration_ms': ?durationMs,
-      'is_error': isError,
-    },
+    kind: EntryKind.event,
+    widget: WidgetPayload(
+      type: 'http_request',
+      data: {
+        'method': method,
+        'url': url,
+        'status': ?status,
+        'duration_ms': ?durationMs,
+        'is_error': isError,
+      },
+    ),
   );
 }
 
@@ -61,11 +63,7 @@ void main() {
     });
 
     testWidgets('renders error state for invalid data', (tester) async {
-      final entry = makeTestEntry(
-        type: LogType.custom,
-        customType: 'http_request',
-        customData: 'not_a_map',
-      );
+      final entry = makeTestEntry(kind: EntryKind.event);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -79,15 +77,17 @@ void main() {
 
     testWidgets('expands details on tap', (tester) async {
       final entry = makeTestEntry(
-        type: LogType.custom,
-        customType: 'http_request',
-        customData: {
-          'method': 'GET',
-          'url': '/api',
-          'status': 200,
-          'request_headers': {'Authorization': 'Bearer token'},
-          'response_body': '{"ok":true}',
-        },
+        kind: EntryKind.event,
+        widget: WidgetPayload(
+          type: 'http_request',
+          data: {
+            'method': 'GET',
+            'url': '/api',
+            'status': 200,
+            'request_headers': {'Authorization': 'Bearer token'},
+            'response_body': '{"ok":true}',
+          },
+        ),
       );
 
       await tester.pumpWidget(

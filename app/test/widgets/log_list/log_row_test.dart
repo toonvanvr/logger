@@ -15,16 +15,16 @@ import '../../test_helpers.dart';
 
 LogEntry _makeEntry({
   String id = 'e1',
-  String text = 'hello world',
+  String message = 'hello world',
   Severity severity = Severity.info,
-  LogType type = LogType.text,
+  EntryKind kind = EntryKind.event,
   String sessionId = 'sess-1',
 }) {
   return makeTestEntry(
     id: id,
-    text: text,
+    message: message,
     severity: severity,
-    type: type,
+    kind: kind,
     sessionId: sessionId,
   );
 }
@@ -57,7 +57,7 @@ Container _findRowContainer(WidgetTester tester) {
 void main() {
   testWidgets('renders text content', (tester) async {
     await tester.pumpWidget(
-      _wrap(LogRow(entry: _makeEntry(text: 'test log message'))),
+      _wrap(LogRow(entry: _makeEntry(message: 'test log message'))),
     );
 
     // TextRenderer uses RichText, so match via predicate.
@@ -137,7 +137,7 @@ void main() {
   });
 
   testWidgets('copy button shows checkmark after tap', (tester) async {
-    await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry(text: 'copy me'))));
+    await tester.pumpWidget(_wrap(LogRow(entry: _makeEntry(message: 'copy me'))));
     await tester.pump();
 
     // Hover to show copy button

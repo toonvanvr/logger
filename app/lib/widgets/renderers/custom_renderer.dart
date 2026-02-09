@@ -7,7 +7,7 @@ import '../../plugins/plugin_registry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
-/// Renderer for [LogType.custom] entries.
+/// Renderer for entries with an unknown or custom [WidgetPayload].
 ///
 /// Dispatches to specialized renderers via [PluginRegistry], or falls
 /// back to a JSON dump for unknown types.
@@ -18,11 +18,11 @@ class CustomRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final customType = entry.customType;
-    if (customType != null) {
-      final plugin = PluginRegistry.instance.resolveRenderer(customType);
+    final widgetType = entry.widget?.type;
+    if (widgetType != null) {
+      final plugin = PluginRegistry.instance.resolveRenderer(widgetType);
       if (plugin != null) {
-        final data = entry.customData;
+        final data = entry.widget?.data;
         return plugin.buildRenderer(
           context,
           data is Map<String, dynamic> ? data : <String, dynamic>{},
@@ -41,8 +41,8 @@ class _FallbackRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type = entry.customType ?? 'custom';
-    final data = entry.customData;
+    final type = entry.widget?.type ?? 'custom';
+    final data = entry.widget?.data;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

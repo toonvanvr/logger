@@ -22,8 +22,8 @@ class _HttpRequestRendererState extends State<HttpRequestRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    final data = widget.entry.customData;
-    if (data is! Map) {
+    final data = widget.entry.widget?.data;
+    if (data == null) {
       return Text(
         '[http_request: invalid data]',
         style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),

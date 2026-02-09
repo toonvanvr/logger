@@ -17,27 +17,21 @@ import '../../test_helpers.dart';
 
 LogEntry _makeEntry({
   required String id,
-  String text = 'log line',
+  String message = 'log line',
   Severity severity = Severity.info,
   String sessionId = 'sess-1',
-  LogType type = LogType.text,
   String? groupId,
-  GroupAction? groupAction,
-  String? groupLabel,
-  bool? sticky,
-  String? stickyAction,
+  String? parentId,
+  DisplayLocation display = DisplayLocation.defaultLoc,
 }) {
   return makeTestEntry(
     id: id,
-    text: type == LogType.text ? text : null,
+    message: message,
     severity: severity,
     sessionId: sessionId,
-    type: type,
     groupId: groupId,
-    groupAction: groupAction,
-    groupLabel: groupLabel,
-    sticky: sticky,
-    stickyAction: stickyAction,
+    parentId: parentId,
+    display: display,
   );
 }
 
@@ -103,8 +97,12 @@ void main() {
     testWidgets('close button appears on sticky entry row', (tester) async {
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'sticky log', sticky: true),
-        _makeEntry(id: 'b', text: 'normal log'),
+        _makeEntry(
+          id: 'a',
+          message: 'sticky log',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(id: 'b', message: 'normal log'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store));
@@ -117,7 +115,13 @@ void main() {
     testWidgets('tapping close button dismisses sticky entry', (tester) async {
       final stickyState = StickyStateService();
       final section = StickySection(
-        entries: [_makeEntry(id: 'e1', text: 'sticky entry', sticky: true)],
+        entries: [
+          _makeEntry(
+            id: 'e1',
+            message: 'sticky entry',
+            display: DisplayLocation.static_,
+          ),
+        ],
       );
 
       await tester.pumpWidget(
@@ -140,15 +144,15 @@ void main() {
       final stickyState = StickyStateService();
       final groupEntry = _makeEntry(
         id: 'g1-open',
-        type: LogType.group,
         groupId: 'g1',
-        groupAction: GroupAction.open,
-        groupLabel: 'Build',
-        sticky: true,
+        message: 'Build',
+        display: DisplayLocation.static_,
       );
       final section = StickySection(
         groupHeader: groupEntry,
-        entries: [_makeEntry(id: 'g1-a', text: 'Building...', groupId: 'g1')],
+        entries: [
+          _makeEntry(id: 'g1-a', message: 'Building...', parentId: 'g1'),
+        ],
         groupDepth: 0,
       );
 
@@ -175,9 +179,17 @@ void main() {
       final stickyState = StickyStateService();
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'sticky 1', sticky: true),
-        _makeEntry(id: 'b', text: 'sticky 2', sticky: true),
-        _makeEntry(id: 'c', text: 'normal'),
+        _makeEntry(
+          id: 'a',
+          message: 'sticky 1',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(
+          id: 'b',
+          message: 'sticky 2',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(id: 'c', message: 'normal'),
       ]);
 
       // Pre-dismiss one entry
@@ -213,9 +225,9 @@ void main() {
           entries: [
             _makeEntry(
               id: 'e1',
-              text: 'sticky entry',
-              sticky: true,
-              groupId: 'g1',
+              message: 'sticky entry',
+              display: DisplayLocation.static_,
+              parentId: 'g1',
             ),
           ],
         );
@@ -253,8 +265,8 @@ void main() {
         entries: [
           _makeEntry(
             id: 'e1',
-            text: 'sticky entry',
-            sticky: true,
+            message: 'sticky entry',
+            display: DisplayLocation.static_,
             groupId: 'g1',
           ),
         ],
@@ -291,20 +303,12 @@ void main() {
       store.addEntries([
         _makeEntry(
           id: 'g1-open',
-          type: LogType.group,
           groupId: 'g1',
-          groupAction: GroupAction.open,
-          groupLabel: 'Build',
-          sticky: true,
+          message: 'Build',
+          display: DisplayLocation.static_,
         ),
-        _makeEntry(id: 'g1-a', text: 'Compiling...', groupId: 'g1'),
-        _makeEntry(
-          id: 'g1-close',
-          type: LogType.group,
-          groupId: 'g1',
-          groupAction: GroupAction.close,
-        ),
-        _makeEntry(id: 'normal', text: 'After group'),
+        _makeEntry(id: 'g1-a', message: 'Compiling...', parentId: 'g1'),
+        _makeEntry(id: 'normal', message: 'After group'),
       ]);
 
       // Ignore the group
@@ -344,38 +348,35 @@ void main() {
       final stickyState = StickyStateService();
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'sticky log', sticky: true, groupId: 'g1'),
-        _makeEntry(id: 'b', text: 'normal'),
         _makeEntry(
-          id: 'unpin-1',
-          text: '',
-          groupId: 'g1',
-          stickyAction: 'unpin',
+          id: 'a',
+          message: 'sticky log',
+          display: DisplayLocation.static_,
+          parentId: 'g1',
         ),
+        _makeEntry(id: 'b', message: 'normal'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store, stickyState: stickyState));
       await tester.pumpAndSettle();
 
-      // The unpin entry should have caused the group to be ignored
+      // In v2, stickyAction was removed. Unpin is handled externally.
+      // Manually dismiss to simulate the unpin behavior.
+      stickyState.ignore('g1');
       expect(stickyState.isGroupIgnored('g1'), isTrue);
-      expect(stickyState.isDismissed('unpin-1'), isTrue);
     });
 
-    testWidgets('LogEntry.fromJson parses stickyAction', (tester) async {
+    testWidgets('LogEntry.fromJson parses groupId', (tester) async {
       final json = {
         'id': 'test-1',
         'timestamp': '2026-02-08T10:00:00.000Z',
         'session_id': 'sess-1',
         'severity': 'info',
-        'type': 'text',
-        'text': '',
-        'sticky_action': 'unpin',
+        'kind': 'event',
         'group_id': 'g1',
       };
 
       final entry = LogEntry.fromJson(json);
-      expect(entry.stickyAction, 'unpin');
       expect(entry.groupId, 'g1');
     });
   });
@@ -387,7 +388,13 @@ void main() {
       final sections = List.generate(
         3,
         (i) => StickySection(
-          entries: [_makeEntry(id: 'e$i', text: 'entry $i', sticky: true)],
+          entries: [
+            _makeEntry(
+              id: 'e$i',
+              message: 'entry $i',
+              display: DisplayLocation.static_,
+            ),
+          ],
         ),
       );
 
@@ -405,7 +412,13 @@ void main() {
       final sections = List.generate(
         6,
         (i) => StickySection(
-          entries: [_makeEntry(id: 'e$i', text: 'entry $i', sticky: true)],
+          entries: [
+            _makeEntry(
+              id: 'e$i',
+              message: 'entry $i',
+              display: DisplayLocation.static_,
+            ),
+          ],
         ),
       );
 
@@ -429,7 +442,13 @@ void main() {
       final sections = List.generate(
         6,
         (i) => StickySection(
-          entries: [_makeEntry(id: 'e$i', text: 'entry $i', sticky: true)],
+          entries: [
+            _makeEntry(
+              id: 'e$i',
+              message: 'entry $i',
+              display: DisplayLocation.static_,
+            ),
+          ],
         ),
       );
 
@@ -458,7 +477,13 @@ void main() {
       final sections = List.generate(
         6,
         (i) => StickySection(
-          entries: [_makeEntry(id: 'e$i', text: 'entry $i', sticky: true)],
+          entries: [
+            _makeEntry(
+              id: 'e$i',
+              message: 'entry $i',
+              display: DisplayLocation.static_,
+            ),
+          ],
         ),
       );
 
@@ -493,7 +518,13 @@ void main() {
     testWidgets('no overflow when sections fit in max height', (tester) async {
       final sections = [
         StickySection(
-          entries: [_makeEntry(id: 'e1', text: 'entry 1', sticky: true)],
+          entries: [
+            _makeEntry(
+              id: 'e1',
+              message: 'entry 1',
+              display: DisplayLocation.static_,
+            ),
+          ],
         ),
       ];
 

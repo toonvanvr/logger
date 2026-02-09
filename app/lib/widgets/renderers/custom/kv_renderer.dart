@@ -11,8 +11,8 @@ class KvRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = entry.customData;
-    if (data is! Map) {
+    final data = entry.widget?.data;
+    if (data == null) {
       return Text(
         '[kv: invalid data]',
         style: LoggerTypography.logBody.copyWith(color: LoggerColors.fgMuted),

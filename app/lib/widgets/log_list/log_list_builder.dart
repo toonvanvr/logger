@@ -22,136 +22,122 @@ class DisplayEntry {
 }
 
 /// Process entries to compute group depths and filter collapsed groups.
+///
+/// In v2, groups are identified by [LogEntry.groupId] (header) and
+/// [LogEntry.parentId] (child membership). There are no explicit
+/// open/close group actions.
 List<DisplayEntry> processGrouping({
   required List<LogEntry> entries,
   required String? textFilter,
   required Set<String> collapsedGroups,
   Set<String>? stickyOverrideIds,
 }) {
-  // Pre-scan to find group IDs that have at least one non-group child.
+  // Pre-scan: collect group hierarchy and find groups with children.
   final groupIdsWithChildren = <String>{};
-  {
-    final stack = <String>[];
-    for (final entry in entries) {
-      if (entry.type == LogType.group) {
-        if (entry.groupAction == GroupAction.open) {
-          stack.add(entry.groupId ?? entry.id);
-        } else if (entry.groupAction == GroupAction.close) {
-          if (stack.isNotEmpty) stack.removeLast();
-        }
-      } else if (stack.isNotEmpty) {
-        groupIdsWithChildren.add(stack.last);
-      }
+  final groupParents = <String, String?>{};
+  for (final entry in entries) {
+    if (entry.groupId != null) {
+      groupParents[entry.groupId!] = entry.parentId;
+    }
+    if (entry.parentId != null) {
+      groupIdsWithChildren.add(entry.parentId!);
+    }
+  }
+
+  // Compute group depths (memoized).
+  final groupDepths = <String, int>{};
+  int getDepth(String groupId, [Set<String>? seen]) {
+    if (groupDepths.containsKey(groupId)) return groupDepths[groupId]!;
+    seen ??= {};
+    if (!seen.add(groupId)) return 0; // circular-ref guard
+    final parent = groupParents[groupId];
+    if (parent == null) {
+      groupDepths[groupId] = 0;
+      return 0;
+    }
+    final d = getDepth(parent, seen) + 1;
+    groupDepths[groupId] = d;
+    return d;
+  }
+
+  for (final gid in groupParents.keys) {
+    getDepth(gid);
+  }
+
+  // Check if an entry is hidden by a collapsed ancestor.
+  bool isCollapsed(String? parentId) {
+    var current = parentId;
+    final seen = <String>{};
+    while (current != null && seen.add(current)) {
+      if (collapsedGroups.contains(current)) return true;
+      current = groupParents[current];
+    }
+    return false;
+  }
+
+  // Collect sticky group IDs (group headers with static display).
+  final stickyGroupIds = <String>{};
+  for (final entry in entries) {
+    if (entry.groupId != null && entry.display == DisplayLocation.static_) {
+      stickyGroupIds.add(entry.groupId!);
     }
   }
 
   final hasTextFilter = textFilter != null && textFilter.isNotEmpty;
   final result = <DisplayEntry>[];
-  int depth = 0;
-  final groupStack = <String>[];
-  final stickyGroupIds = <String>{};
 
   for (final entry in entries) {
-    bool isHidden = false;
-    for (final gid in groupStack) {
-      if (collapsedGroups.contains(gid)) {
-        isHidden = true;
-        break;
-      }
-    }
+    final isGroupHeader = entry.groupId != null;
+    final parentId = entry.parentId;
 
-    final parentGroupId = groupStack.isNotEmpty ? groupStack.last : null;
-
-    if (entry.type == LogType.group) {
-      if (entry.groupAction == GroupAction.open) {
-        final gid = entry.groupId ?? entry.id;
-        final isSticky = entry.sticky == true;
-        if (isSticky) stickyGroupIds.add(gid);
-        final hasChildren = groupIdsWithChildren.contains(gid);
-
-        if (!isHidden) {
-          if (!hasChildren && hasTextFilter) {
-            result.add(
-              DisplayEntry(
-                entry: entry,
-                depth: depth,
-                isSticky: isSticky,
-                parentGroupId: parentGroupId,
-                isStandalone: true,
-              ),
-            );
-          } else {
-            result.add(
-              DisplayEntry(
-                entry: entry,
-                depth: depth,
-                isSticky: isSticky,
-                parentGroupId: parentGroupId,
-              ),
-            );
-          }
-        }
-        groupStack.add(gid);
-        depth++;
-      } else if (entry.groupAction == GroupAction.close) {
-        if (depth > 0) depth--;
-        final closedId = groupStack.isNotEmpty ? groupStack.removeLast() : null;
-        if (closedId != null) stickyGroupIds.remove(closedId);
-
-        final closeHasChildren =
-            closedId != null && groupIdsWithChildren.contains(closedId);
-        if (!isHidden && (closeHasChildren || !hasTextFilter)) {
-          result.add(
-            DisplayEntry(
-              entry: entry,
-              depth: depth,
-              parentGroupId: parentGroupId,
-            ),
-          );
-        }
-      }
+    // Compute depth.
+    int depth;
+    if (isGroupHeader) {
+      depth = groupDepths[entry.groupId] ?? 0;
+    } else if (parentId != null) {
+      depth = (groupDepths[parentId] ?? 0) + 1;
     } else {
-      if (!isHidden) {
-        final isInStickyGroup = groupStack.any(
-          (gid) => stickyGroupIds.contains(gid),
-        );
-        final isSticky =
-            entry.sticky == true ||
-            isInStickyGroup ||
-            (stickyOverrideIds?.contains(entry.id) ?? false);
-        result.add(
-          DisplayEntry(
-            entry: entry,
-            depth: depth,
-            isSticky: isSticky,
-            parentGroupId: parentGroupId,
-          ),
-        );
-      }
+      depth = 0;
     }
-  }
 
-  // Auto-close remaining open groups to prevent depth corruption.
-  while (groupStack.isNotEmpty) {
-    if (depth > 0) depth--;
-    final gid = groupStack.removeLast();
-    stickyGroupIds.remove(gid);
-    result.add(
-      DisplayEntry(
-        entry: LogEntry(
-          id: '${gid}_autoclose',
-          timestamp: entries.last.timestamp,
-          sessionId: entries.last.sessionId,
-          severity: entries.last.severity,
-          type: LogType.group,
-          groupAction: GroupAction.close,
-          groupId: gid,
+    // Check if hidden by collapsed ancestor.
+    if (parentId != null && isCollapsed(parentId)) continue;
+
+    // Determine sticky state.
+    final bool isSticky;
+    if (isGroupHeader) {
+      isSticky = entry.display == DisplayLocation.static_;
+    } else {
+      final isInStickyGroup =
+          parentId != null && stickyGroupIds.contains(parentId);
+      isSticky =
+          entry.display == DisplayLocation.static_ ||
+          isInStickyGroup ||
+          (stickyOverrideIds?.contains(entry.id) ?? false);
+    }
+
+    if (isGroupHeader) {
+      final gid = entry.groupId!;
+      final hasChildren = groupIdsWithChildren.contains(gid);
+      result.add(
+        DisplayEntry(
+          entry: entry,
+          depth: depth,
+          isSticky: isSticky,
+          parentGroupId: parentId,
+          isStandalone: !hasChildren && hasTextFilter,
         ),
-        depth: depth,
-        isAutoClose: true,
-        parentGroupId: groupStack.isNotEmpty ? groupStack.last : null,
-      ),
-    );
+      );
+    } else {
+      result.add(
+        DisplayEntry(
+          entry: entry,
+          depth: depth,
+          isSticky: isSticky,
+          parentGroupId: parentId,
+        ),
+      );
+    }
   }
 
   return result;

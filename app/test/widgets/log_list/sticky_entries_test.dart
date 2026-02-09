@@ -13,25 +13,21 @@ import '../../test_helpers.dart';
 
 LogEntry _makeEntry({
   required String id,
-  String text = 'log line',
+  String message = 'log line',
   Severity severity = Severity.info,
   String sessionId = 'sess-1',
-  LogType type = LogType.text,
   String? groupId,
-  GroupAction? groupAction,
-  String? groupLabel,
-  bool? sticky,
+  String? parentId,
+  DisplayLocation display = DisplayLocation.defaultLoc,
 }) {
   return makeTestEntry(
     id: id,
-    text: type == LogType.text ? text : null,
+    message: message,
     severity: severity,
     sessionId: sessionId,
-    type: type,
     groupId: groupId,
-    groupAction: groupAction,
-    groupLabel: groupLabel,
-    sticky: sticky,
+    parentId: parentId,
+    display: display,
   );
 }
 
@@ -55,9 +51,13 @@ void main() {
     testWidgets('sticky entry shows PINNED badge in header', (tester) async {
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'normal log'),
-        _makeEntry(id: 'b', text: 'sticky log', sticky: true),
-        _makeEntry(id: 'c', text: 'another normal'),
+        _makeEntry(id: 'a', message: 'normal log'),
+        _makeEntry(
+          id: 'b',
+          message: 'sticky log',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(id: 'c', message: 'another normal'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store));
@@ -82,21 +82,13 @@ void main() {
       store.addEntries([
         _makeEntry(
           id: 'g1-open',
-          type: LogType.group,
           groupId: 'g1',
-          groupAction: GroupAction.open,
-          groupLabel: 'Build Output',
-          sticky: true,
+          message: 'Build Output',
+          display: DisplayLocation.static_,
         ),
-        _makeEntry(id: 'g1-a', text: 'Compiling...', groupId: 'g1'),
-        _makeEntry(id: 'g1-b', text: 'Build done', groupId: 'g1'),
-        _makeEntry(
-          id: 'g1-close',
-          type: LogType.group,
-          groupId: 'g1',
-          groupAction: GroupAction.close,
-        ),
-        _makeEntry(id: 'normal', text: 'After group'),
+        _makeEntry(id: 'g1-a', message: 'Compiling...', parentId: 'g1'),
+        _makeEntry(id: 'g1-b', message: 'Build done', parentId: 'g1'),
+        _makeEntry(id: 'normal', message: 'After group'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store));
@@ -112,35 +104,23 @@ void main() {
       (tester) async {
         final store = LogStore();
         store.addEntries([
-          _makeEntry(
-            id: 'g2-open',
-            type: LogType.group,
-            groupId: 'g2',
-            groupAction: GroupAction.open,
-            groupLabel: 'API Pipeline',
-          ),
-          _makeEntry(id: 'g2-a', text: 'Parsing body...', groupId: 'g2'),
-          _makeEntry(id: 'g2-b', text: 'Validating...', groupId: 'g2'),
+          _makeEntry(id: 'g2-open', groupId: 'g2', message: 'API Pipeline'),
+          _makeEntry(id: 'g2-a', message: 'Parsing body...', parentId: 'g2'),
+          _makeEntry(id: 'g2-b', message: 'Validating...', parentId: 'g2'),
           _makeEntry(
             id: 'g2-c',
-            text: 'Auth verified',
-            groupId: 'g2',
-            sticky: true,
+            message: 'Auth verified',
+            parentId: 'g2',
+            display: DisplayLocation.static_,
           ),
-          _makeEntry(id: 'g2-d', text: 'DB query...', groupId: 'g2'),
+          _makeEntry(id: 'g2-d', message: 'DB query...', parentId: 'g2'),
           _makeEntry(
             id: 'g2-e',
-            text: '201 Created',
-            groupId: 'g2',
-            sticky: true,
+            message: '201 Created',
+            parentId: 'g2',
+            display: DisplayLocation.static_,
           ),
-          _makeEntry(id: 'g2-f', text: 'Done', groupId: 'g2'),
-          _makeEntry(
-            id: 'g2-close',
-            type: LogType.group,
-            groupId: 'g2',
-            groupAction: GroupAction.close,
-          ),
+          _makeEntry(id: 'g2-f', message: 'Done', parentId: 'g2'),
         ]);
 
         await tester.pumpWidget(_wrap(logStore: store));
@@ -174,8 +154,8 @@ void main() {
     testWidgets('no sticky section when no entries are sticky', (tester) async {
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'normal log 1'),
-        _makeEntry(id: 'b', text: 'normal log 2'),
+        _makeEntry(id: 'a', message: 'normal log 1'),
+        _makeEntry(id: 'b', message: 'normal log 2'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store));
@@ -196,10 +176,18 @@ void main() {
     ) async {
       final store = LogStore();
       store.addEntries([
-        _makeEntry(id: 'a', text: 'Server running on :3000', sticky: true),
-        _makeEntry(id: 'b', text: 'Memory: 87%', sticky: true),
-        _makeEntry(id: 'c', text: 'Normal log'),
-        _makeEntry(id: 'd', text: 'Another log'),
+        _makeEntry(
+          id: 'a',
+          message: 'Server running on :3000',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(
+          id: 'b',
+          message: 'Memory: 87%',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(id: 'c', message: 'Normal log'),
+        _makeEntry(id: 'd', message: 'Another log'),
       ]);
 
       await tester.pumpWidget(_wrap(logStore: store));

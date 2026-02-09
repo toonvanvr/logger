@@ -14,13 +14,13 @@ import '../../test_helpers.dart';
 
 LogEntry _makeEntry({
   required String id,
-  String text = 'log line',
+  String message = 'log line',
   Severity severity = Severity.info,
   String sessionId = 'sess-1',
 }) {
   return makeTestEntry(
     id: id,
-    text: text,
+    message: message,
     severity: severity,
     sessionId: sessionId,
   );
@@ -52,9 +52,9 @@ void main() {
   testWidgets('renders list of log entries', (tester) async {
     final store = LogStore();
     store.addEntries([
-      _makeEntry(id: 'a', text: 'first log'),
-      _makeEntry(id: 'b', text: 'second log'),
-      _makeEntry(id: 'c', text: 'third log'),
+      _makeEntry(id: 'a', message: 'first log'),
+      _makeEntry(id: 'b', message: 'second log'),
+      _makeEntry(id: 'c', message: 'third log'),
     ]);
 
     await tester.pumpWidget(_wrap(logStore: store));
@@ -83,7 +83,7 @@ void main() {
 
   testWidgets('LIVE pill shows when at bottom', (tester) async {
     final store = LogStore();
-    store.addEntry(_makeEntry(id: 'x', text: 'a log'));
+    store.addEntry(_makeEntry(id: 'x', message: 'a log'));
 
     await tester.pumpWidget(_wrap(logStore: store));
     await tester.pumpAndSettle();

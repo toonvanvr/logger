@@ -9,10 +9,10 @@ import 'package:provider/provider.dart';
 import '../../test_helpers.dart';
 
 LogEntry _makeTextEntry({
-  String text = 'hello world',
+  String message = 'hello world',
   ExceptionData? exception,
 }) {
-  return makeTestEntry(text: text, exception: exception);
+  return makeTestEntry(message: message, exception: exception);
 }
 
 Widget _wrap(Widget child) {
@@ -28,7 +28,7 @@ Widget _wrap(Widget child) {
 void main() {
   testWidgets('renders plain text', (tester) async {
     await tester.pumpWidget(
-      _wrap(TextRenderer(entry: _makeTextEntry(text: 'simple log message'))),
+      _wrap(TextRenderer(entry: _makeTextEntry(message: 'simple log message'))),
     );
 
     expect(find.byType(RichText), findsOneWidget);
@@ -45,7 +45,7 @@ void main() {
 
   testWidgets('uses Text.rich for SelectionArea compatibility', (tester) async {
     await tester.pumpWidget(
-      _wrap(TextRenderer(entry: _makeTextEntry(text: 'selectable text'))),
+      _wrap(TextRenderer(entry: _makeTextEntry(message: 'selectable text'))),
     );
 
     // TextRenderer should produce a Text widget (via Text.rich), not a
@@ -58,7 +58,7 @@ void main() {
 
   testWidgets('highlights numbers in text', (tester) async {
     await tester.pumpWidget(
-      _wrap(TextRenderer(entry: _makeTextEntry(text: 'count is 42 items'))),
+      _wrap(TextRenderer(entry: _makeTextEntry(message: 'count is 42 items'))),
     );
 
     // The rendered output should contain the full text.
@@ -103,7 +103,10 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TextRenderer(
-          entry: _makeTextEntry(text: 'error occurred', exception: exception),
+          entry: _makeTextEntry(
+            message: 'error occurred',
+            exception: exception,
+          ),
         ),
       ),
     );

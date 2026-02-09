@@ -9,7 +9,10 @@ import 'package:provider/provider.dart';
 import '../../test_helpers.dart';
 
 LogEntry _makeJsonEntry({required dynamic jsonData}) {
-  return makeTestEntry(type: LogType.json, jsonData: jsonData);
+  return makeTestEntry(
+    kind: EntryKind.event,
+    widget: WidgetPayload(type: 'json', data: {'data': jsonData}),
+  );
 }
 
 Widget _wrap(Widget child) {

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/log_entry.dart';
 import '../../services/log_connection.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
@@ -209,22 +208,18 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
           _selectedIndex = _selectedIndex == index ? -1 : index;
         });
       },
-      onGroupToggle:
-          entry.type == LogType.group &&
-              entry.groupAction == GroupAction.open &&
-              !display.isStandalone
+      onGroupToggle: entry.groupId != null && !display.isStandalone
           ? () => setState(() {
-              final gid = entry.groupId ?? entry.id;
+              final gid = entry.groupId!;
               _collapsedGroups.contains(gid)
                   ? _collapsedGroups.remove(gid)
                   : _collapsedGroups.add(gid);
             })
           : null,
       isCollapsed:
-          entry.type == LogType.group &&
-          entry.groupAction == GroupAction.open &&
+          entry.groupId != null &&
           !display.isStandalone &&
-          _collapsedGroups.contains(entry.groupId ?? entry.id),
+          _collapsedGroups.contains(entry.groupId!),
     );
   }
 }

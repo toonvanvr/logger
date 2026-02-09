@@ -1,48 +1,62 @@
 // ─── Size Limits ─────────────────────────────────────────────────────
 
 /** Maximum text content size in bytes (1 MB) */
-export const MAX_TEXT_SIZE = 1 * 1024 * 1024;
+export const MAX_TEXT_SIZE = 1 * 1024 * 1024
 
 /** Maximum JSON content size in bytes (4 MB) */
-export const MAX_JSON_SIZE = 4 * 1024 * 1024;
+export const MAX_JSON_SIZE = 4 * 1024 * 1024
 
 /** Maximum binary content size in bytes (16 MB) */
-export const MAX_BINARY_SIZE = 16 * 1024 * 1024;
+export const MAX_BINARY_SIZE = 16 * 1024 * 1024
 
 /** Maximum image content size in bytes (32 MB) */
-export const MAX_IMAGE_SIZE = 32 * 1024 * 1024;
+export const MAX_IMAGE_SIZE = 32 * 1024 * 1024
 
 /** Maximum number of tags per log entry */
-export const MAX_TAGS = 32;
+export const MAX_TAGS = 32
 
 /** Maximum session ID length in characters */
-export const MAX_SESSION_ID_LENGTH = 256;
+export const MAX_SESSION_ID_LENGTH = 256
 
 /** Maximum entries in a single log batch */
-export const MAX_BATCH_SIZE = 1000;
+export const MAX_BATCH_SIZE = 1000
 
 /** Default ring buffer capacity in entries */
-export const RING_BUFFER_DEFAULT_SIZE = 1_000_000;
+export const RING_BUFFER_DEFAULT_SIZE = 1_000_000
 
 // ─── Network Defaults ────────────────────────────────────────────────
 
 /** Default HTTP/WS server port */
-export const DEFAULT_SERVER_PORT = 8080;
+export const DEFAULT_SERVER_PORT = 8080
 
 /** Default UDP listener port */
-export const DEFAULT_UDP_PORT = 8081;
+export const DEFAULT_UDP_PORT = 8081
 
 /** Default TCP listener port */
-export const DEFAULT_TCP_PORT = 8082;
+export const DEFAULT_TCP_PORT = 8082
 
 /** Default host for all transports */
-export const DEFAULT_HOST = 'localhost';
+export const DEFAULT_HOST = 'localhost'
 
 /** Default WebSocket URL */
-export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/stream`;
+export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/stream`
 
 /** Default HTTP URL */
-export const DEFAULT_HTTP_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/log`;
+export const DEFAULT_HTTP_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/log`
+
+// ─── v2 Endpoints ────────────────────────────────────────────────────
+
+/** v2 WebSocket stream URL */
+export const DEFAULT_WS_V2_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/stream`
+
+/** v2 session endpoint */
+export const DEFAULT_SESSION_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/session`
+
+/** v2 events endpoint */
+export const DEFAULT_EVENTS_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/events`
+
+/** v2 data endpoint */
+export const DEFAULT_DATA_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/data`
 
 // ─── Error Codes ─────────────────────────────────────────────────────
 
@@ -67,6 +81,6 @@ export const ERROR_CODES = {
   RPC_TARGET_NOT_FOUND: 'RPC_TARGET_NOT_FOUND',
   /** Max connections exceeded */
   MAX_CONNECTIONS: 'MAX_CONNECTIONS',
-} as const;
+} as const
 
-export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]

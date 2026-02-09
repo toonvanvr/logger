@@ -32,51 +32,51 @@ void main() {
       expect(msg.errorEntryId, 'e-bad');
     });
 
-    // ── Test 3: log ──
+    // ── Test 3: event (single entry) ──
 
-    test('type log parses nested entry', () {
+    test('type event parses nested entry', () {
       final msg = ServerMessage.fromJson({
-        'type': 'log',
+        'type': 'event',
         'entry': {
           'id': 'e1',
           'timestamp': '2026-02-07T12:00:00Z',
           'session_id': 'sess-1',
+          'kind': 'event',
           'severity': 'info',
-          'type': 'text',
-          'text': 'hello',
+          'message': 'hello',
         },
       });
 
-      expect(msg.type, ServerMessageType.log);
+      expect(msg.type, ServerMessageType.event);
       expect(msg.entry, isNotNull);
       expect(msg.entry!.id, 'e1');
-      expect(msg.entry!.text, 'hello');
+      expect(msg.entry!.message, 'hello');
     });
 
-    // ── Test 4: logs ──
+    // ── Test 4: event_batch (multiple entries) ──
 
-    test('type logs parses nested entries list', () {
+    test('type event_batch parses nested entries list', () {
       final msg = ServerMessage.fromJson({
-        'type': 'logs',
+        'type': 'event_batch',
         'entries': [
           {
             'id': 'e1',
             'timestamp': '2026-02-07T12:00:00Z',
             'session_id': 'sess-1',
+            'kind': 'event',
             'severity': 'info',
-            'type': 'text',
           },
           {
             'id': 'e2',
             'timestamp': '2026-02-07T12:01:00Z',
             'session_id': 'sess-1',
+            'kind': 'event',
             'severity': 'warning',
-            'type': 'text',
           },
         ],
       });
 
-      expect(msg.type, ServerMessageType.logs);
+      expect(msg.type, ServerMessageType.eventBatch);
       expect(msg.entries, hasLength(2));
       expect(msg.entries![0].id, 'e1');
       expect(msg.entries![1].id, 'e2');
@@ -160,19 +160,57 @@ void main() {
       },
     );
 
-    // ── Test 9: state_snapshot ──
+    // ── Test 9: data_snapshot ──
 
-    test('type state_snapshot parses state map', () {
+    test('type data_snapshot parses data map with DataState values', () {
       final msg = ServerMessage.fromJson({
-        'type': 'state_snapshot',
-        'state': {'theme': 'dark', 'locale': 'en'},
+        'type': 'data_snapshot',
+        'data': {
+          'theme': {'value': 'dark', 'display': 'shelf'},
+          'locale': {'value': 'en'},
+        },
       });
 
-      expect(msg.type, ServerMessageType.stateSnapshot);
-      expect(msg.state, {'theme': 'dark', 'locale': 'en'});
+      expect(msg.type, ServerMessageType.dataSnapshot);
+      expect(msg.data, isNotNull);
+      expect(msg.data!['theme']!.value, 'dark');
+      expect(msg.data!['theme']!.display, DisplayLocation.shelf);
+      expect(msg.data!['locale']!.value, 'en');
+      expect(msg.data!['locale']!.display, DisplayLocation.defaultLoc);
     });
 
-    // ── Test 10: history ──
+    // ── Test 10: data_update ──
+
+    test('type data_update parses dataKey, dataValue, dataDisplay', () {
+      final msg = ServerMessage.fromJson({
+        'type': 'data_update',
+        'data_key': 'theme',
+        'data_value': 'dark',
+        'data_display': 'shelf',
+      });
+
+      expect(msg.type, ServerMessageType.dataUpdate);
+      expect(msg.dataKey, 'theme');
+      expect(msg.dataValue, 'dark');
+      expect(msg.dataDisplay, DisplayLocation.shelf);
+    });
+
+    // ── Test 11: data_update with widget ──
+
+    test('type data_update parses dataWidget', () {
+      final msg = ServerMessage.fromJson({
+        'type': 'data_update',
+        'data_key': 'cpu',
+        'data_value': 87.5,
+        'data_widget': {'type': 'gauge', 'max': 100},
+      });
+
+      expect(msg.dataWidget, isNotNull);
+      expect(msg.dataWidget!.type, 'gauge');
+      expect(msg.dataWidget!.data['max'], 100);
+    });
+
+    // ── Test 12: history ──
 
     test('type history parses historyEntries, hasMore, cursor, queryId', () {
       final msg = ServerMessage.fromJson({
@@ -183,8 +221,8 @@ void main() {
             'id': 'e1',
             'timestamp': '2026-02-07T12:00:00Z',
             'session_id': 'sess-1',
+            'kind': 'event',
             'severity': 'info',
-            'type': 'text',
           },
         ],
         'has_more': true,
@@ -198,7 +236,7 @@ void main() {
       expect(msg.cursor, 'next-page');
     });
 
-    // ── Test 11: subscribe_ack ──
+    // ── Test 13: subscribe_ack ──
 
     test('type subscribe_ack parses', () {
       final msg = ServerMessage.fromJson({'type': 'subscribe_ack'});
@@ -211,11 +249,26 @@ void main() {
     test('unknown type defaults to error', () {
       expect(parseServerMessageType('unknown'), ServerMessageType.error);
     });
+
+    // ── v1 backward compat ──
+
+    test('v1 "log" maps to event', () {
+      expect(parseServerMessageType('log'), ServerMessageType.event);
+    });
+
+    test('v1 "logs" maps to eventBatch', () {
+      expect(parseServerMessageType('logs'), ServerMessageType.eventBatch);
+    });
+
+    test('v1 "state_snapshot" maps to dataSnapshot', () {
+      expect(
+        parseServerMessageType('state_snapshot'),
+        ServerMessageType.dataSnapshot,
+      );
+    });
   });
 
   group('SessionInfo', () {
-    // ── Test 12: SessionInfo.fromJson round-trip ──
-
     test('fromJson parses all required fields', () {
       final info = SessionInfo.fromJson({
         'session_id': 'sess-1',

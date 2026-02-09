@@ -43,7 +43,7 @@ void main() {
 
     testWidgets('selection actions not visible initially', (tester) async {
       final store = LogStore();
-      store.addEntry(makeTestEntry(id: 'e1', text: 'hello'));
+      store.addEntry(makeTestEntry(id: 'e1', message: 'hello'));
 
       await tester.pumpWidget(_wrap(logStore: store));
       await tester.pumpAndSettle();

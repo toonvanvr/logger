@@ -6,18 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeGroupEntry({
-  GroupAction action = GroupAction.open,
-  String? label,
-  bool collapsed = false,
-}) {
-  return makeTestEntry(
-    type: LogType.group,
-    groupId: 'g1',
-    groupAction: action,
-    groupLabel: label,
-    groupCollapsed: collapsed,
-  );
+LogEntry _makeGroupEntry({String? label}) {
+  return makeTestEntry(kind: EntryKind.event, groupId: 'g1', message: label);
 }
 
 Widget _wrap(Widget child) {
@@ -29,33 +19,23 @@ Widget _wrap(Widget child) {
 
 void main() {
   group('GroupRenderer', () {
-    // ── Test 1: open action shows label with chevron ──
+    // ── Test 1: group header shows label with chevron ──
 
-    testWidgets('open action shows label with expand icon', (tester) async {
+    testWidgets('group header shows label with expand icon', (tester) async {
       await tester.pumpWidget(
-        _wrap(
-          GroupRenderer(
-            entry: _makeGroupEntry(action: GroupAction.open, label: 'Network'),
-          ),
-        ),
+        _wrap(GroupRenderer(entry: _makeGroupEntry(label: 'Network'))),
       );
 
       expect(find.text('Network'), findsOneWidget);
       expect(find.byIcon(Icons.expand_more), findsOneWidget);
     });
 
-    // ── Test 2: close action shows End: text ──
+    // ── Test 2: group header without label shows groupId ──
 
-    testWidgets('close action shows End: label', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          GroupRenderer(
-            entry: _makeGroupEntry(action: GroupAction.close, label: 'Network'),
-          ),
-        ),
-      );
+    testWidgets('group header without label shows groupId', (tester) async {
+      await tester.pumpWidget(_wrap(GroupRenderer(entry: _makeGroupEntry())));
 
-      expect(find.text('End: Network'), findsOneWidget);
+      expect(find.text('g1'), findsOneWidget);
     });
   });
 }

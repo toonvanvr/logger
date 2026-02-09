@@ -9,7 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../test_helpers.dart';
 
 LogEntry _makeBinaryEntry({String? binary}) {
-  return makeTestEntry(type: LogType.binary, binary: binary);
+  return makeTestEntry(
+    kind: EntryKind.event,
+    widget: binary != null
+        ? WidgetPayload(type: 'binary', data: {'data': binary})
+        : null,
+  );
 }
 
 Widget _wrap(Widget child) {

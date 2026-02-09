@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeEntry({String text = ''}) {
-  return makeTestEntry(text: text);
+LogEntry _makeEntry({String message = ''}) {
+  return makeTestEntry(message: message);
 }
 
 void main() {
@@ -20,17 +20,17 @@ void main() {
     const partialUuid = '550e8400-e29b';
 
     test('matches full UUID with uuid: prefix', () {
-      final entry = _makeEntry(text: 'request id $fullUuid done');
+      final entry = _makeEntry(message: 'request id $fullUuid done');
       expect(plugin.matches(entry, 'uuid:$fullUuid'), isTrue);
     });
 
     test('does not match partial UUID (only first two segments)', () {
-      final entry = _makeEntry(text: 'id is $partialUuid only');
+      final entry = _makeEntry(message: 'id is $partialUuid only');
       expect(plugin.matches(entry, 'uuid:$partialUuid'), isFalse);
     });
 
     test('matches partial search within full UUID', () {
-      final entry = _makeEntry(text: 'id $fullUuid');
+      final entry = _makeEntry(message: 'id $fullUuid');
       expect(plugin.matches(entry, 'uuid:550e8400'), isTrue);
     });
   });
@@ -41,8 +41,8 @@ void main() {
 
     test('extracts full UUIDs from entries', () {
       final entries = [
-        _makeEntry(text: 'req $uuid1 started'),
-        _makeEntry(text: 'req $uuid2 started'),
+        _makeEntry(message: 'req $uuid1 started'),
+        _makeEntry(message: 'req $uuid2 started'),
       ];
 
       final suggestions = plugin.getSuggestions('uuid:', entries);
@@ -53,7 +53,7 @@ void main() {
 
     test('does not extract partial UUID segments', () {
       // Text with only 2 UUID segments — should NOT match.
-      final entries = [_makeEntry(text: 'partial 550e8400-e29b only')];
+      final entries = [_makeEntry(message: 'partial 550e8400-e29b only')];
 
       final suggestions = plugin.getSuggestions('uuid:', entries);
       expect(suggestions, isEmpty);
@@ -61,8 +61,8 @@ void main() {
 
     test('filters suggestions by partial value', () {
       final entries = [
-        _makeEntry(text: 'req $uuid1'),
-        _makeEntry(text: 'req $uuid2'),
+        _makeEntry(message: 'req $uuid1'),
+        _makeEntry(message: 'req $uuid2'),
       ];
 
       final suggestions = plugin.getSuggestions('uuid:a1b2', entries);

@@ -38,7 +38,7 @@ class TextRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = entry.text ?? '';
+    final text = entry.message ?? '';
     final spans = hasAnsiCodes(text) ? _buildAnsiSpans(text) : _highlight(text);
 
     return Column(

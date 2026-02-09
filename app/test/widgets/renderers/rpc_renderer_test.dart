@@ -7,20 +7,24 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../test_helpers.dart';
 
 LogEntry _makeRpcEntry({
-  RpcDirection direction = RpcDirection.request,
+  String direction = 'request',
   String method = 'getState',
   dynamic args,
   dynamic response,
   String? error,
 }) {
   return makeTestEntry(
-    type: LogType.rpc,
-    rpcId: 'rpc-1',
-    rpcDirection: direction,
-    rpcMethod: method,
-    rpcArgs: args,
-    rpcResponse: response,
-    rpcError: error,
+    kind: EntryKind.event,
+    widget: WidgetPayload(
+      type: 'rpc_$direction',
+      data: {
+        'direction': direction,
+        'method': method,
+        if (args != null) 'args': args,
+        if (response != null) 'response': response,
+        if (error != null) 'error': error,
+      },
+    ),
   );
 }
 
@@ -39,10 +43,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           RpcRenderer(
-            entry: _makeRpcEntry(
-              direction: RpcDirection.request,
-              method: 'ping',
-            ),
+            entry: _makeRpcEntry(direction: 'request', method: 'ping'),
           ),
         ),
       );
@@ -62,10 +63,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           RpcRenderer(
-            entry: _makeRpcEntry(
-              direction: RpcDirection.response,
-              method: 'ping',
-            ),
+            entry: _makeRpcEntry(direction: 'response', method: 'ping'),
           ),
         ),
       );
@@ -87,7 +85,7 @@ void main() {
         _wrap(
           RpcRenderer(
             entry: _makeRpcEntry(
-              direction: RpcDirection.error,
+              direction: 'error',
               method: 'ping',
               error: 'timeout',
             ),

@@ -27,7 +27,9 @@ class _ImageRendererState extends State<ImageRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    final image = widget.entry.image;
+    final image = widget.entry.widget != null
+        ? ImageData.fromJson(widget.entry.widget!.data)
+        : null;
 
     if (image == null) {
       return Text(

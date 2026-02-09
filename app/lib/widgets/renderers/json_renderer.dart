@@ -18,7 +18,7 @@ class JsonRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = entry.jsonData;
+    final data = entry.widget?.data['data'];
 
     if (data == null) {
       return Text('[null]', style: LoggerTypography.logBody);

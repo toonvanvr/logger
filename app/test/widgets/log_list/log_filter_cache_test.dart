@@ -8,19 +8,19 @@ import '../../test_helpers.dart';
 
 LogEntry _makeEntry({
   required String id,
-  LogType type = LogType.text,
+  EntryKind kind = EntryKind.event,
   Severity severity = Severity.info,
-  String? text,
-  String? stateKey,
-  dynamic stateValue,
+  String? message,
+  String? key,
+  dynamic value,
 }) {
   return makeTestEntry(
     id: id,
-    type: type,
+    kind: kind,
     severity: severity,
-    text: text,
-    stateKey: stateKey,
-    stateValue: stateValue,
+    message: message,
+    key: key,
+    value: value,
   );
 }
 
@@ -36,21 +36,21 @@ void main() {
       cache = LogFilterCache();
     });
 
-    test('excludes LogType.state entries from filtered results', () {
+    test('excludes data entries from filtered results', () {
       store.addEntries([
-        _makeEntry(id: '1', type: LogType.text, text: 'hello'),
+        _makeEntry(id: '1', kind: EntryKind.event, message: 'hello'),
         _makeEntry(
           id: '2',
-          type: LogType.state,
-          stateKey: 'cpu',
-          stateValue: '42%',
+          kind: EntryKind.data,
+          key: 'cpu',
+          value: '42%',
         ),
-        _makeEntry(id: '3', type: LogType.text, text: 'world'),
+        _makeEntry(id: '3', kind: EntryKind.event, message: 'world'),
         _makeEntry(
           id: '4',
-          type: LogType.state,
-          stateKey: 'mem',
-          stateValue: '1GB',
+          kind: EntryKind.data,
+          key: 'mem',
+          value: '1GB',
         ),
       ]);
 
@@ -67,19 +67,19 @@ void main() {
       expect(result.map((e) => e.id).toList(), ['1', '3']);
     });
 
-    test('keeps entries with stateKey but non-state type', () {
+    test('keeps event entries with key set', () {
       store.addEntries([
         _makeEntry(
           id: '1',
-          type: LogType.text,
-          text: 'setting cpu',
-          stateKey: 'cpu',
+          kind: EntryKind.event,
+          message: 'setting cpu',
+          key: 'cpu',
         ),
         _makeEntry(
           id: '2',
-          type: LogType.state,
-          stateKey: 'cpu',
-          stateValue: '42%',
+          kind: EntryKind.data,
+          key: 'cpu',
+          value: '42%',
         ),
       ]);
 
@@ -96,10 +96,10 @@ void main() {
       expect(result.first.id, '1');
     });
 
-    test('returns empty list when all entries are state type', () {
+    test('returns empty list when all entries are data kind', () {
       store.addEntries([
-        _makeEntry(id: '1', type: LogType.state, stateKey: 'a'),
-        _makeEntry(id: '2', type: LogType.state, stateKey: 'b'),
+        _makeEntry(id: '1', kind: EntryKind.data, key: 'a'),
+        _makeEntry(id: '2', kind: EntryKind.data, key: 'b'),
       ]);
 
       final result = cache.getFiltered(
@@ -114,21 +114,21 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('state: prefix filter returns matching state entries', () {
+    test('state: prefix filter returns matching data entries', () {
       store.addEntries([
-        _makeEntry(id: '1', type: LogType.text, text: 'hello'),
+        _makeEntry(id: '1', kind: EntryKind.event, message: 'hello'),
         _makeEntry(
           id: '2',
-          type: LogType.state,
-          stateKey: 'cpu',
-          stateValue: '42%',
+          kind: EntryKind.data,
+          key: 'cpu',
+          value: '42%',
         ),
-        _makeEntry(id: '3', type: LogType.text, text: 'world'),
+        _makeEntry(id: '3', kind: EntryKind.event, message: 'world'),
         _makeEntry(
           id: '4',
-          type: LogType.state,
-          stateKey: 'mem',
-          stateValue: '1GB',
+          kind: EntryKind.data,
+          key: 'mem',
+          value: '1GB',
         ),
       ]);
 
@@ -143,16 +143,16 @@ void main() {
 
       expect(result.length, 1);
       expect(result.first.id, '2');
-      expect(result.first.stateKey, 'cpu');
+      expect(result.first.key, 'cpu');
     });
 
     test('state: prefix with unknown key returns empty', () {
       store.addEntries([
         _makeEntry(
           id: '1',
-          type: LogType.state,
-          stateKey: 'cpu',
-          stateValue: '42%',
+          kind: EntryKind.data,
+          key: 'cpu',
+          value: '42%',
         ),
       ]);
 

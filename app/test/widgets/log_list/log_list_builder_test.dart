@@ -7,22 +7,20 @@ import '../../test_helpers.dart';
 LogEntry _makeEntry({
   required String id,
   Severity severity = Severity.info,
-  LogType type = LogType.text,
-  String? text,
-  bool? sticky,
+  EntryKind kind = EntryKind.event,
+  String? message,
+  DisplayLocation display = DisplayLocation.defaultLoc,
   String? groupId,
-  GroupAction? groupAction,
-  String? groupLabel,
+  String? parentId,
 }) {
   return makeTestEntry(
     id: id,
     severity: severity,
-    type: type,
-    text: text,
-    sticky: sticky,
+    kind: kind,
+    message: message,
+    display: display,
     groupId: groupId,
-    groupAction: groupAction,
-    groupLabel: groupLabel,
+    parentId: parentId,
   );
 }
 
@@ -30,9 +28,9 @@ void main() {
   group('processGrouping stickyOverrideIds', () {
     test('marks entries in stickyOverrideIds as sticky', () {
       final entries = [
-        _makeEntry(id: 'a', text: 'first'),
-        _makeEntry(id: 'b', text: 'second'),
-        _makeEntry(id: 'c', text: 'third'),
+        _makeEntry(id: 'a', message: 'first'),
+        _makeEntry(id: 'b', message: 'second'),
+        _makeEntry(id: 'c', message: 'third'),
       ];
 
       final result = processGrouping(
@@ -50,9 +48,13 @@ void main() {
 
     test('combines protocol sticky with override sticky', () {
       final entries = [
-        _makeEntry(id: 'a', text: 'protocol sticky', sticky: true),
-        _makeEntry(id: 'b', text: 'override sticky'),
-        _makeEntry(id: 'c', text: 'not sticky'),
+        _makeEntry(
+          id: 'a',
+          message: 'protocol sticky',
+          display: DisplayLocation.static_,
+        ),
+        _makeEntry(id: 'b', message: 'override sticky'),
+        _makeEntry(id: 'c', message: 'not sticky'),
       ];
 
       final result = processGrouping(
@@ -68,7 +70,9 @@ void main() {
     });
 
     test('override on already-sticky entry is no-op', () {
-      final entries = [_makeEntry(id: 'a', text: 'both', sticky: true)];
+      final entries = [
+        _makeEntry(id: 'a', message: 'both', display: DisplayLocation.static_),
+      ];
 
       final result = processGrouping(
         entries: entries,
@@ -81,7 +85,7 @@ void main() {
     });
 
     test('null stickyOverrideIds has no effect', () {
-      final entries = [_makeEntry(id: 'a', text: 'normal')];
+      final entries = [_makeEntry(id: 'a', message: 'normal')];
 
       final result = processGrouping(
         entries: entries,
@@ -93,7 +97,7 @@ void main() {
     });
 
     test('empty stickyOverrideIds marks nothing as sticky', () {
-      final entries = [_makeEntry(id: 'a', text: 'normal')];
+      final entries = [_makeEntry(id: 'a', message: 'normal')];
 
       final result = processGrouping(
         entries: entries,
@@ -107,22 +111,10 @@ void main() {
   });
 
   group('processGrouping basic grouping', () {
-    test('computes correct depth for nested groups', () {
+    test('computes correct depth for group header and child', () {
       final entries = [
-        _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'grp1',
-          groupLabel: 'Outer',
-        ),
-        _makeEntry(id: 'a', text: 'inside outer'),
-        _makeEntry(
-          id: 'g1c',
-          type: LogType.group,
-          groupAction: GroupAction.close,
-          groupId: 'grp1',
-        ),
+        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Outer'),
+        _makeEntry(id: 'a', message: 'inside outer', parentId: 'grp1'),
       ];
 
       final result = processGrouping(
@@ -131,28 +123,15 @@ void main() {
         collapsedGroups: {},
       );
 
-      expect(result.length, 3);
-      expect(result[0].depth, 0); // group open
+      expect(result.length, 2);
+      expect(result[0].depth, 0); // group header
       expect(result[1].depth, 1); // child
-      expect(result[2].depth, 0); // group close
     });
 
     test('hides entries in collapsed groups', () {
       final entries = [
-        _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'grp1',
-          groupLabel: 'Group',
-        ),
-        _makeEntry(id: 'a', text: 'hidden child'),
-        _makeEntry(
-          id: 'g1c',
-          type: LogType.group,
-          groupAction: GroupAction.close,
-          groupId: 'grp1',
-        ),
+        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', message: 'hidden child', parentId: 'grp1'),
       ];
 
       final result = processGrouping(
@@ -161,23 +140,23 @@ void main() {
         collapsedGroups: {'grp1'},
       );
 
-      // Group open is visible, child and close are hidden
+      // Group header visible, child hidden
       expect(result.length, 1);
       expect(result[0].entry.id, 'g1');
     });
   });
 
-  group('processGrouping auto-close orphaned groups', () {
-    test('auto-closes single unclosed group', () {
+  group('processGrouping nested groups', () {
+    test('computes depth for deeply nested groups', () {
       final entries = [
+        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
         _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'grp1',
-          groupLabel: 'Orphan',
+          id: 'g2',
+          groupId: 'inner',
+          parentId: 'outer',
+          message: 'Inner',
         ),
-        _makeEntry(id: 'a', text: 'inside orphan'),
+        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
       ];
 
       final result = processGrouping(
@@ -186,117 +165,66 @@ void main() {
         collapsedGroups: {},
       );
 
+      expect(result.length, 3);
+      expect(result[0].depth, 0); // outer header
+      expect(result[1].depth, 1); // inner header (child of outer)
+      expect(result[2].depth, 2); // leaf child
+    });
+
+    test('collapsing outer hides inner group and its children', () {
+      final entries = [
+        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
+        _makeEntry(
+          id: 'g2',
+          groupId: 'inner',
+          parentId: 'outer',
+          message: 'Inner',
+        ),
+        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {'outer'},
+      );
+
+      // Only outer header visible
+      expect(result.length, 1);
+      expect(result[0].entry.id, 'g1');
+    });
+
+    test('collapsing inner hides only its children', () {
+      final entries = [
+        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
+        _makeEntry(
+          id: 'g2',
+          groupId: 'inner',
+          parentId: 'outer',
+          message: 'Inner',
+        ),
+        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
+        _makeEntry(id: 'b', message: 'sibling', parentId: 'outer'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {'inner'},
+      );
+
+      // Outer header + inner header + sibling visible, deep hidden
       expect(result.length, 3);
       expect(result[0].entry.id, 'g1');
-      expect(result[1].entry.id, 'a');
-      // Synthetic auto-close entry
-      final autoClose = result[2];
-      expect(autoClose.entry.id, 'grp1_autoclose');
-      expect(autoClose.entry.groupAction, GroupAction.close);
-      expect(autoClose.entry.groupId, 'grp1');
-      expect(autoClose.isAutoClose, true);
-      expect(autoClose.depth, 0);
+      expect(result[1].entry.id, 'g2');
+      expect(result[2].entry.id, 'b');
     });
 
-    test('auto-closes multiple nested unclosed groups in reverse order', () {
+    test('entries without group have zero depth', () {
       final entries = [
-        _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'outer',
-          groupLabel: 'Outer',
-        ),
-        _makeEntry(
-          id: 'g2',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'inner',
-          groupLabel: 'Inner',
-        ),
-        _makeEntry(id: 'a', text: 'deep'),
-      ];
-
-      final result = processGrouping(
-        entries: entries,
-        textFilter: null,
-        collapsedGroups: {},
-      );
-
-      expect(result.length, 5);
-      // Inner auto-close first (reverse order)
-      final innerClose = result[3];
-      expect(innerClose.entry.groupId, 'inner');
-      expect(innerClose.isAutoClose, true);
-      expect(innerClose.depth, 1);
-      expect(innerClose.parentGroupId, 'outer');
-      // Outer auto-close second
-      final outerClose = result[4];
-      expect(outerClose.entry.groupId, 'outer');
-      expect(outerClose.isAutoClose, true);
-      expect(outerClose.depth, 0);
-      expect(outerClose.parentGroupId, null);
-    });
-
-    test('only auto-closes unclosed groups in mixed scenario', () {
-      final entries = [
-        _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'closed_grp',
-          groupLabel: 'Closed',
-        ),
-        _makeEntry(id: 'a', text: 'child of closed'),
-        _makeEntry(
-          id: 'g1c',
-          type: LogType.group,
-          groupAction: GroupAction.close,
-          groupId: 'closed_grp',
-        ),
-        _makeEntry(
-          id: 'g2',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'orphan_grp',
-          groupLabel: 'Orphan',
-        ),
-        _makeEntry(id: 'b', text: 'child of orphan'),
-      ];
-
-      final result = processGrouping(
-        entries: entries,
-        textFilter: null,
-        collapsedGroups: {},
-      );
-
-      // 3 from closed group + 2 from orphan + 1 auto-close = 6
-      expect(result.length, 6);
-      final autoClose = result[5];
-      expect(autoClose.entry.groupId, 'orphan_grp');
-      expect(autoClose.isAutoClose, true);
-      expect(autoClose.depth, 0);
-      // Regular close entries are NOT auto-close
-      final regularClose = result[2];
-      expect(regularClose.isAutoClose, false);
-    });
-
-    test('no auto-close entries when all groups properly closed', () {
-      final entries = [
-        _makeEntry(
-          id: 'g1',
-          type: LogType.group,
-          groupAction: GroupAction.open,
-          groupId: 'grp1',
-          groupLabel: 'Group',
-        ),
-        _makeEntry(id: 'a', text: 'child'),
-        _makeEntry(
-          id: 'g1c',
-          type: LogType.group,
-          groupAction: GroupAction.close,
-          groupId: 'grp1',
-        ),
+        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', message: 'child', parentId: 'grp1'),
+        _makeEntry(id: 'b', message: 'top-level'),
       ];
 
       final result = processGrouping(
@@ -306,9 +234,8 @@ void main() {
       );
 
       expect(result.length, 3);
-      for (final entry in result) {
-        expect(entry.isAutoClose, false);
-      }
+      expect(result[2].depth, 0);
+      expect(result[2].parentGroupId, isNull);
     });
   });
 }

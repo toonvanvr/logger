@@ -15,13 +15,20 @@ import 'text_renderer.dart';
 
 /// Returns the appropriate content renderer widget for [entry].
 ///
-/// If the entry has an [ExceptionData] exception, a [StackTraceRenderer]
-/// is appended below the main content.
+/// If the entry has an [ExceptionData] exception and is not rendered
+/// by [TextRenderer] (which handles exceptions internally), a
+/// [StackTraceRenderer] is appended below the main content.
 Widget buildLogContent(LogEntry entry) {
   final mainWidget = _buildMainContent(entry);
 
-  if (entry.exception != null && entry.type != LogType.text) {
-    // TextRenderer already handles exceptions internally
+  // TextRenderer already handles exceptions internally.
+  final usesTextRenderer =
+      entry.kind == EntryKind.event &&
+      entry.widget == null &&
+      entry.groupId == null &&
+      entry.parentId == null;
+
+  if (entry.exception != null && !usesTextRenderer) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -37,26 +44,28 @@ Widget buildLogContent(LogEntry entry) {
 }
 
 Widget _buildMainContent(LogEntry entry) {
-  switch (entry.type) {
-    case LogType.text:
-      return TextRenderer(entry: entry);
-    case LogType.json:
-      return JsonRenderer(entry: entry);
-    case LogType.html:
-      return HtmlRenderer(entry: entry);
-    case LogType.binary:
-      return BinaryRenderer(entry: entry);
-    case LogType.image:
-      return ImageRenderer(entry: entry);
-    case LogType.state:
-      return StateRenderer(entry: entry);
-    case LogType.group:
-      return GroupRenderer(entry: entry);
-    case LogType.rpc:
-      return RpcRenderer(entry: entry);
-    case LogType.session:
+  switch (entry.kind) {
+    case EntryKind.session:
       return SessionRenderer(entry: entry);
-    case LogType.custom:
-      return CustomRenderer(entry: entry);
+    case EntryKind.data:
+      return StateRenderer(entry: entry);
+    case EntryKind.event:
+      if (entry.widget != null) {
+        return switch (entry.widget!.type) {
+          'json' => JsonRenderer(entry: entry),
+          'html' => HtmlRenderer(entry: entry),
+          'binary' => BinaryRenderer(entry: entry),
+          'image' => ImageRenderer(entry: entry),
+          'rpc' ||
+          'rpc_request' ||
+          'rpc_response' ||
+          'rpc_error' => RpcRenderer(entry: entry),
+          _ => CustomRenderer(entry: entry),
+        };
+      }
+      if (entry.parentId != null || entry.groupId != null) {
+        return GroupRenderer(entry: entry);
+      }
+      return TextRenderer(entry: entry);
   }
 }

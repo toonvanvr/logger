@@ -7,19 +7,23 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
 /// Renders an RPC log entry (request, response, or error).
+///
+/// In v2, RPC fields are stored in [LogEntry.widget.data].
 class RpcRenderer extends StatelessWidget {
   final LogEntry entry;
 
   const RpcRenderer({super.key, required this.entry});
 
+  Map<String, dynamic> get _data => entry.widget?.data ?? {};
+
   @override
   Widget build(BuildContext context) {
-    final direction = entry.rpcDirection ?? RpcDirection.request;
+    final direction = _data['direction'] as String? ?? 'request';
 
     return switch (direction) {
-      RpcDirection.request => _buildRequest(),
-      RpcDirection.response => _buildResponse(),
-      RpcDirection.error => _buildError(),
+      'response' => _buildResponse(),
+      'error' => _buildError(),
+      _ => _buildRequest(),
     };
   }
 
@@ -38,7 +42,7 @@ class RpcRenderer extends StatelessWidget {
                 ),
               ),
               TextSpan(
-                text: entry.rpcMethod ?? 'unknown',
+                text: _data['method'] as String? ?? 'unknown',
                 style: LoggerTypography.logBody.copyWith(
                   color: LoggerColors.fgPrimary,
                 ),
@@ -46,9 +50,9 @@ class RpcRenderer extends StatelessWidget {
             ],
           ),
         ),
-        if (entry.rpcArgs != null) ...[
+        if (_data['args'] != null) ...[
           const SizedBox(height: 2),
-          Text(_formatData(entry.rpcArgs), style: LoggerTypography.logMeta),
+          Text(_formatData(_data['args']), style: LoggerTypography.logMeta),
         ],
       ],
     );
@@ -69,7 +73,7 @@ class RpcRenderer extends StatelessWidget {
                 ),
               ),
               TextSpan(
-                text: entry.rpcMethod ?? 'unknown',
+                text: _data['method'] as String? ?? 'unknown',
                 style: LoggerTypography.logBody.copyWith(
                   color: LoggerColors.fgPrimary,
                 ),
@@ -77,9 +81,9 @@ class RpcRenderer extends StatelessWidget {
             ],
           ),
         ),
-        if (entry.rpcResponse != null) ...[
+        if (_data['response'] != null) ...[
           const SizedBox(height: 2),
-          Text(_formatData(entry.rpcResponse), style: LoggerTypography.logMeta),
+          Text(_formatData(_data['response']), style: LoggerTypography.logMeta),
         ],
       ],
     );
@@ -90,13 +94,13 @@ class RpcRenderer extends StatelessWidget {
       TextSpan(
         children: [
           TextSpan(
-            text: '✗ ${entry.rpcMethod ?? 'unknown'}: ',
+            text: '✗ ${_data['method'] as String? ?? 'unknown'}: ',
             style: LoggerTypography.logBody.copyWith(
               color: LoggerColors.syntaxError,
             ),
           ),
           TextSpan(
-            text: entry.rpcError ?? 'unknown error',
+            text: _data['error'] as String? ?? 'unknown error',
             style: LoggerTypography.logBody.copyWith(
               color: LoggerColors.severityErrorText,
             ),

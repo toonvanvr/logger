@@ -48,10 +48,9 @@ class _LogRowContentState extends State<LogRowContent> {
   Widget build(BuildContext context) {
     Widget content;
 
-    // For group open entries, show collapse icon and group label
-    if (widget.entry.type == LogType.group &&
-        widget.entry.groupAction == GroupAction.open) {
-      final label = widget.entry.groupLabel ?? widget.entry.groupId ?? 'Group';
+    // For group header entries, show collapse icon and group label
+    if (widget.entry.groupId != null) {
+      final label = widget.entry.message ?? widget.entry.groupId ?? 'Group';
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -175,28 +174,30 @@ class _CopyButtonState extends State<_CopyButton> {
 
 /// Serialize a log entry to a clipboard-friendly string.
 String serializeLogEntry(LogEntry entry) {
-  if (entry.type == LogType.group) {
-    return entry.groupLabel ?? entry.groupId ?? 'Group';
+  if (entry.groupId != null) {
+    return entry.message ?? entry.groupId ?? 'Group';
   }
-  final text = entry.text ?? '';
-  if (entry.jsonData != null) {
+  final text = entry.message ?? '';
+  if (entry.widget?.data['data'] != null) {
     try {
       final encoded = const JsonEncoder.withIndent(
         '  ',
-      ).convert(entry.jsonData);
+      ).convert(entry.widget!.data['data']);
       return text.isNotEmpty ? '$text\n$encoded' : encoded;
     } catch (_) {
-      return text.isNotEmpty ? '$text\n${entry.jsonData}' : '${entry.jsonData}';
+      return text.isNotEmpty
+          ? '$text\n${entry.widget!.data['data']}'
+          : '${entry.widget!.data['data']}';
     }
   }
-  if (entry.customData != null) {
+  if (entry.widget?.data != null) {
     try {
       final encoded = const JsonEncoder.withIndent(
         '  ',
-      ).convert(entry.customData);
+      ).convert(entry.widget!.data);
       return text.isNotEmpty ? '$text\n$encoded' : encoded;
     } catch (_) {
-      return text.isNotEmpty ? text : '${entry.customData}';
+      return text.isNotEmpty ? text : '${entry.widget!.data}';
     }
   }
   return text;

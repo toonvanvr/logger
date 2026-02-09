@@ -6,8 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_helpers.dart';
 
-LogEntry _makeImageEntry({ImageData? image}) {
-  return makeTestEntry(type: LogType.image, image: image);
+LogEntry _makeImageEntry({Map<String, dynamic>? imageData}) {
+  return makeTestEntry(
+    kind: EntryKind.event,
+    widget: imageData != null
+        ? WidgetPayload(type: 'image', data: imageData)
+        : null,
+  );
 }
 
 Widget _wrap(Widget child) {
@@ -26,7 +31,7 @@ void main() {
         _wrap(
           ImageRenderer(
             entry: _makeImageEntry(
-              image: const ImageData(ref: 'https://example.com/image.png'),
+              imageData: const {'ref': 'https://example.com/image.png'},
             ),
           ),
         ),
@@ -42,12 +47,12 @@ void main() {
         _wrap(
           ImageRenderer(
             entry: _makeImageEntry(
-              image: const ImageData(
-                ref: 'https://example.com/image.png',
-                label: 'Screenshot',
-                width: 800,
-                height: 600,
-              ),
+              imageData: const {
+                'ref': 'https://example.com/image.png',
+                'label': 'Screenshot',
+                'width': 800,
+                'height': 600,
+              },
             ),
           ),
         ),

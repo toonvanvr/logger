@@ -10,9 +10,8 @@ LogEntry _chartEntry({Map<String, dynamic>? data}) => LogEntry(
   timestamp: '2026-01-01T00:00:00Z',
   sessionId: 's1',
   severity: Severity.info,
-  type: LogType.custom,
-  customType: 'chart',
-  customData: data,
+  kind: EntryKind.event,
+  widget: WidgetPayload(type: 'chart', data: data ?? const {}),
 );
 
 /// A wrapper that provides a BuildContext for the plugin renderer.

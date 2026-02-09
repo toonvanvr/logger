@@ -1,43 +1,51 @@
-import type { LogEntry } from '@logger/shared';
-import type { TransportType } from './transport/auto.js';
-import type { TransportAdapter } from './transport/types.js';
+import type { TransportType } from './transport/auto.js'
+import type { TransportAdapter } from './transport/types.js'
+
+// ─── Message routing ─────────────────────────────────────────────────
+
+export type MessageKind = 'session' | 'event' | 'data' | 'rpc_response' | 'register_tools'
+
+export interface QueuedMessage {
+  kind: MessageKind
+  [key: string]: unknown
+}
 
 // ─── Public types ────────────────────────────────────────────────────
 
-export type Middleware = (entry: LogEntry, next: () => void) => void;
+export type Middleware = (entry: QueuedMessage, next: () => void) => void
 
 export interface LoggerOptions {
-  url?: string;
-  app?: string;
-  environment?: string;
-  transport?: TransportType;
-  middleware?: Middleware[];
-  maxQueueSize?: number;
-  sessionId?: string;
+  url?: string
+  app?: string
+  environment?: string
+  transport?: TransportType
+  middleware?: Middleware[]
+  maxQueueSize?: number
+  sessionId?: string
   /** @internal — inject a pre-built transport (for testing). */
-  _transport?: TransportAdapter;
+  _transport?: TransportAdapter
 }
 
 // ─── Middleware chain runner ─────────────────────────────────────────
 
 export function runMiddlewareChain(
   middlewares: Middleware[],
-  entry: LogEntry,
+  entry: QueuedMessage,
   done: () => void,
 ): void {
   if (middlewares.length === 0) {
-    done();
-    return;
+    done()
+    return
   }
 
-  let index = 0;
+  let index = 0
   const next = () => {
-    index++;
+    index++
     if (index < middlewares.length) {
-      middlewares[index](entry, next);
+      middlewares[index](entry, next)
     } else {
-      done();
+      done()
     }
-  };
-  middlewares[0](entry, next);
+  }
+  middlewares[0](entry, next)
 }

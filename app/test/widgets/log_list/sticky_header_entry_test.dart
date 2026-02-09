@@ -1,4 +1,3 @@
-import 'package:app/models/log_entry.dart';
 import 'package:app/services/session_store.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/log_list/sticky_header_entry.dart';
@@ -21,12 +20,7 @@ Widget _wrapWidget(Widget child) {
 void main() {
   group('StickyGroupHeader', () {
     testWidgets('renders group label', (tester) async {
-      final entry = makeTestEntry(
-        type: LogType.group,
-        groupId: 'g1',
-        groupLabel: 'My Group',
-        groupAction: GroupAction.open,
-      );
+      final entry = makeTestEntry(groupId: 'g1', message: 'My Group');
 
       await tester.pumpWidget(
         _wrapWidget(StickyGroupHeader(entry: entry, depth: 0)),
@@ -37,11 +31,7 @@ void main() {
     });
 
     testWidgets('falls back to groupId when label is null', (tester) async {
-      final entry = makeTestEntry(
-        type: LogType.group,
-        groupId: 'fallback-id',
-        groupAction: GroupAction.open,
-      );
+      final entry = makeTestEntry(groupId: 'fallback-id');
 
       await tester.pumpWidget(
         _wrapWidget(StickyGroupHeader(entry: entry, depth: 0)),
@@ -53,7 +43,7 @@ void main() {
 
   group('StickyEntryRow', () {
     testWidgets('renders entry content', (tester) async {
-      final entry = makeTestEntry(text: 'sticky line');
+      final entry = makeTestEntry(message: 'sticky line');
 
       await tester.pumpWidget(
         _wrapWidget(

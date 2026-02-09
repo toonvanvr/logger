@@ -3,65 +3,80 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('LogEntry.fromJson', () {
-    // ── Test 1: required fields ──
+    // ── Test 1: required fields (event kind) ──
 
-    test('parses required fields', () {
+    test('parses required fields for event kind', () {
       final entry = LogEntry.fromJson({
         'id': 'e1',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'warning',
-        'type': 'text',
       });
 
       expect(entry.id, 'e1');
       expect(entry.timestamp, '2026-02-07T12:00:00Z');
       expect(entry.sessionId, 'sess-1');
+      expect(entry.kind, EntryKind.event);
       expect(entry.severity, Severity.warning);
-      expect(entry.type, LogType.text);
     });
 
-    // ── Test 2: optional text/json/html/binary fields ──
+    // ── Test 2: event fields ──
 
-    test('parses all optional content fields', () {
+    test('parses event-specific fields', () {
       final entry = LogEntry.fromJson({
         'id': 'e2',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'text',
-        'text': 'hello',
-        'html': '<b>bold</b>',
-        'binary': 'AQID',
-        'json': {'key': 'value'},
+        'message': 'hello world',
+        'tag': 'network',
+        'parent_id': 'p1',
+        'group_id': 'g1',
+        'prev_id': 'prev-1',
+        'next_id': 'next-1',
+        'replace': true,
+        'generated_at': '2026-02-07T11:59:00Z',
+        'sent_at': '2026-02-07T11:59:30Z',
       });
 
-      expect(entry.text, 'hello');
-      expect(entry.html, '<b>bold</b>');
-      expect(entry.binary, 'AQID');
-      expect(entry.jsonData, {'key': 'value'});
+      expect(entry.message, 'hello world');
+      expect(entry.tag, 'network');
+      expect(entry.parentId, 'p1');
+      expect(entry.groupId, 'g1');
+      expect(entry.prevId, 'prev-1');
+      expect(entry.nextId, 'next-1');
+      expect(entry.replace, isTrue);
+      expect(entry.generatedAt, '2026-02-07T11:59:00Z');
+      expect(entry.sentAt, '2026-02-07T11:59:30Z');
     });
 
-    // ── Test 3: nested ApplicationInfo ──
+    // ── Test 3: nested ApplicationInfo (session kind) ──
 
-    test('parses nested ApplicationInfo', () {
+    test('parses session kind with ApplicationInfo', () {
       final entry = LogEntry.fromJson({
         'id': 'e3',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'session',
         'severity': 'info',
-        'type': 'session',
+        'session_action': 'start',
         'application': {
           'name': 'MyApp',
           'version': '1.2.3',
           'environment': 'production',
         },
+        'metadata': {'os': 'linux'},
       });
 
+      expect(entry.kind, EntryKind.session);
+      expect(entry.sessionAction, SessionAction.start);
       expect(entry.application, isNotNull);
       expect(entry.application!.name, 'MyApp');
       expect(entry.application!.version, '1.2.3');
       expect(entry.application!.environment, 'production');
+      expect(entry.metadata, {'os': 'linux'});
     });
 
     // ── Test 4: nested ExceptionData with cause chain ──
@@ -71,8 +86,8 @@ void main() {
         'id': 'e4',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'error',
-        'type': 'text',
         'exception': {
           'type': 'TypeError',
           'message': 'null is not an object',
@@ -96,30 +111,28 @@ void main() {
       expect(entry.exception!.cause!.message, 'index out of range');
     });
 
-    // ── Test 5: nested ImageData ──
+    // ── Test 5: widget payload ──
 
-    test('parses nested ImageData', () {
+    test('parses widget payload', () {
       final entry = LogEntry.fromJson({
         'id': 'e5',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'image',
-        'image': {
-          'data': 'iVBORw0KGgo=',
-          'mimeType': 'image/png',
-          'label': 'screenshot',
-          'width': 800,
-          'height': 600,
+        'widget': {
+          'type': 'table',
+          'columns': ['Name', 'Value'],
+          'rows': [
+            ['cpu', '87%'],
+          ],
         },
       });
 
-      expect(entry.image, isNotNull);
-      expect(entry.image!.data, 'iVBORw0KGgo=');
-      expect(entry.image!.mimeType, 'image/png');
-      expect(entry.image!.label, 'screenshot');
-      expect(entry.image!.width, 800);
-      expect(entry.image!.height, 600);
+      expect(entry.widget, isNotNull);
+      expect(entry.widget!.type, 'table');
+      expect(entry.widget!.data['columns'], ['Name', 'Value']);
+      expect(entry.widget!.data.containsKey('type'), isFalse);
     });
 
     // ── Test 6: nested IconRef ──
@@ -129,8 +142,8 @@ void main() {
         'id': 'e6',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'text',
         'icon': {'icon': 'star', 'color': '#FFD700', 'size': 24.0},
       });
 
@@ -140,116 +153,99 @@ void main() {
       expect(entry.icon!.size, 24.0);
     });
 
-    // ── Test 7: maps 'json' key to jsonData ──
+    // ── Test 7: data kind with key/value/display ──
 
-    test('maps json key to jsonData field', () {
+    test('parses data kind fields', () {
       final entry = LogEntry.fromJson({
         'id': 'e7',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'data',
         'severity': 'info',
-        'type': 'json',
-        'json': [1, 2, 3],
+        'key': 'theme',
+        'value': 'dark',
+        'override': false,
+        'display': 'shelf',
       });
 
-      expect(entry.jsonData, [1, 2, 3]);
+      expect(entry.kind, EntryKind.data);
+      expect(entry.key, 'theme');
+      expect(entry.value, 'dark');
+      expect(entry.override_, isFalse);
+      expect(entry.display, DisplayLocation.shelf);
     });
 
-    // ── Test 8: group fields ──
+    // ── Test 8: labels ──
 
-    test('parses group fields', () {
+    test('parses labels as Map<String, String>', () {
       final entry = LogEntry.fromJson({
         'id': 'e8',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'group',
-        'group_id': 'g1',
-        'group_action': 'open',
-        'group_label': 'Network Requests',
-        'group_collapsed': true,
+        'labels': {'env': 'prod', 'region': 'eu-west'},
       });
 
-      expect(entry.groupId, 'g1');
-      expect(entry.groupAction, GroupAction.open);
-      expect(entry.groupLabel, 'Network Requests');
-      expect(entry.groupCollapsed, isTrue);
+      expect(entry.labels, {'env': 'prod', 'region': 'eu-west'});
     });
 
-    // ── Test 9: state fields ──
+    // ── Test 9: server-assigned receivedAt ──
 
-    test('parses state fields', () {
+    test('parses server-assigned receivedAt', () {
       final entry = LogEntry.fromJson({
         'id': 'e9',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'state',
-        'state_key': 'theme',
-        'state_value': 'dark',
+        'received_at': '2026-02-07T12:00:01Z',
       });
 
-      expect(entry.stateKey, 'theme');
-      expect(entry.stateValue, 'dark');
+      expect(entry.receivedAt, '2026-02-07T12:00:01Z');
     });
 
-    // ── Test 10: RPC fields ──
+    // ── Test 10: defaults for replace, override, display ──
 
-    test('parses RPC fields', () {
+    test('defaults: replace=false, override=true, display=defaultLoc', () {
       final entry = LogEntry.fromJson({
         'id': 'e10',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'event',
         'severity': 'info',
-        'type': 'rpc',
-        'rpc_id': 'rpc-1',
-        'rpc_direction': 'request',
-        'rpc_method': 'getState',
-        'rpc_args': {'key': 'theme'},
-        'rpc_response': {'value': 'dark'},
-        'rpc_error': null,
       });
 
-      expect(entry.rpcId, 'rpc-1');
-      expect(entry.rpcDirection, RpcDirection.request);
-      expect(entry.rpcMethod, 'getState');
-      expect(entry.rpcArgs, {'key': 'theme'});
-      expect(entry.rpcResponse, {'value': 'dark'});
-      expect(entry.rpcError, isNull);
+      expect(entry.replace, isFalse);
+      expect(entry.override_, isTrue);
+      expect(entry.display, DisplayLocation.defaultLoc);
     });
 
-    // ── Test 11: tags ──
+    // ── Test 11: severity defaults to info when missing ──
 
-    test('parses tags as Map<String, String>', () {
+    test('severity defaults to info when missing', () {
       final entry = LogEntry.fromJson({
         'id': 'e11',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
-        'severity': 'info',
-        'type': 'text',
-        'tags': {'env': 'prod', 'region': 'eu-west'},
+        'kind': 'event',
       });
 
-      expect(entry.tags, {'env': 'prod', 'region': 'eu-west'});
+      expect(entry.severity, Severity.info);
     });
 
-    // ── Test 12: replace, custom_type, custom_data ──
+    // ── Test 12: unknown kind defaults to event ──
 
-    test('parses replace, custom_type, custom_data', () {
+    test('unknown kind defaults to event', () {
       final entry = LogEntry.fromJson({
         'id': 'e12',
         'timestamp': '2026-02-07T12:00:00Z',
         'session_id': 'sess-1',
+        'kind': 'unknown_kind',
         'severity': 'info',
-        'type': 'custom',
-        'replace': true,
-        'custom_type': 'metric',
-        'custom_data': {'cpu': 87.5},
       });
 
-      expect(entry.replace, isTrue);
-      expect(entry.customType, 'metric');
-      expect(entry.customData, {'cpu': 87.5});
+      expect(entry.kind, EntryKind.event);
     });
   });
 
@@ -265,28 +261,22 @@ void main() {
       expect(parseSeverity('unknown'), Severity.debug);
     });
 
-    // ── Test 14: parseLogType ──
+    // ── Test 14: parseEntryKind ──
 
-    test('parseLogType returns correct values and defaults to text', () {
-      expect(parseLogType('text'), LogType.text);
-      expect(parseLogType('json'), LogType.json);
-      expect(parseLogType('html'), LogType.html);
-      expect(parseLogType('binary'), LogType.binary);
-      expect(parseLogType('image'), LogType.image);
-      expect(parseLogType('state'), LogType.state);
-      expect(parseLogType('group'), LogType.group);
-      expect(parseLogType('rpc'), LogType.rpc);
-      expect(parseLogType('session'), LogType.session);
-      expect(parseLogType('custom'), LogType.custom);
-      expect(parseLogType('bogus'), LogType.text);
+    test('parseEntryKind returns correct values and defaults to event', () {
+      expect(parseEntryKind('session'), EntryKind.session);
+      expect(parseEntryKind('event'), EntryKind.event);
+      expect(parseEntryKind('data'), EntryKind.data);
+      expect(parseEntryKind('bogus'), EntryKind.event);
     });
 
-    // ── Test 15: parseGroupAction ──
+    // ── Test 15: parseDisplayLocation ──
 
-    test('parseGroupAction returns null for null input', () {
-      expect(parseGroupAction(null), isNull);
-      expect(parseGroupAction('open'), GroupAction.open);
-      expect(parseGroupAction('close'), GroupAction.close);
+    test('parseDisplayLocation maps wire strings to enum values', () {
+      expect(parseDisplayLocation('default'), DisplayLocation.defaultLoc);
+      expect(parseDisplayLocation('static'), DisplayLocation.static_);
+      expect(parseDisplayLocation('shelf'), DisplayLocation.shelf);
+      expect(parseDisplayLocation('unknown'), DisplayLocation.defaultLoc);
     });
 
     // ── Test 16: parseSessionAction ──
@@ -297,19 +287,10 @@ void main() {
       expect(parseSessionAction('end'), SessionAction.end);
       expect(parseSessionAction('heartbeat'), SessionAction.heartbeat);
     });
-
-    // ── Test 17: parseRpcDirection ──
-
-    test('parseRpcDirection returns null for null input', () {
-      expect(parseRpcDirection(null), isNull);
-      expect(parseRpcDirection('request'), RpcDirection.request);
-      expect(parseRpcDirection('response'), RpcDirection.response);
-      expect(parseRpcDirection('error'), RpcDirection.error);
-    });
   });
 
   group('Sub-schema round-trips', () {
-    // ── Test 18: ApplicationInfo ──
+    // ── Test 17: ApplicationInfo ──
 
     test('ApplicationInfo fromJson/toJson round-trip', () {
       final json = {
@@ -325,7 +306,7 @@ void main() {
       expect(output['environment'], 'staging');
     });
 
-    // ── Test 19: SourceLocation ──
+    // ── Test 18: SourceLocation ──
 
     test('SourceLocation fromJson/toJson round-trip', () {
       final json = {
@@ -343,7 +324,7 @@ void main() {
       expect(output['symbol'], 'main');
     });
 
-    // ── Test 20: StackFrame ──
+    // ── Test 19: StackFrame ──
 
     test('StackFrame fromJson/toJson round-trip', () {
       final json = {
@@ -360,7 +341,7 @@ void main() {
       expect(output['raw'], '#0 main (app.dart:5)');
     });
 
-    // ── Test 21: ExceptionData with nested cause ──
+    // ── Test 20: ExceptionData with nested cause ──
 
     test('ExceptionData fromJson/toJson with nested cause', () {
       final json = {
@@ -382,7 +363,7 @@ void main() {
       expect(output['cause']['message'], 'DNS resolution failed');
     });
 
-    // ── Test 22: IconRef ──
+    // ── Test 21: IconRef ──
 
     test('IconRef fromJson/toJson round-trip', () {
       final json = {'icon': 'warning', 'color': 'red', 'size': 16.0};
@@ -394,7 +375,7 @@ void main() {
       expect(output['size'], 16.0);
     });
 
-    // ── Test 23: ImageData data variant ──
+    // ── Test 22: ImageData data variant ──
 
     test('ImageData fromJson/toJson round-trip (data variant)', () {
       final json = {
@@ -415,7 +396,7 @@ void main() {
       expect(output.containsKey('ref'), isFalse);
     });
 
-    // ── Test 24: ImageData ref variant ──
+    // ── Test 23: ImageData ref variant ──
 
     test('ImageData fromJson/toJson round-trip (ref variant)', () {
       final json = {'ref': 'https://example.com/img.png', 'label': 'banner'};
@@ -425,6 +406,81 @@ void main() {
       expect(output['ref'], 'https://example.com/img.png');
       expect(output['label'], 'banner');
       expect(output.containsKey('data'), isFalse);
+    });
+
+    // ── Test 24: WidgetPayload ──
+
+    test('WidgetPayload fromJson/toJson round-trip', () {
+      final json = {
+        'type': 'chart',
+        'series': [1, 2, 3],
+        'title': 'CPU',
+      };
+      final wp = WidgetPayload.fromJson(json);
+
+      expect(wp.type, 'chart');
+      expect(wp.data['series'], [1, 2, 3]);
+      expect(wp.data['title'], 'CPU');
+      expect(wp.data.containsKey('type'), isFalse);
+
+      final output = wp.toJson();
+      expect(output['type'], 'chart');
+      expect(output['series'], [1, 2, 3]);
+    });
+
+    // ── Test 25: DataState ──
+
+    test('DataState fromJson/toJson round-trip', () {
+      final json = {
+        'value': 'dark',
+        'history': ['light', 'dark'],
+        'display': 'shelf',
+        'label': 'Theme',
+        'icon': {'icon': 'palette'},
+        'updated_at': '2026-02-07T12:00:00Z',
+      };
+      final ds = DataState.fromJson(json);
+
+      expect(ds.value, 'dark');
+      expect(ds.history, ['light', 'dark']);
+      expect(ds.display, DisplayLocation.shelf);
+      expect(ds.label, 'Theme');
+      expect(ds.icon, isNotNull);
+      expect(ds.icon!.icon, 'palette');
+      expect(ds.updatedAt, '2026-02-07T12:00:00Z');
+
+      final output = ds.toJson();
+      expect(output['value'], 'dark');
+      expect(output['display'], 'shelf');
+      expect(output['label'], 'Theme');
+    });
+
+    // ── Test 26: DataState with widget ──
+
+    test('DataState with widget payload', () {
+      final json = {
+        'value': {'cpu': 87.5},
+        'display': 'static',
+        'widget': {'type': 'gauge', 'max': 100},
+      };
+      final ds = DataState.fromJson(json);
+
+      expect(ds.display, DisplayLocation.static_);
+      expect(ds.widget, isNotNull);
+      expect(ds.widget!.type, 'gauge');
+      expect(ds.widget!.data['max'], 100);
+    });
+
+    // ── Test 27: DataState defaults ──
+
+    test('DataState defaults display to defaultLoc', () {
+      final ds = DataState.fromJson({'value': 42});
+
+      expect(ds.display, DisplayLocation.defaultLoc);
+      expect(ds.history, isNull);
+      expect(ds.widget, isNull);
+      expect(ds.label, isNull);
+      expect(ds.icon, isNull);
     });
   });
 }

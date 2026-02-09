@@ -8,13 +8,13 @@ void main() {
     // ── Test 1: subscribe includes all fields ──
 
     test(
-      'subscribe toJson includes sessionIds, minSeverity, sections, textFilter',
+      'subscribe toJson includes sessionIds, minSeverity, tags, textFilter',
       () {
         const msg = ViewerMessage(
           type: ViewerMessageType.subscribe,
           sessionIds: ['sess-1', 'sess-2'],
           minSeverity: 'warning',
-          sections: ['network', 'ui'],
+          tags: ['network', 'ui'],
           textFilter: 'error',
         );
         final json = msg.toJson();
@@ -22,7 +22,7 @@ void main() {
         expect(json['type'], 'subscribe');
         expect(json['session_ids'], ['sess-1', 'sess-2']);
         expect(json['min_severity'], 'warning');
-        expect(json['sections'], ['network', 'ui']);
+        expect(json['tags'], ['network', 'ui']);
         expect(json['text_filter'], 'error');
       },
     );
@@ -92,17 +92,17 @@ void main() {
       expect(json['type'], 'session_list');
     });
 
-    // ── Test 6: state_query toJson ──
+    // ── Test 6: data_query toJson ──
 
-    test('state_query toJson with stateSessionId', () {
+    test('data_query toJson with dataSessionId', () {
       const msg = ViewerMessage(
-        type: ViewerMessageType.stateQuery,
-        stateSessionId: 'sess-1',
+        type: ViewerMessageType.dataQuery,
+        dataSessionId: 'sess-1',
       );
       final json = msg.toJson();
 
-      expect(json['type'], 'state_query');
-      expect(json['state_session_id'], 'sess-1');
+      expect(json['type'], 'data_query');
+      expect(json['data_session_id'], 'sess-1');
     });
 
     // ── Test 7: excludes null optional fields ──
@@ -113,7 +113,7 @@ void main() {
 
       expect(json.containsKey('session_ids'), isFalse);
       expect(json.containsKey('min_severity'), isFalse);
-      expect(json.containsKey('sections'), isFalse);
+      expect(json.containsKey('tags'), isFalse);
       expect(json.containsKey('text_filter'), isFalse);
       expect(json.containsKey('query_id'), isFalse);
       expect(json.containsKey('from'), isFalse);
@@ -126,7 +126,7 @@ void main() {
       expect(json.containsKey('target_session_id'), isFalse);
       expect(json.containsKey('rpc_method'), isFalse);
       expect(json.containsKey('rpc_args'), isFalse);
-      expect(json.containsKey('state_session_id'), isFalse);
+      expect(json.containsKey('data_session_id'), isFalse);
     });
   });
 
