@@ -15,10 +15,10 @@ class LogoPainter extends CustomPainter {
     final sx = size.width / 64;
     final sy = size.height / 64;
     final path = Path()
-      ..moveTo(20 * sx, 8 * sy)
-      ..lineTo(20 * sx, 36 * sy)
-      ..quadraticBezierTo(20 * sx, 44 * sy, 28 * sx, 44 * sy)
-      ..lineTo(52 * sx, 44 * sy);
+      ..moveTo(16 * sx, 14 * sy)
+      ..lineTo(16 * sx, 42 * sy)
+      ..quadraticBezierTo(16 * sx, 50 * sy, 24 * sx, 50 * sy)
+      ..lineTo(48 * sx, 50 * sy);
     canvas.drawPath(path, paint);
   }
 

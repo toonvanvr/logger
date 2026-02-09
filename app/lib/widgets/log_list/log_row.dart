@@ -44,7 +44,7 @@ class LogRow extends StatefulWidget {
 
 class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  bool _isHovered = false;
+  final ValueNotifier<bool> _hoverNotifier = ValueNotifier(false);
   late final Animation<Color?> _highlightAnimation;
   late final Animation<double> _opacityAnimation;
   late final Animation<double> _slideAnimation;
@@ -96,19 +96,20 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    _hoverNotifier.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   Offset? _pointerDownPosition;
 
-  Color get _backgroundColor {
+  Color _computeBackgroundColor(bool isHovered) {
     final base = widget.isSelectionSelected
         ? LoggerColors.bgActive
         : (widget.isEvenRow
               ? LoggerColors.bgSurface
               : LoggerColors.bgSurface.withValues(alpha: 0.85));
-    if (_isHovered) return Color.lerp(base, Colors.white, 0.03)!;
+    if (isHovered) return Color.lerp(base, Colors.white, 0.03)!;
     return base;
   }
 
@@ -154,22 +155,28 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
           child: Opacity(
             opacity: _opacityAnimation.value,
             child: _buildTapHandler(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 24),
-                decoration: BoxDecoration(
-                  color: _backgroundColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: LoggerColors.borderSubtle,
-                      width: 1,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _hoverNotifier,
+                builder: (context, isHovered, innerChild) {
+                  return Container(
+                    constraints: const BoxConstraints(minHeight: 24),
+                    decoration: BoxDecoration(
+                      color: _computeBackgroundColor(isHovered),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: LoggerColors.borderSubtle,
+                          width: 1,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                foregroundDecoration:
-                    _highlightAnimation.value != null &&
-                        _highlightAnimation.value != Colors.transparent
-                    ? BoxDecoration(color: _highlightAnimation.value)
-                    : null,
+                    foregroundDecoration:
+                        _highlightAnimation.value != null &&
+                            _highlightAnimation.value != Colors.transparent
+                        ? BoxDecoration(color: _highlightAnimation.value)
+                        : null,
+                    child: innerChild,
+                  );
+                },
                 child: child,
               ),
             ),
@@ -177,8 +184,8 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
         );
       },
       child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
+        onEnter: (_) => _hoverNotifier.value = true,
+        onExit: (_) => _hoverNotifier.value = false,
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -206,12 +213,17 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                     horizontal: 8,
                     vertical: 2,
                   ),
-                  child: LogRowContent(
-                    entry: widget.entry,
-                    groupDepth: widget.groupDepth,
-                    isCollapsed: widget.isCollapsed,
-                    isHovered: _isHovered,
-                    backgroundColor: _backgroundColor,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _hoverNotifier,
+                    builder: (context, isHovered, _) {
+                      return LogRowContent(
+                        entry: widget.entry,
+                        groupDepth: widget.groupDepth,
+                        isCollapsed: widget.isCollapsed,
+                        isHovered: isHovered,
+                        backgroundColor: _computeBackgroundColor(isHovered),
+                      );
+                    },
                   ),
                 ),
               ),
