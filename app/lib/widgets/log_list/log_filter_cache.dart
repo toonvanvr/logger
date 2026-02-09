@@ -78,11 +78,32 @@ class LogFilterCache {
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.
     // When filtering by state: prefix, include state entries; otherwise exclude them.
-    if (textFilter != null && textFilter.startsWith('state:')) {
-      final key = textFilter.substring(6);
+    final stateKeys = <String>{};
+    String? remainingFilter;
+    if (textFilter != null && textFilter.contains('state:')) {
+      final tokens = textFilter.split(' ');
+      for (final token in tokens) {
+        if (token.startsWith('state:')) {
+          stateKeys.add(token.substring(6));
+        }
+      }
+      remainingFilter = tokens
+          .where((t) => !t.startsWith('state:'))
+          .join(' ')
+          .trim();
+    }
+
+    if (stateKeys.isNotEmpty) {
       results = results.where(
-        (e) => e.type == LogType.state && e.stateKey == key,
+        (e) => e.type == LogType.state && stateKeys.contains(e.stateKey),
       );
+      if (remainingFilter != null && remainingFilter.isNotEmpty) {
+        final lower = remainingFilter.toLowerCase();
+        results = results.where((e) {
+          final text = e.text?.toLowerCase() ?? '';
+          return text.contains(lower);
+        });
+      }
     } else {
       results = results.where((e) => e.type != LogType.state);
       if (textFilter != null && textFilter.isNotEmpty) {

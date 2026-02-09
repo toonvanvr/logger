@@ -184,6 +184,10 @@ class _LogViewerScreenState extends State<LogViewerScreen>
                             _stateFilterStack = [];
                           });
                         },
+                        activeStateFilters: _stateFilterStack.toSet(),
+                        onStateFilterRemove: (key) {
+                          _toggleStateFilter(key);
+                        },
                       )
                     : const SizedBox.shrink(),
               ),

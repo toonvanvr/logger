@@ -131,7 +131,12 @@ class StateViewSection extends StatelessWidget {
                       ),
                     if (chartEntries.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      StateChartStrip(chartEntries: chartEntries),
+                      StateChartStrip(
+                        chartEntries: chartEntries,
+                        onTap: onStateFilter != null
+                            ? (key) => onStateFilter!('state:_chart.$key')
+                            : null,
+                      ),
                     ],
                     if (shelfEntries.isNotEmpty)
                       _SecondaryShelf(

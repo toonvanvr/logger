@@ -41,7 +41,7 @@ class _StateCardState extends State<StateCard> {
           decoration: BoxDecoration(
             color: Color.lerp(
               widget.isActiveFilter
-                  ? LoggerColors.severityInfoBar.withValues(alpha: 0.10)
+                  ? LoggerColors.severityInfoBar.withValues(alpha: 0.15)
                   : LoggerColors.bgSurface,
               Colors.white,
               _isHovered ? 0.05 : 0.0,
@@ -65,7 +65,9 @@ class _StateCardState extends State<StateCard> {
               Text(
                 widget.stateKey,
                 style: LoggerTypography.logMeta.copyWith(
-                  color: LoggerColors.fgMuted,
+                  color: widget.isActiveFilter
+                      ? LoggerColors.fgPrimary
+                      : LoggerColors.fgMuted,
                   fontSize: 10,
                 ),
               ),
@@ -85,6 +87,10 @@ class _StateCardState extends State<StateCard> {
                   ),
                 ),
               ),
+              if (widget.isActiveFilter) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.close, size: 10, color: LoggerColors.fgMuted),
+              ],
             ],
           ),
         ),

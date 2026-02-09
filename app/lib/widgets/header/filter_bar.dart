@@ -22,6 +22,8 @@ class FilterBar extends StatefulWidget {
   final ValueChanged<Set<String>>? onSeverityChange;
   final ValueChanged<String>? onTextFilterChange;
   final VoidCallback? onClear;
+  final Set<String> activeStateFilters;
+  final ValueChanged<String>? onStateFilterRemove;
 
   const FilterBar({
     super.key,
@@ -35,6 +37,8 @@ class FilterBar extends StatefulWidget {
     this.onSeverityChange,
     this.onTextFilterChange,
     this.onClear,
+    this.activeStateFilters = const {},
+    this.onStateFilterRemove,
   });
 
   @override
@@ -168,6 +172,51 @@ class _FilterBarState extends State<FilterBar> {
               ),
             ),
           const SizedBox(width: 8),
+          if (widget.activeStateFilters.isNotEmpty) ...[
+            for (final key in widget.activeStateFilters)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: GestureDetector(
+                  onTap: () => widget.onStateFilterRemove?.call(key),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: LoggerColors.severityInfoBar.withValues(
+                        alpha: 0.15,
+                      ),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                        color: LoggerColors.severityInfoBar.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'state:$key',
+                          style: LoggerTypography.logMeta.copyWith(
+                            color: LoggerColors.fgPrimary,
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        const Icon(
+                          Icons.close,
+                          size: 10,
+                          color: LoggerColors.fgMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(width: 4),
+          ],
           Expanded(child: _buildSearchField()),
           const SizedBox(width: 8),
           BookmarkButton(

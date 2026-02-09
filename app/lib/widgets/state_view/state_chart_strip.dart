@@ -7,8 +7,9 @@ import '../../theme/typography.dart';
 /// Horizontal scrollable strip of live-updating charts from `_chart.*` state keys.
 class StateChartStrip extends StatelessWidget {
   final Map<String, dynamic> chartEntries;
+  final ValueChanged<String>? onTap;
 
-  const StateChartStrip({super.key, required this.chartEntries});
+  const StateChartStrip({super.key, required this.chartEntries, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,10 @@ class StateChartStrip extends StatelessWidget {
           final data = _parseChartData(entry.value);
           if (data == null) return const SizedBox.shrink();
 
-          return _ChartCard(data: data);
+          return _ChartCard(
+            data: data,
+            onTap: onTap != null ? () => onTap!(data.title ?? entry.key) : null,
+          );
         },
       ),
     );
@@ -59,8 +63,9 @@ class StateChartStrip extends StatelessWidget {
 
 class _ChartCard extends StatefulWidget {
   final _ChartData data;
+  final VoidCallback? onTap;
 
-  const _ChartCard({required this.data});
+  const _ChartCard({required this.data, this.onTap});
 
   @override
   State<_ChartCard> createState() => _ChartCardState();
@@ -71,54 +76,60 @@ class _ChartCardState extends State<_ChartCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        width: 160,
-        height: 72,
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-        decoration: BoxDecoration(
-          color: LoggerColors.bgSurface,
-          border: Border.all(
-            color: Color.lerp(
-              LoggerColors.borderSubtle,
-              Colors.white,
-              _isHovered ? 0.1 : 0.0,
-            )!,
-          ),
-          borderRadius: BorderRadius.circular(3),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.data.title != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  widget.data.title!,
-                  style: LoggerTypography.logMeta.copyWith(
-                    color: LoggerColors.fgSecondary,
-                    fontSize: 9,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            Expanded(
-              child: CustomPaint(
-                painter: ChartPainter(
-                  variant: widget.data.type,
-                  values: widget.data.values,
-                  color: widget.data.color ?? LoggerColors.syntaxKey,
-                  textColor: LoggerColors.fgMuted,
-                  showTicks: true,
-                ),
-                size: Size.infinite,
-              ),
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        cursor: widget.onTap != null
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          width: 160,
+          height: 72,
+          margin: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+          decoration: BoxDecoration(
+            color: LoggerColors.bgSurface,
+            border: Border.all(
+              color: Color.lerp(
+                LoggerColors.borderSubtle,
+                Colors.white,
+                _isHovered ? 0.1 : 0.0,
+              )!,
             ),
-          ],
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.data.title != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    widget.data.title!,
+                    style: LoggerTypography.logMeta.copyWith(
+                      color: LoggerColors.fgSecondary,
+                      fontSize: 9,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              Expanded(
+                child: CustomPaint(
+                  painter: ChartPainter(
+                    variant: widget.data.type,
+                    values: widget.data.values,
+                    color: widget.data.color ?? LoggerColors.syntaxKey,
+                    textColor: LoggerColors.fgMuted,
+                    showTicks: true,
+                  ),
+                  size: Size.infinite,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
