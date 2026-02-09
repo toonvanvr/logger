@@ -35,7 +35,11 @@ LogEntry _makeEntry({
   );
 }
 
-Widget _wrap({required LogStore logStore, StickyStateService? stickyState}) {
+Widget _wrap({
+  required LogStore logStore,
+  StickyStateService? stickyState,
+  Set<String> stickyOverrideIds = const {},
+}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: logStore),
@@ -47,7 +51,7 @@ Widget _wrap({required LogStore logStore, StickyStateService? stickyState}) {
     ],
     child: MaterialApp(
       theme: createLoggerTheme(),
-      home: const Scaffold(body: LogListView()),
+      home: Scaffold(body: LogListView(stickyOverrideIds: stickyOverrideIds)),
     ),
   );
 }
@@ -105,7 +109,7 @@ void main() {
         _makeEntry(id: 'b', message: 'normal log'),
       ]);
 
-      await tester.pumpWidget(_wrap(logStore: store));
+      await tester.pumpWidget(_wrap(logStore: store, stickyOverrideIds: {'a'}));
       await tester.pumpAndSettle();
 
       // Should find an Icons.close in the sticky area

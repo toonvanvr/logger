@@ -75,14 +75,6 @@ List<DisplayEntry> processGrouping({
     return false;
   }
 
-  // Collect sticky group IDs (group headers with static display).
-  final stickyGroupIds = <String>{};
-  for (final entry in entries) {
-    if (entry.groupId != null && entry.display == DisplayLocation.static_) {
-      stickyGroupIds.add(entry.groupId!);
-    }
-  }
-
   final hasTextFilter = textFilter != null && textFilter.isNotEmpty;
   final result = <DisplayEntry>[];
 
@@ -103,18 +95,8 @@ List<DisplayEntry> processGrouping({
     // Check if hidden by collapsed ancestor.
     if (parentId != null && isCollapsed(parentId)) continue;
 
-    // Determine sticky state.
-    final bool isSticky;
-    if (isGroupHeader) {
-      isSticky = entry.display == DisplayLocation.static_;
-    } else {
-      final isInStickyGroup =
-          parentId != null && stickyGroupIds.contains(parentId);
-      isSticky =
-          entry.display == DisplayLocation.static_ ||
-          isInStickyGroup ||
-          (stickyOverrideIds?.contains(entry.id) ?? false);
-    }
+    // Determine sticky state — only manual pin via stickyOverrideIds.
+    final isSticky = stickyOverrideIds?.contains(entry.id) ?? false;
 
     if (isGroupHeader) {
       final gid = entry.groupId!;

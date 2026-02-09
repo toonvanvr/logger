@@ -42,6 +42,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_wrap());
+      // Advance past the 500ms landing delay timer
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
 
       // Landing page shows connect prompt
       expect(find.text('Connect to Server'), findsOneWidget);

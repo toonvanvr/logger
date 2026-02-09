@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/server_connection.dart';
 import '../../services/connection_manager.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
@@ -15,9 +18,9 @@ class StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entryCount = context.select<LogStore, int>((s) => s.entryCount);
-    final memoryBytes =
-        context.select<LogStore, int>((s) => s.estimatedMemoryBytes);
-    final manager = context.watch<ConnectionManager>();
+    final memoryBytes = context.select<LogStore, int>(
+      (s) => s.estimatedMemoryBytes,
+    );
     final stickyState = context.watch<StickyStateService>();
 
     final dismissed = stickyState.dismissedCount;
@@ -55,7 +58,7 @@ class StatusBar extends StatelessWidget {
                 ),
               ],
               const Spacer(),
-              _ConnectionIndicator(manager: manager),
+              const _ConnectionIndicator(),
             ],
           );
         },
@@ -103,34 +106,90 @@ class _StatusItem extends StatelessWidget {
   }
 }
 
-class _ConnectionIndicator extends StatelessWidget {
-  final ConnectionManager manager;
+class _ConnectionIndicator extends StatefulWidget {
+  const _ConnectionIndicator();
 
-  const _ConnectionIndicator({required this.manager});
+  @override
+  State<_ConnectionIndicator> createState() => _ConnectionIndicatorState();
+}
+
+/// Derived display state for the connection indicator.
+enum _ConnDisplayState { connected, reconnecting, disconnected }
+
+class _ConnectionIndicatorState extends State<_ConnectionIndicator> {
+  _ConnDisplayState _displayState = _ConnDisplayState.disconnected;
+  Timer? _disconnectTimer;
+  String _label = 'disconnected';
+
+  @override
+  void dispose() {
+    _disconnectTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final active = manager.connections.values
-        .where((c) => c.isActive)
+    // Select only the derived connection info we need.
+    final connections = context
+        .select<ConnectionManager, List<ServerConnection>>(
+          (c) => c.connections.values.toList(growable: false),
+        );
+
+    final active = connections.where((c) => c.isActive).toList(growable: false);
+    final reconnecting = connections
+        .where((c) => c.state == ServerConnectionState.reconnecting)
         .toList(growable: false);
 
-    final String text;
-    final Color dotColor;
-
-    if (active.isEmpty) {
-      text = 'disconnected';
-      dotColor = LoggerColors.severityErrorText;
-    } else if (active.length == 1) {
-      text = active.first.displayLabel;
-      dotColor = LoggerColors.severityInfoText;
+    // Compute target state.
+    final _ConnDisplayState targetState;
+    final String targetLabel;
+    if (active.isNotEmpty) {
+      targetState = _ConnDisplayState.connected;
+      targetLabel = active.length == 1
+          ? active.first.displayLabel
+          : '${active.length} connections';
+    } else if (reconnecting.isNotEmpty) {
+      targetState = _ConnDisplayState.reconnecting;
+      targetLabel = 'Reconnecting\u2026';
     } else {
-      text = '${active.length} connections';
-      dotColor = LoggerColors.severityInfoText;
+      targetState = _ConnDisplayState.disconnected;
+      targetLabel = 'disconnected';
     }
 
-    final color = active.isNotEmpty
-        ? LoggerColors.severityInfoText
-        : LoggerColors.fgMuted;
+    // Apply debounce: only show disconnected after 2s without recovery.
+    if (targetState == _ConnDisplayState.disconnected &&
+        _displayState != _ConnDisplayState.disconnected) {
+      if (_disconnectTimer == null || !_disconnectTimer!.isActive) {
+        _disconnectTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() {
+              _displayState = _ConnDisplayState.disconnected;
+              _label = 'disconnected';
+            });
+          }
+        });
+      }
+      // Keep showing previous state during debounce.
+    } else {
+      _disconnectTimer?.cancel();
+      _disconnectTimer = null;
+      _displayState = targetState;
+      _label = targetLabel;
+    }
+
+    final Color dotColor;
+    final Color textColor;
+    switch (_displayState) {
+      case _ConnDisplayState.connected:
+        dotColor = LoggerColors.severityInfoText;
+        textColor = LoggerColors.severityInfoText;
+      case _ConnDisplayState.reconnecting:
+        dotColor = LoggerColors.severityWarningText;
+        textColor = LoggerColors.severityWarningText;
+      case _ConnDisplayState.disconnected:
+        dotColor = LoggerColors.severityErrorText;
+        textColor = LoggerColors.fgMuted;
+    }
 
     return GestureDetector(
       onTap: () {}, // Future: connection menu
@@ -149,10 +208,10 @@ class _ConnectionIndicator extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              text,
+              _label,
               style: LoggerTypography.logMeta.copyWith(
                 fontSize: 9,
-                color: color,
+                color: textColor,
               ),
             ),
           ],

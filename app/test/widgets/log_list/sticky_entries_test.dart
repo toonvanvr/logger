@@ -31,7 +31,10 @@ LogEntry _makeEntry({
   );
 }
 
-Widget _wrap({required LogStore logStore}) {
+Widget _wrap({
+  required LogStore logStore,
+  Set<String> stickyOverrideIds = const {},
+}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: logStore),
@@ -41,7 +44,7 @@ Widget _wrap({required LogStore logStore}) {
     ],
     child: MaterialApp(
       theme: createLoggerTheme(),
-      home: const Scaffold(body: LogListView()),
+      home: Scaffold(body: LogListView(stickyOverrideIds: stickyOverrideIds)),
     ),
   );
 }
@@ -91,7 +94,9 @@ void main() {
         _makeEntry(id: 'normal', message: 'After group'),
       ]);
 
-      await tester.pumpWidget(_wrap(logStore: store));
+      await tester.pumpWidget(
+        _wrap(logStore: store, stickyOverrideIds: {'g1-open'}),
+      );
       await tester.pumpAndSettle();
 
       // Group header should appear in sticky section with PINNED badge
@@ -123,7 +128,9 @@ void main() {
           _makeEntry(id: 'g2-f', message: 'Done', parentId: 'g2'),
         ]);
 
-        await tester.pumpWidget(_wrap(logStore: store));
+        await tester.pumpWidget(
+          _wrap(logStore: store, stickyOverrideIds: {'g2-c', 'g2-e'}),
+        );
         await tester.pumpAndSettle();
 
         // Should show the group header in pinned area

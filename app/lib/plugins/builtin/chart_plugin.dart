@@ -9,6 +9,11 @@ import 'chart_painter.dart';
 export 'chart_painter.dart';
 
 class ChartRendererPlugin extends RendererPlugin with EnableablePlugin {
+  /// Chart render height. Defaults to 120.
+  final double height;
+
+  ChartRendererPlugin({this.height = 120});
+
   @override
   String get id => 'dev.logger.chart-renderer';
   @override
@@ -88,7 +93,7 @@ class ChartRendererPlugin extends RendererPlugin with EnableablePlugin {
             color: chartColor,
             textColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
-          size: const Size(double.infinity, 120),
+          size: Size(double.infinity, height),
         ),
       ],
     );

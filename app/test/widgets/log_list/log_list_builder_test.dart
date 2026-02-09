@@ -46,28 +46,31 @@ void main() {
       expect(result[2].isSticky, false);
     });
 
-    test('combines protocol sticky with override sticky', () {
-      final entries = [
-        _makeEntry(
-          id: 'a',
-          message: 'protocol sticky',
-          display: DisplayLocation.static_,
-        ),
-        _makeEntry(id: 'b', message: 'override sticky'),
-        _makeEntry(id: 'c', message: 'not sticky'),
-      ];
+    test(
+      'protocol static_ display does not auto-sticky; only override works',
+      () {
+        final entries = [
+          _makeEntry(
+            id: 'a',
+            message: 'protocol sticky',
+            display: DisplayLocation.static_,
+          ),
+          _makeEntry(id: 'b', message: 'override sticky'),
+          _makeEntry(id: 'c', message: 'not sticky'),
+        ];
 
-      final result = processGrouping(
-        entries: entries,
-        textFilter: null,
-        collapsedGroups: {},
-        stickyOverrideIds: {'b'},
-      );
+        final result = processGrouping(
+          entries: entries,
+          textFilter: null,
+          collapsedGroups: {},
+          stickyOverrideIds: {'b'},
+        );
 
-      expect(result[0].isSticky, true); // protocol
-      expect(result[1].isSticky, true); // override
-      expect(result[2].isSticky, false);
-    });
+        expect(result[0].isSticky, false); // protocol alone not sticky
+        expect(result[1].isSticky, true); // override
+        expect(result[2].isSticky, false);
+      },
+    );
 
     test('override on already-sticky entry is no-op', () {
       final entries = [

@@ -64,6 +64,8 @@ class _LogViewerScreenState extends State<LogViewerScreen>
   String? _selectedSection;
   bool _settingsPanelVisible = false;
   bool _hasEverReceivedEntries = false;
+  bool _landingDelayActive = true;
+  Timer? _landingDelayTimer;
 
   @override
   void initState() {
@@ -73,6 +75,9 @@ class _LogViewerScreenState extends State<LogViewerScreen>
       _setupQueryStore();
       _initConnection();
       _handleLaunchUri();
+    });
+    _landingDelayTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _landingDelayActive = false);
     });
   }
 
@@ -129,6 +134,7 @@ class _LogViewerScreenState extends State<LogViewerScreen>
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     _messageSub?.cancel();
+    _landingDelayTimer?.cancel();
     super.dispose();
   }
 
@@ -194,13 +200,18 @@ class _LogViewerScreenState extends State<LogViewerScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final logStore = context.watch<LogStore>();
-                    final connMgr = context.watch<ConnectionManager>();
-                    if (logStore.entries.isNotEmpty) {
-                      _hasEverReceivedEntries = true;
-                    }
+                    final hasEntries = context.select<LogStore, bool>(
+                      (s) => s.entries.isNotEmpty,
+                    );
+                    final hasConnection = context
+                        .select<ConnectionManager, bool>(
+                          (c) => c.activeCount > 0,
+                        );
                     final showLanding =
-                        !_hasEverReceivedEntries && connMgr.activeCount == 0;
+                        !_hasEverReceivedEntries &&
+                        !hasEntries &&
+                        !hasConnection &&
+                        !_landingDelayActive;
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       layoutBuilder: (currentChild, previousChildren) {

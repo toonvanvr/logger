@@ -48,6 +48,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_wrap());
+      // Advance past the 500ms landing delay timer
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
       expect(find.text('Logger'), findsOneWidget);
       expect(find.text('Connect to Server'), findsOneWidget);
     });

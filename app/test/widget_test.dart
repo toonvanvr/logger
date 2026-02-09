@@ -36,8 +36,10 @@ void main() {
       ),
     );
 
-    // Verify the static UI renders before the post-frame callback fires.
+    // Verify the landing page renders after the delay timer expires.
     // Landing page shows when no logs and no active connection.
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
     expect(find.text('Logger'), findsOneWidget);
     expect(find.text('Connect to Server'), findsOneWidget);
     expect(find.text('Quick Start'), findsOneWidget);

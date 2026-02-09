@@ -9,7 +9,23 @@ class StateChartStrip extends StatelessWidget {
   final Map<String, dynamic> chartEntries;
   final ValueChanged<String>? onTap;
 
-  const StateChartStrip({super.key, required this.chartEntries, this.onTap});
+  /// Height of the strip container. Defaults to 80.
+  final double stripHeight;
+
+  /// Width of each chart card. Defaults to 160.
+  final double cardWidth;
+
+  /// Height of each chart card. Defaults to 72.
+  final double cardHeight;
+
+  const StateChartStrip({
+    super.key,
+    required this.chartEntries,
+    this.onTap,
+    this.stripHeight = 80,
+    this.cardWidth = 160,
+    this.cardHeight = 72,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +34,7 @@ class StateChartStrip extends StatelessWidget {
     final entries = chartEntries.entries.toList();
 
     return SizedBox(
-      height: 80,
+      height: stripHeight,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -30,6 +46,8 @@ class StateChartStrip extends StatelessWidget {
 
           return _ChartCard(
             data: data,
+            cardWidth: cardWidth,
+            cardHeight: cardHeight,
             onTap: onTap != null ? () => onTap!(data.title ?? entry.key) : null,
           );
         },
@@ -64,8 +82,15 @@ class StateChartStrip extends StatelessWidget {
 class _ChartCard extends StatefulWidget {
   final _ChartData data;
   final VoidCallback? onTap;
+  final double cardWidth;
+  final double cardHeight;
 
-  const _ChartCard({required this.data, this.onTap});
+  const _ChartCard({
+    required this.data,
+    this.onTap,
+    this.cardWidth = 160,
+    this.cardHeight = 72,
+  });
 
   @override
   State<_ChartCard> createState() => _ChartCardState();
@@ -85,8 +110,8 @@ class _ChartCardState extends State<_ChartCard> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: Container(
-          width: 160,
-          height: 72,
+          width: widget.cardWidth,
+          height: widget.cardHeight,
           margin: const EdgeInsets.only(right: 6),
           padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
           decoration: BoxDecoration(

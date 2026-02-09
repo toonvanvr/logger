@@ -39,12 +39,19 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
 
     switch (msg.type) {
       case ServerMessageType.event:
-        if (msg.entry != null) logStore.addEntry(msg.entry!);
+        if (msg.entry != null) {
+          logStore.addEntry(msg.entry!);
+          _markEntriesReceived();
+        }
       case ServerMessageType.eventBatch:
-        if (msg.entries != null) logStore.addEntries(msg.entries!);
+        if (msg.entries != null) {
+          logStore.addEntries(msg.entries!);
+          if (msg.entries!.isNotEmpty) _markEntriesReceived();
+        }
       case ServerMessageType.history:
         if (msg.historyEntries != null) {
           logStore.addEntries(msg.historyEntries!);
+          if (msg.historyEntries!.isNotEmpty) _markEntriesReceived();
         }
       case ServerMessageType.sessionList:
         if (msg.sessions != null) sessionStore.updateSessions(msg.sessions!);
@@ -67,6 +74,14 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
         }
       default:
         break;
+    }
+  }
+
+  /// Mark that entries have been received, preventing landing page from showing.
+  void _markEntriesReceived() {
+    final state = this as _LogViewerScreenState;
+    if (!state._hasEverReceivedEntries) {
+      setState(() => state._hasEverReceivedEntries = true);
     }
   }
 }
