@@ -41,7 +41,7 @@ class _StateCardState extends State<StateCard> {
           decoration: BoxDecoration(
             color: Color.lerp(
               widget.isActiveFilter
-                  ? LoggerColors.severityInfoBar.withValues(alpha: 0.15)
+                  ? Color.lerp(LoggerColors.bgSurface, LoggerColors.severityInfoBar, 0.15)!
                   : LoggerColors.bgSurface,
               Colors.white,
               _isHovered ? 0.05 : 0.0,
