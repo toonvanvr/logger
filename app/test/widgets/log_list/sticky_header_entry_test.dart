@@ -1,7 +1,7 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/services/session_store.dart';
-import 'package:app/widgets/log_list/sticky_header_entry.dart';
 import 'package:app/theme/theme.dart';
+import 'package:app/widgets/log_list/sticky_header_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -57,10 +57,7 @@ void main() {
 
       await tester.pumpWidget(
         _wrapWidget(
-          SizedBox(
-            height: 40,
-            child: StickyEntryRow(entry: entry, depth: 0),
-          ),
+          SizedBox(height: 40, child: StickyEntryRow(entry: entry, depth: 0)),
         ),
       );
 
@@ -141,9 +138,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: createLoggerTheme(),
-          home: Scaffold(
-            body: StickyCloseButton(onTap: () => tapped = true),
-          ),
+          home: Scaffold(body: StickyCloseButton(onTap: () => tapped = true)),
         ),
       );
 

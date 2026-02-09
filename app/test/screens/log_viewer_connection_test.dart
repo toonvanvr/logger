@@ -33,14 +33,14 @@ Widget _wrap() {
 
 void main() {
   group('LogViewerScreen connection', () {
-    testWidgets('builds with null serverUrl (no auto-connect)',
-        (tester) async {
+    testWidgets('builds with null serverUrl (no auto-connect)', (tester) async {
       await tester.pumpWidget(_wrap());
       expect(find.byType(LogViewerScreen), findsOneWidget);
     });
 
-    testWidgets('shows landing page when disconnected and no entries',
-        (tester) async {
+    testWidgets('shows landing page when disconnected and no entries', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap());
 
       // Landing page shows connect prompt

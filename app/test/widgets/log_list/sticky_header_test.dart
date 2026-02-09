@@ -12,18 +12,10 @@ import '../../test_helpers.dart';
 
 Widget _wrap(Widget child) {
   return MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => SessionStore()),
-    ],
+    providers: [ChangeNotifierProvider(create: (_) => SessionStore())],
     child: MaterialApp(
       theme: createLoggerTheme(),
-      home: Scaffold(
-        body: SizedBox(
-          height: 400,
-          width: 600,
-          child: child,
-        ),
-      ),
+      home: Scaffold(body: SizedBox(height: 400, width: 600, child: child)),
     ),
   );
 }
@@ -31,9 +23,7 @@ Widget _wrap(Widget child) {
 void main() {
   group('StickyHeaderOverlay', () {
     testWidgets('renders nothing when sections empty', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const StickyHeaderOverlay(sections: [])),
-      );
+      await tester.pumpWidget(_wrap(const StickyHeaderOverlay(sections: [])));
 
       expect(find.byType(StickyHeaderOverlay), findsOneWidget);
       expect(find.byType(SizedBox), findsWidgets);
@@ -84,10 +74,7 @@ void main() {
         _wrap(
           StickyHeaderOverlay(
             sections: [
-              StickySection(
-                groupHeader: groupHeader,
-                entries: [entry],
-              ),
+              StickySection(groupHeader: groupHeader, entries: [entry]),
             ],
           ),
         ),
@@ -97,11 +84,7 @@ void main() {
     });
 
     testWidgets('shows hidden count badge', (tester) async {
-      final entry = makeTestEntry(
-        id: 's1',
-        text: 'visible',
-        sticky: true,
-      );
+      final entry = makeTestEntry(id: 's1', text: 'visible', sticky: true);
 
       await tester.pumpWidget(
         _wrap(
@@ -116,8 +99,9 @@ void main() {
       expect(find.textContaining('5'), findsWidgets);
     });
 
-    testWidgets('shows section count bar for multiple sections',
-        (tester) async {
+    testWidgets('shows section count bar for multiple sections', (
+      tester,
+    ) async {
       final e1 = makeTestEntry(id: 's1', text: 'a', sticky: true);
       final e2 = makeTestEntry(id: 's2', text: 'b', sticky: true);
 
@@ -147,7 +131,9 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           StickyHeaderOverlay(
-            sections: [StickySection(entries: [entry])],
+            sections: [
+              StickySection(entries: [entry]),
+            ],
             stickyState: stickyState,
           ),
         ),

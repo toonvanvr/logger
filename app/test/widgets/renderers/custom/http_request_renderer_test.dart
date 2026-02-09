@@ -1,6 +1,6 @@
 import 'package:app/models/log_entry.dart';
-import 'package:app/widgets/renderers/custom/http_request_renderer.dart';
 import 'package:app/theme/theme.dart';
+import 'package:app/widgets/renderers/custom/http_request_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -113,9 +113,7 @@ void main() {
         MaterialApp(
           theme: createLoggerTheme(),
           home: Scaffold(
-            body: HttpRequestRenderer(
-              entry: _httpEntry(status: 500),
-            ),
+            body: HttpRequestRenderer(entry: _httpEntry(status: 500)),
           ),
         ),
       );

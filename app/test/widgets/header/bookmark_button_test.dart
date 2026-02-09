@@ -1,6 +1,6 @@
 import 'package:app/services/query_store.dart';
-import 'package:app/widgets/header/bookmark_button.dart';
 import 'package:app/theme/theme.dart';
+import 'package:app/widgets/header/bookmark_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -23,8 +23,9 @@ Widget _wrap({required QueryStore queryStore}) {
 
 void main() {
   group('BookmarkButton', () {
-    testWidgets('renders bookmark_border icon when no saved queries',
-        (tester) async {
+    testWidgets('renders bookmark_border icon when no saved queries', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(queryStore: QueryStore()));
 
       expect(find.byIcon(Icons.bookmark_border), findsOneWidget);

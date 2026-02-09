@@ -54,9 +54,7 @@ void main() {
         MaterialApp(
           theme: createLoggerTheme(),
           home: Scaffold(
-            body: LogRowContent(
-              entry: makeTestEntry(text: 'log message here'),
-            ),
+            body: LogRowContent(entry: makeTestEntry(text: 'log message here')),
           ),
         ),
       );

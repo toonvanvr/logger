@@ -32,11 +32,13 @@ void main() {
     testWidgets('shows LIVE pill when list has entries', (tester) async {
       final store = LogStore();
       for (var i = 0; i < 5; i++) {
-        store.addEntry(makeTestEntry(
-          id: 'e$i',
-          text: 'log line $i',
-          severity: Severity.info,
-        ));
+        store.addEntry(
+          makeTestEntry(
+            id: 'e$i',
+            text: 'log line $i',
+            severity: Severity.info,
+          ),
+        );
       }
 
       await tester.pumpWidget(_wrap(logStore: store));
@@ -53,11 +55,13 @@ void main() {
     testWidgets('renders with many entries without overflow', (tester) async {
       final store = LogStore();
       for (var i = 0; i < 50; i++) {
-        store.addEntry(makeTestEntry(
-          id: 'e$i',
-          text: 'log $i',
-          severity: i.isEven ? Severity.info : Severity.debug,
-        ));
+        store.addEntry(
+          makeTestEntry(
+            id: 'e$i',
+            text: 'log $i',
+            severity: i.isEven ? Severity.info : Severity.debug,
+          ),
+        );
       }
 
       await tester.pumpWidget(_wrap(logStore: store));

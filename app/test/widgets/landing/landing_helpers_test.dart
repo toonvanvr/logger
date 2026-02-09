@@ -16,10 +16,7 @@ void main() {
       final painter = LogoPainter();
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
-      expect(
-        () => painter.paint(canvas, const Size(64, 64)),
-        returnsNormally,
-      );
+      expect(() => painter.paint(canvas, const Size(64, 64)), returnsNormally);
       recorder.endRecording();
     });
   });
@@ -95,9 +92,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: createLoggerTheme(),
-          home: Scaffold(
-            body: ConnectButton(onTap: () => tapped = true),
-          ),
+          home: Scaffold(body: ConnectButton(onTap: () => tapped = true)),
         ),
       );
 

@@ -44,8 +44,9 @@ void main() {
       expect(find.byType(StatusBar), findsOneWidget);
     });
 
-    testWidgets('shows landing page when no entries and no connections',
-        (tester) async {
+    testWidgets('shows landing page when no entries and no connections', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap());
       expect(find.text('Logger'), findsOneWidget);
       expect(find.text('Connect to Server'), findsOneWidget);
@@ -61,8 +62,9 @@ void main() {
       expect(find.byType(LogViewerScreen), findsOneWidget);
     });
 
-    testWidgets('renders session selector when not in mini mode',
-        (tester) async {
+    testWidgets('renders session selector when not in mini mode', (
+      tester,
+    ) async {
       final settings = SettingsService();
       settings.setMiniMode(false);
 
