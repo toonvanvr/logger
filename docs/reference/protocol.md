@@ -45,6 +45,8 @@ text | json | html | binary | image | state | group | rpc | session | custom
 | `binary` | `type: "binary"` | `string` | Base64-encoded binary data. |
 | `image` | `type: "image"` | `ImageData` | Image data (inline base64 or upload reference). |
 
+The `text` field supports ANSI escape codes (SGR sequences). The viewer renders these with syntax-highlighted colors. Use standard `\x1b[...m` sequences for colored output.
+
 ### Exception Data
 
 | Field | Type | Description |
@@ -78,6 +80,8 @@ Groups allow collapsible log sections.
 | `state_key` | `string` | State key for upsert. Unique per session. |
 | `state_value` | `unknown` | State value. `null` deletes the key. |
 
+**State lifecycle:** Sending a state entry with the same `state_key` and `session_id` upserts the value. Setting `state_value` to `null` removes the key from the session's state store entirely. This is how charts and other stateful UI elements are cleaned up.
+
 ### Session Control (`type: "session"`)
 
 | Field | Type | Description |
@@ -108,12 +112,46 @@ Groups allow collapsible log sections.
 | `rpc_response` | `unknown` | Response data (response direction). |
 | `rpc_error` | `string` | Error message (error direction). |
 
+**RPC routing:** RPC is session-scoped. The viewer's `rpc_request` message includes a `target_session_id` field that routes the request to the specific client session. There is no multi-server RPC routing — each request targets exactly one session on one server connection.
+
+**RPC flow:** Viewer sends `rpc_request` → Server forwards to client session → Client responds → Server sends `rpc_response` back to viewer. The `rpc_id` correlates request and response.
+
 ### Custom Types (`type: "custom"`)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `custom_type` | `string` | Custom type discriminator (e.g., `"chart"`, `"progress"`). |
 | `custom_data` | `unknown` | Arbitrary data for the custom renderer. |
+
+#### Built-in Custom Renderers
+
+The following `custom_type` values have built-in renderer support. Schemas are defined in `packages/shared/src/custom-renderers.ts`.
+
+| `custom_type` | Description | Key `custom_data` Fields |
+|---------------|-------------|---------------------------|
+| `progress` | Progress bar or ring | `value`, `max`, `label`, `sublabel`, `color`, `style` (`bar`\|`ring`) |
+| `chart` | Inline chart | `type` (`sparkline`\|`bar`\|`area`\|`dense_bar`), `values`, `labels`, `color`, `height`, `min`/`max`, `title` |
+| `table` | Data table | `columns`, `rows`, `highlight_column`, `sortable`, `caption` |
+| `kv` | Key-value pairs | `entries` (`[{key, value, icon?, color?}]`), `layout` (`inline`\|`stacked`) |
+| `diff` | Side-by-side diff | `before`, `after`, `language` (`json`\|`yaml`\|`sql`\|`text`), `context_lines` |
+| `tree` | Collapsible tree | `root` (recursive `TreeNode`), `default_expanded_depth` |
+| `timeline` | Event timeline | `events` (`[{label, time, duration_ms?, color?, icon?}]`), `show_duration`, `total_label` |
+| `http_request` | HTTP request/response | `method`, `url`, `status`, `duration_ms`, headers, body fields |
+
+Example (progress bar):
+
+```json
+{
+  "type": "custom",
+  "custom_type": "progress",
+  "custom_data": {
+    "value": 42,
+    "max": 100,
+    "label": "Uploading files",
+    "style": "bar"
+  }
+}
+```
 
 ### State Charts
 
@@ -142,6 +180,16 @@ Example:
 ```
 
 The `dense_bar` variant renders thin vertical bars without gaps, suitable for high-frequency time-series data.
+
+**Chart titles** are truncated with ellipsis (single line, no wrapping). Keep titles short.
+
+**Chart count:** There is no maximum number of charts per session. Charts display in a horizontal scrollable list. Performance is fine since charts are lightweight widgets.
+
+**Chart removal:** Set `state_value` to `null` for the chart key to remove it (see [State Operations](#state-operations-type-state)).
+
+### State Shelf Keys (`_shelf.*`)
+
+State keys prefixed with `_shelf.` are rendered in a secondary "shelf" area below the main state view. Use these for supplementary status data that should be visible but not prominent.
 
 ### Timing Metadata
 
@@ -254,3 +302,20 @@ Defined in `shared/src/viewer-message.ts`:
 | `rpc_request` | Send RPC to a client application |
 | `session_list` | Request current session list |
 | `state_query` | Request state snapshot for a session |
+
+## Image Upload
+
+Images can be sent inline (base64 in `image.data`) or uploaded separately:
+
+1. `POST /api/v1/upload` with the image file → returns a `ref` ID
+2. Use `image.ref` in a subsequent log entry with `type: "image"`
+
+This avoids embedding large base64 payloads in log entries.
+
+## Client SDK Architecture
+
+The TypeScript client SDK (`packages/client/`) exposes a `Logger` class that extends `LoggerBase`. Key design notes:
+
+- **Protected methods:** `enqueue()` and `base()` on `LoggerBase` are `protected`. Subclasses (like session-scoped loggers) override behavior through inheritance. These are not accessible to external consumers.
+- **Batching:** The client batches log entries via an internal queue (`packages/client/src/queue.ts`) and flushes periodically or when the batch size threshold is reached.
+- **Session lifecycle:** Managed by `LoggerSession` — each session gets a unique `session_id` and handles `start`/`end`/`heartbeat` actions automatically.

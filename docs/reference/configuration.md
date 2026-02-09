@@ -84,3 +84,24 @@ Resource limits:
 - Server: 512 MB memory
 - Loki: 4 GB memory
 - Grafana: 1 GB memory
+
+## Viewer (Flutter App)
+
+The Flutter desktop viewer (`app/`) has no persistent configuration files. All state is in-memory:
+
+| Setting | Storage | Description |
+|---------|---------|-------------|
+| Server connections | In-memory `Map` | Added via the UI connection dialog. Not persisted to disk — connections must be re-added after restarting the viewer. Intentional for a local-dev tool. |
+| Filters & subscriptions | In-memory | Active filters, severity toggles, and session subscriptions reset on restart. |
+
+## Workspace Setup
+
+The repository uses **Bun workspaces** for TypeScript package management. The root `package.json` declares:
+
+```json
+{
+  "workspaces": ["packages/*"]
+}
+```
+
+Run `bun install` from the repository root to install dependencies for all packages. Cross-package imports resolve automatically via the workspace configuration.
