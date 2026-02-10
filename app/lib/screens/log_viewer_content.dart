@@ -1,8 +1,7 @@
 part of 'log_viewer.dart';
 
 /// Build helpers for the log viewer layout.
-mixin _ContentMixin
-    on _KeyboardMixin, _SelectionMixin, _ConnectionMixin {
+mixin _ContentMixin on _KeyboardMixin, _SelectionMixin, _ConnectionMixin {
   /// Header bar: mini title bar or session selector.
   Widget _buildHeader(SettingsService settings) {
     void toggleFilter() =>
@@ -56,20 +55,24 @@ mixin _ContentMixin
       child: Builder(
         builder: (context) {
           final hasEntries = context.select<LogStore, bool>(
-            (s) => s.entries.isNotEmpty);
+            (s) => s.entries.isNotEmpty,
+          );
           final hasConnection = context.select<ConnectionManager, bool>(
-            (c) => c.activeCount > 0);
-          final showLanding = !_hasEverReceivedEntries &&
-              !hasEntries && !hasConnection && !_landingDelayActive;
+            (c) => c.activeCount > 0,
+          );
+          final showLanding =
+              !_hasEverReceivedEntries &&
+              !hasEntries &&
+              !hasConnection &&
+              !_landingDelayActive;
           return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 150),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
             layoutBuilder: (currentChild, previousChildren) {
               return Stack(
                 alignment: Alignment.center,
-                children: <Widget>[
-                  ...previousChildren,
-                  ?currentChild,
-                ],
+                children: <Widget>[...previousChildren, ?currentChild],
               );
             },
             child: showLanding
@@ -91,7 +94,10 @@ mixin _ContentMixin
     final top = settings.miniMode ? 28.0 : 40.0;
     return [
       Positioned(
-        left: 0, right: 0, top: top, bottom: 0,
+        left: 0,
+        right: 0,
+        top: top,
+        bottom: 0,
         child: IgnorePointer(
           ignoring: !_settingsPanelVisible,
           child: AnimatedOpacity(
@@ -105,7 +111,9 @@ mixin _ContentMixin
         ),
       ),
       Positioned(
-        right: 0, top: top, bottom: 0,
+        right: 0,
+        top: top,
+        bottom: 0,
         child: SettingsPanel(
           isVisible: _settingsPanelVisible,
           onClose: () => setState(() => _settingsPanelVisible = false),

@@ -129,26 +129,35 @@ class _ConnectionIndicatorState extends State<_ConnectionIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    // Select only the derived connection info we need.
-    final connections = context
-        .select<ConnectionManager, List<ServerConnection>>(
-          (c) => c.connections.values.toList(growable: false),
-        );
-
-    final active = connections.where((c) => c.isActive).toList(growable: false);
-    final reconnecting = connections
-        .where((c) => c.state == ServerConnectionState.reconnecting)
-        .toList(growable: false);
+    // Select only derived scalars to avoid rebuild on list reference change.
+    final (:activeCount, :anyReconnecting, :displayLabel) = context
+        .select<
+          ConnectionManager,
+          ({int activeCount, bool anyReconnecting, String displayLabel})
+        >((c) {
+          final conns = c.connections.values;
+          final active = conns.where((c) => c.isActive);
+          final reconnecting = conns.where(
+            (c) => c.state == ServerConnectionState.reconnecting,
+          );
+          return (
+            activeCount: active.length,
+            anyReconnecting: reconnecting.isNotEmpty,
+            displayLabel: active.length == 1
+                ? active.first.displayLabel
+                : active.length > 1
+                ? '${active.length} connections'
+                : '',
+          );
+        });
 
     // Compute target state.
     final _ConnDisplayState targetState;
     final String targetLabel;
-    if (active.isNotEmpty) {
+    if (activeCount > 0) {
       targetState = _ConnDisplayState.connected;
-      targetLabel = active.length == 1
-          ? active.first.displayLabel
-          : '${active.length} connections';
-    } else if (reconnecting.isNotEmpty) {
+      targetLabel = displayLabel;
+    } else if (anyReconnecting) {
       targetState = _ConnDisplayState.reconnecting;
       targetLabel = 'Reconnecting\u2026';
     } else {

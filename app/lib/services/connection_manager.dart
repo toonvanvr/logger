@@ -103,7 +103,7 @@ class ConnectionManager extends ChangeNotifier {
 
   // ─── Private ────────────────────────────────────────────────────
 
-  void _connect(String id) {
+  Future<void> _connect(String id) async {
     final conn = _connections[id];
     if (conn == null) return;
 
@@ -114,15 +114,27 @@ class ConnectionManager extends ChangeNotifier {
 
     try {
       final channel = WebSocketChannel.connect(Uri.parse(conn.config.url));
-      channel.ready.catchError((_) {}); // Errors handled via stream onError
       final sub = channel.stream.listen(
         (data) => _onData(id, data),
         onError: (error) => _onError(id, error),
         onDone: () => _onDone(id),
         cancelOnError: true,
       );
+
+      // Wait for the WebSocket handshake to complete before marking connected
+      try {
+        await channel.ready;
+      } catch (_) {
+        // Handshake failed — trigger reconnect via onError/onDone path
+        return;
+      }
+
+      // Only set connected if we're still in connecting state (not disposed)
+      final current = _connections[id];
+      if (current == null) return;
+
       _connections[id] = _ActiveConnection(
-        config: conn.config.copyWith(
+        config: current.config.copyWith(
           state: ServerConnectionState.connected,
           retryCount: 0,
           lastError: null,
