@@ -31,11 +31,11 @@ abstract class LoggerPlugin {
 
 ## RendererPlugin
 
-Renders custom log entry types. The viewer's `custom_type` field on a `LogEntry` is matched against the plugin's `customTypes` set.
+Renders custom log entry types. The viewer dispatches to renderer plugins based on the entry's `widget.type` field. When a `StoredEntry` has a non-null `widget`, `RendererFactory` matches `widget.type` against each plugin's `customTypes` set.
 
 ```dart
 abstract class RendererPlugin extends LoggerPlugin {
-  /// The set of custom_type strings this renderer handles.
+  /// The set of widget.type strings this renderer handles.
   Set<String> get customTypes;
 
   /// Build the full renderer widget for the given entry.
@@ -50,7 +50,7 @@ abstract class RendererPlugin extends LoggerPlugin {
 }
 ```
 
-**How it works:** When the viewer encounters a `LogEntry` with `type: "custom"` and a `custom_type` field, it calls `PluginRegistry.instance.resolveRenderer(customType)` to find the matching plugin (O(1) lookup via index), then calls `buildRenderer()` to produce the widget.
+**How it works:** When the viewer encounters a `StoredEntry` with a non-null `widget` field, it uses `widget.type` to find the matching renderer plugin via `PluginRegistry.instance.resolveRenderer(widgetType)` (O(1) lookup via index), then calls `buildRenderer()` to produce the Flutter widget.
 
 ## FilterPlugin
 
@@ -235,9 +235,10 @@ class MyRendererPlugin extends RendererPlugin {
 From the client SDK:
 
 ```typescript
-logger.log({
-  type: 'custom',
-  custom_type: 'my_type',
-  custom_data: { message: 'Hello from custom renderer' },
+// Send an event with a widget payload
+await logger.event({
+  session_id: sessionId,
+  message: 'Hello from custom renderer',
+  widget: { type: 'my_type', message: 'Hello from custom renderer' },
 });
 ```

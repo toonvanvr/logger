@@ -18,18 +18,18 @@ A monolithic renderer switch statement would grow unwieldy and prevent third-par
 We will use a **registry-based plugin architecture** with typed abstract interfaces for different plugin capabilities.
 
 The system defines four plugin types:
-- **RendererPlugin** — renders custom log entry types (maps `custom_type` string → widget)
+- **RendererPlugin** — renders custom log entry types (maps `widget.type` string → Flutter widget)
 - **FilterPlugin** — provides custom filtering logic with autocomplete
 - **TransformPlugin** — transforms log entry display text
 - **ToolPlugin** — adds tool panels to the UI
 
-Plugins register with a global `PluginRegistry` singleton. Renderer plugins are indexed by `custom_type` for O(1) lookup. Each plugin carries a `PluginManifest` with identity (id, name, version) and tier (stdlib/community).
+Plugins register with a global `PluginRegistry` singleton. Renderer plugins are indexed by `widget.type` for O(1) lookup. Each plugin carries a `PluginManifest` with identity (id, name, version) and tier (stdlib/community).
 
 ## Consequences
 
 ### Positive
 - **Open/closed principle** — new renderers added without changing core code
-- **O(1) lookup** — renderer index maps `custom_type` → plugin directly
+- **O(1) lookup** — renderer index maps `widget.type` → plugin directly
 - **Type safety** — abstract Dart classes enforce plugin contracts at compile time
 - **Discoverability** — manifests enable future plugin management UI
 - **Separation** — built-in plugins in `plugins/builtin/` use the same API as future community plugins

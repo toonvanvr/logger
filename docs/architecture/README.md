@@ -152,7 +152,7 @@ sequenceDiagram
     RB-->>WS: Historical entries
     WS-->>V: history message
     Note over WS,V: Live streaming begins
-    WS-->>V: log messages (real-time)
+    WS-->>V: event messages (real-time)
 ```
 
 ## Key Design Decisions

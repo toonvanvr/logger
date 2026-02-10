@@ -33,7 +33,7 @@ cd packages/server && bun install && bun run src/main.ts
 cd app && flutter pub get && flutter run -d linux
 ```
 
-The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. Loki connection warnings in the server console are expected without Docker and can be ignored.
+The viewer auto-connects to `ws://localhost:8080/api/v2/stream`. Loki connection warnings in the server console are expected without Docker and can be ignored.
 
 ### 3. Send Test Logs
 

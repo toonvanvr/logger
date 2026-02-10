@@ -98,13 +98,9 @@ Pre-built Grafana dashboards provide aggregate views:
 
 ## Sticky Functionality
 
-Log entries and group headers can be marked as `sticky`. When scrolled past, sticky entries pin to the top of the viewport, providing persistent context while browsing related entries below. This is especially useful for group headers and important state changes.
+Group headers automatically pin to the top of the viewport when scrolled past, providing persistent context while browsing related entries below. Users can also manually pin selected entries via the selection context menu. This is especially useful for group headers and important state changes.
 
-To mark an entry as sticky from the client SDK:
-
-```typescript
-logger.log({ sticky: true, text: "Request context", ... });
-```
+Sticky headers are rendered from group entries. The viewer automatically pins group headers to the viewport top when their content is scrolled past.
 
 ## Plugin System
 
@@ -133,7 +129,7 @@ The Smart Search plugin provides intelligent log filtering with:
 
 ## Chart Renderer
 
-Log entries with `type: "custom"` and `custom_type: "chart"` are rendered as inline visualizations. The chart plugin supports data passed via the `custom_data` field.
+Log entries with `widget.type: "chart"` are rendered as inline visualizations. The chart plugin supports various chart types via the widget payload: sparkline, bar, area, and dense_bar.
 
 ## Entry Highlight
 
@@ -159,7 +155,7 @@ The viewer can retrieve historical logs from Loki when scrolling back beyond the
 
 ![HTTP Requests](../screenshots/08-http-requests.png)
 
-Log entries with `custom_type: "http_request"` are rendered as expandable HTTP request/response panels in HAR-inspired format. The HTTP request plugin displays method, URL, status code, headers, and body with syntax highlighting.
+Log entries with `widget.type: "http_request"` are rendered as expandable HTTP request/response panels in HAR-inspired format. The HTTP request plugin displays method, URL, status code, headers, and body with syntax highlighting.
 
 ## Secondary State Shelves
 

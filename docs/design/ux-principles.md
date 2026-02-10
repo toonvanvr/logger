@@ -56,7 +56,7 @@ Custom content types are rendered by plugins, not hardcoded widgets. This keeps 
 
 ### 7. Sticky Pinning for Context
 
-Important log entries (or group headers) can be marked `sticky: true`, causing them to pin to the viewport top when scrolled past. This provides persistent context while browsing related entries below.
+Group headers automatically pin to the viewport top when their content is scrolled past ("sticky headers"). Users can also manually pin selected entries via the selection context menu. This provides persistent context while browsing related entries below.
 
 ## Typography
 

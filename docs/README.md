@@ -91,7 +91,7 @@ Logs appear instantly in the viewer as they are emitted. The WebSocket connectio
 ### Structured Log Entries
 
 Every log entry carries:
-- **Severity** — `trace`, `debug`, `info`, `warn`, `error`, `fatal`
+- **Severity** — `debug`, `info`, `warning`, `error`, `critical`
 - **Timestamp** — microsecond precision
 - **Source** — originating module or file
 - **Session** — logical grouping of related entries
@@ -117,16 +117,7 @@ Text in log rows is selectable via mouse drag. A gradient copy overlay appears o
 
 ### Screenshots
 
-> Screenshots are auto-generated. Run `bun run docs:screenshots` to update.
-
-![App Overview](screenshots/01-app-overview.png)
-![Custom Renderers](screenshots/02-custom-renderers.png)
-![Error with Stack Trace](screenshots/03-error-stack-trace.png)
-![Session Selection](screenshots/04-session-selection.png)
-![Filter Bar](screenshots/05-filter-bar.png)
-![Sticky Grouping](screenshots/06-sticky-grouping.png)
-![State Panel](screenshots/07-state-panel.png)
-![HTTP Requests](screenshots/08-http-requests.png)
+> **Note:** Screenshots are pending regeneration. Run `bun run docs:screenshots` to generate.
 
 ### Session Management
 

@@ -47,8 +47,7 @@ Applications push structured logs via a TypeScript client SDK to a Bun-based ser
 | **Bidirectional RPC** | Viewer can invoke tools registered by client applications |
 | **Docker sidecar** | Captures Docker container stdout/stderr as structured logs |
 | **MCP server** | Model Context Protocol tools for AI agent log access |
-| **Sticky pinning** | Important entries pin to viewport top when scrolled past |
-| **Custom types** | `type: "custom"` with arbitrary `custom_type` + `custom_data` |
+| **Rich widgets** | Progress bars, tables, charts, diffs, timelines via `widget` payload |
 
 ### Technology Stack
 
@@ -255,12 +254,12 @@ logger.info("Application started");
 logger.error("Request failed", { error: err.message });
 logger.debug("Cache hit", { key: "user:123" });
 
-// Structured logging
-logger.log({
+// Rich widget content
+await logger.event({
+  session_id: session.id,
   severity: "info",
-  type: "custom",
-  custom_type: "progress",
-  custom_data: { label: "Processing", value: 0.75 },
+  message: "Processing",
+  widget: { type: "progress", value: 75, max: 100, label: "Processing" },
 });
 
 // Session control
@@ -325,29 +324,28 @@ Uses Provider pattern:
 
 1. `LogEntry` arrives via WebSocket → deserialized into Dart model
 2. `LogListView` renders entries using virtualized scrolling
-3. `LogRow` dispatches to `RendererFactory` based on entry `type`
-4. For `type: "custom"` → `PluginRegistry.resolveRenderer(customType)`
+3. `LogRow` dispatches to `RendererFactory` based on entry content
+4. If entry has `widget` → `PluginRegistry.resolveRenderer(widget.type)`
 5. Matching `RendererPlugin.buildRenderer()` produces the widget
 
 #### Renderers
 
 | Renderer | File | Handles |
 |----------|------|---------|
-| Text | `renderers/text_renderer.dart` | `type: "text"` — plain text with syntax highlighting |
-| JSON | `renderers/json_renderer.dart` | `type: "json"` — collapsible syntax-highlighted JSON |
-| HTML | `renderers/html_renderer.dart` | `type: "html"` — rendered HTML content |
-| Binary | `renderers/binary_renderer.dart` | `type: "binary"` — hex dump with ASCII sidebar |
-| Image | `renderers/image_renderer.dart` | `type: "image"` — inline images (base64 or upload ref) |
-| Stack Trace | `renderers/stack_trace_renderer.dart` | Exception data — collapsible, syntax-highlighted |
-| Session | `renderers/session_renderer.dart` | `type: "session"` — session start/end markers |
-| State | `renderers/state_renderer.dart` | `type: "state"` — key-value state display |
-| Group | `renderers/group_renderer.dart` | Group headers and bodies |
-| RPC | `renderers/rpc_renderer.dart` | `type: "rpc"` — RPC request/response rendering |
-| Custom | `renderers/custom_renderer.dart` | Dispatches to registered `RendererPlugin` |
-| Progress | `plugins/builtin/progress_plugin.dart` | `custom_type: "progress"` — progress bars |
-| Table | `plugins/builtin/table_plugin.dart` | `custom_type: "table"` — tabular data |
-| Key-Value | `plugins/builtin/kv_plugin.dart` | `custom_type: "kv"` — aligned key-value pairs |
-| Chart | `plugins/builtin/chart_plugin.dart` | `custom_type: "chart"` — inline charts |
+| Text/ANSI | `renderers/ansi_renderer.dart` | Plain text messages with ANSI color support |
+| JSON | `renderers/json_renderer.dart` | `widget.type: "json"` — collapsible syntax-highlighted JSON |
+| HTML | `renderers/html_renderer.dart` | `widget.type: "html"` — rendered HTML content |
+| Binary | `renderers/binary_renderer.dart` | `widget.type: "binary"` — hex dump with ASCII sidebar |
+| Image | `renderers/image_renderer.dart` | `widget.type: "image"` — inline images |
+| Stack Trace | `renderers/cause_chain_renderer.dart` | Exception data — collapsible cause chain |
+| Progress | `plugins/builtin/progress_plugin.dart` | `widget.type: "progress"` — progress bars |
+| Table | `plugins/builtin/table_plugin.dart` | `widget.type: "table"` — tabular data |
+| Key-Value | `plugins/builtin/kv_plugin.dart` | `widget.type: "kv"` — aligned key-value pairs |
+| Chart | `plugins/builtin/chart_plugin.dart` | `widget.type: "chart"` — inline charts |
+| Diff | renderer via widget | `widget.type: "diff"` — side-by-side diff |
+| Tree | renderer via widget | `widget.type: "tree"` — collapsible tree |
+| Timeline | renderer via widget | `widget.type: "timeline"` — event timeline |
+| HTTP Request | `plugins/builtin/http_request_plugin.dart` | `widget.type: "http_request"` — request/response panels |
 
 ### 3.4 MCP Server (`packages/mcp/src/`)
 
@@ -793,33 +791,34 @@ The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages
 | `timestamp` | `string` | ISO 8601 datetime with offset and millisecond precision |
 | `session_id` | `string` | Groups logs from a single application run |
 | `severity` | `Severity` | `debug` \| `info` \| `warning` \| `error` \| `critical` |
-| `type` | `LogType` | `text` \| `json` \| `html` \| `binary` \| `image` \| `state` \| `group` \| `rpc` \| `session` \| `custom` |
+| `kind` | `EntryKind` | Entry kind: `session` \| `event` \| `data`. |
 
-### 7.2 Content Fields (type-dependent)
+### 7.2 Content Fields
 
-| Field | Used When | Type |
-|-------|-----------|------|
-| `text` | `type: "text"` | `string` |
-| `json` | `type: "json"` | `unknown` |
-| `html` | `type: "html"` | `string` |
-| `binary` | `type: "binary"` | `string` (base64) |
-| `image` | `type: "image"` | `ImageData` |
-| `custom_type` | `type: "custom"` | `string` |
-| `custom_data` | `type: "custom"` | `unknown` |
+| Field | Used When | Type | Description |
+|-------|-----------|------|-------------|
+| `message` | `kind: "event"` | `string \| null` | Human-readable text (supports ANSI escape codes) |
+| `tag` | `kind: "event"` | `string \| null` | Category label for filtering |
+| `widget` | `kind: "event"` | `WidgetPayload \| null` | Rich rendered content (see Widget Types below) |
+| `key` | `kind: "data"` | `string \| null` | Data key, unique per session |
+| `value` | `kind: "data"` | `unknown` | Data value; any JSON |
+| `override` | `kind: "data"` | `boolean` | `true` = replace, `false` = append (default: true) |
+| `display` | `kind: "data"` | `DisplayLocation` | `default` \| `static` \| `shelf` |
+| `session_action` | `kind: "session"` | `string \| null` | `start` \| `end` \| `heartbeat` |
+| `application` | `kind: "session"` | `ApplicationInfo \| null` | Required for `start` |
+| `metadata` | `kind: "session"` | `Record \| null` | Arbitrary session metadata |
 
 ### 7.3 Optional Metadata
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `application` | `ApplicationInfo` | `{name, version?, environment?}` |
-| `section` | `string` | UI section. Default: `"events"` |
-| `tags` | `Record<string, string>` | Arbitrary key-value metadata |
+| `labels` | `Record<string, string>` | Arbitrary key-value metadata for filtering |
 | `icon` | `IconRef` | `{icon, color?, size?}` (Iconify ID) |
 | `exception` | `ExceptionData` | Error with typed stack traces |
-| `sticky` | `boolean` | Pin to viewport top when scrolled past |
 | `replace` | `boolean` | Update existing entry in-place |
-| `after_id` | `string` | Ordering hint: insert after this ID |
-| `before_id` | `string` | Ordering hint: insert before this ID |
+| `prev_id` | `string` | Ordering: insert after this ID |
+| `next_id` | `string` | Ordering: insert before this ID |
 | `generated_at` | `string` | When originally generated (ISO 8601) |
 | `sent_at` | `string` | When sent over the wire (ISO 8601) |
 
@@ -827,46 +826,46 @@ The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `group_id` | `string` | Shared by all entries in a group |
-| `group_action` | `"open"` \| `"close"` | Opens or closes the group |
-| `group_label` | `string` | Display label |
-| `group_collapsed` | `boolean` | Start collapsed? |
+| `group_id` | `string` | Flat grouping reference — shared by all entries in a group |
+| `parent_id` | `string` | Parent entry ID for tree nesting |
 
-### 7.5 State Operations (`type: "state"`)
+Note: `parent_id` and `group_id` are mutually exclusive.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `state_key` | `string` | Unique per session |
-| `state_value` | `unknown` | `null` = delete |
+### 7.5 State Operations
 
-### 7.6 Session Control (`type: "session"`)
+State data is sent via `DataMessage` (POST /api/v2/data), which normalizes to a StoredEntry with `kind: "data"`.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `session_action` | `"start"` \| `"end"` \| `"heartbeat"` | Session lifecycle action |
+| `key` | `string` | Unique data key per session (max 256 chars) |
+| `value` | `unknown` | Any JSON value |
+| `override` | `boolean` | `true` = replace existing, `false` = append (default: true) |
+| `display` | `DisplayLocation` | `default` \| `static` \| `shelf` |
 
-### 7.7 RPC (`type: "rpc"`)
+### 7.6 Session Control
+
+Session lifecycle is sent via `SessionMessage` (POST /api/v2/session).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `rpc_id` | `string (UUID)` | Unique call ID |
-| `rpc_direction` | `"request"` \| `"response"` \| `"error"` | Direction |
-| `rpc_method` | `string` | Method name |
-| `rpc_args` | `unknown` | Arguments (request) |
-| `rpc_response` | `unknown` | Response data (response) |
-| `rpc_error` | `string` | Error message (error) |
+| `session_action` | `"start" \| "end" \| "heartbeat"` | Session lifecycle action |
+| `application` | `ApplicationInfo` | Required when action = `start` |
+| `metadata` | `Record<string, unknown>` | Arbitrary session metadata |
+
+### 7.7 RPC
+
+RPC is handled via WebSocket messages (ServerBroadcast/ViewerCommand), not as StoredEntry fields.
+
+**Viewer → Server:** `rpc_request` with `rpc_id`, `target_session_id`, `method`, `args?`
+**Server → Viewer:** `rpc_request` (forwarded from client) and `rpc_response` with `rpc_id`, `result?`, `error?`
 
 ### 7.8 Sub-schemas
 
 **ApplicationInfo**: `{name: string, version?: string, environment?: string}`
 
-**ExceptionData**: `{type?: string, message: string, stackTrace?: StackFrame[], cause?: ExceptionData}`
+**ExceptionData**: `{type: string, message: string, stack_trace?: string, source?: string, handled?: boolean, inner?: ExceptionData}`
 
-**StackFrame**: `{location: SourceLocation, isVendor?: boolean, raw?: string}`
-
-**SourceLocation**: `{uri: string, line?: number, column?: number, symbol?: string}`
-
-**ImageData**: `{data?: string, ref?: string, mimeType?: string, label?: string, width?: number, height?: number}` (requires `data` or `ref`)
+**ImageData**: `{data?: string, ref?: string, mime_type?: string, label?: string, width?: number, height?: number}` (requires `data` or `ref`)
 
 **IconRef**: `{icon: string, color?: string, size?: number}`
 
@@ -881,7 +880,7 @@ The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages
 | HTTP | `GET /api/v2/health` | Server health status |
 | UDP | Port 8081 | JSON entry per datagram |
 | TCP | Port 8082 | Newline-delimited JSON entries |
-| WebSocket | Port 8080 | `ServerBroadcast` / `ViewerCommand` frames |
+| WebSocket | Port 8080 at `/api/v2/stream` | `ServerBroadcast` / `ViewerCommand` frames |
 
 ### 7.10 WebSocket Messages
 
@@ -891,12 +890,12 @@ The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages
 |------|-------------|
 | `ack` | Acknowledges received log entry IDs |
 | `error` | Error response |
-| `log` | Single log entry broadcast |
-| `logs` | Batch of log entries |
+| `event` | Single log entry broadcast |
 | `history` | Response to history query |
 | `session_list` | All sessions |
 | `session_update` | Session status change |
-| `state_snapshot` | Full state for a session |
+| `data_snapshot` | Full data state for a session |
+| `data_update` | Single data key update |
 | `rpc_request` | RPC request forwarded from client |
 | `rpc_response` | RPC response forwarded from client |
 | `subscribe_ack` | Subscription confirmed |
@@ -907,10 +906,10 @@ The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages
 |------|-------------|
 | `subscribe` | Subscribe to sessions with filters |
 | `unsubscribe` | Unsubscribe from sessions |
-| `history_query` | Query historical entries |
+| `history` | Query historical log entries |
 | `rpc_request` | Send RPC to a client application |
 | `session_list` | Request current session list |
-| `state_query` | Request state snapshot |
+| `data_query` | Request data snapshot for a session |
 
 ---
 
@@ -1071,4 +1070,4 @@ cd app && flutter test               # Flutter widget & unit tests
 
 ---
 
-*Generated: 2026-02-08 | Source of truth for schemas: `packages/shared/src/stored-entry.ts`*
+*Generated: 2026-02-10 | Source of truth for schemas: `packages/shared/src/stored-entry.ts`*
