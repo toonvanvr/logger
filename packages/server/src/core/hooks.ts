@@ -1,5 +1,8 @@
 import type { StoredEntry } from '@logger/shared'
-import { config } from './config'
+
+export interface HookManagerOptions {
+  redactPatterns?: readonly string[]
+}
 
 export type HookPhase = 'pre-validate' | 'post-validate' | 'post-store'
 
@@ -12,10 +15,11 @@ export class HookManager {
   private postValidateHooks: PostValidateHook[] = [];
   private postStoreHooks: PostStoreHook[] = [];
 
-  constructor() {
+  constructor(options?: HookManagerOptions) {
     // Register built-in redact hook if patterns are configured
-    if (config.hookRedactPatterns.length > 0) {
-      this.registerHook('post-validate', createRedactHook(config.hookRedactPatterns))
+    const patterns = options?.redactPatterns ?? []
+    if (patterns.length > 0) {
+      this.registerHook('post-validate', createRedactHook(patterns))
     }
   }
 

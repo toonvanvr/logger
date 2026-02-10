@@ -21,7 +21,7 @@ const rateLimiter = new RateLimiter(
   config.rateLimitPerSession,
   config.rateLimitBurstMultiplier,
 )
-const hookManager = new HookManager()
+const hookManager = new HookManager({ redactPatterns: config.hookRedactPatterns })
 const ringBuffer = new RingBuffer(config.ringBufferMaxEntries, config.ringBufferMaxBytes)
 const sessionManager = new SessionManager()
 const wsHub = new WebSocketHub()

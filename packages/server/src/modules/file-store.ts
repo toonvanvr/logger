@@ -1,6 +1,5 @@
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { config } from '../core/config';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -48,9 +47,9 @@ export class FileStore {
   private readonly storePath: string;
   private readonly maxBytes: number;
 
-  constructor(options?: { storePath?: string; maxBytes?: number }) {
-    this.storePath = options?.storePath ?? config.imageStorePath;
-    this.maxBytes = options?.maxBytes ?? config.imageStoreMaxBytes;
+  constructor(options: { storePath: string; maxBytes: number }) {
+    this.storePath = options.storePath;
+    this.maxBytes = options.maxBytes;
   }
 
   /**
