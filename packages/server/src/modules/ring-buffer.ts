@@ -151,6 +151,17 @@ export class RingBuffer {
     this.count--
   }
 
+  /** Clear all entries and reset state for clean shutdown. */
+  shutdown(): void {
+    this.entries.fill(null)
+    this.entrySizes.fill(null)
+    this.head = 0
+    this.count = 0
+    this.bytesUsed = 0
+    this.idIndex.clear()
+    this.idInsertionOrder.length = 0
+  }
+
   private indexId(id: string, slot: number): void {
     // If already in index, remove from insertion order
     if (this.idIndex.has(id)) {

@@ -98,6 +98,14 @@ export class WebSocketHub {
     }
   }
 
+  /** Close all viewer connections and clear state. */
+  shutdown(): void {
+    for (const entry of this.viewers.values()) {
+      try { entry.ws.close() } catch { /* already closed */ }
+    }
+    this.viewers.clear()
+  }
+
   // ─── Internals ───────────────────────────────────────────────────
 
   /** Check if a server message matches a viewer's subscription. */

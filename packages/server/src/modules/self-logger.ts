@@ -58,6 +58,11 @@ export class SelfLogger {
   debug(text: string): void {
     this.log('debug', text)
   }
+
+  /** No-op shutdown — SelfLogger holds no resources to release. */
+  shutdown(): void {
+    // intentionally empty
+  }
 }
 
 /**

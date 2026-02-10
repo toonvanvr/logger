@@ -120,9 +120,12 @@ async function shutdown(signal: string): Promise<void> {
   console.log(`\n[${signal}] Shutting down...`)
   selfLogger.info(`Server shutting down (${signal})`)
   server.stop()          // stop accepting new connections
+  wsHub.shutdown()       // close all viewer WebSocket connections
   rpcBridge.shutdown()   // clear pending RPC timers
   sessionManager.shutdown()  // clear session cleanup timer
   await lokiForwarder.shutdown()  // flush remaining Loki buffer
+  ringBuffer.shutdown()  // clear buffer memory
+  selfLogger.shutdown()  // finalize self-logger
   console.log('Shutdown complete.')
   process.exit(0)
 }
