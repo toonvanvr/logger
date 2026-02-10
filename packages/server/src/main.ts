@@ -113,3 +113,19 @@ console.log(`Logger TCP on ${config.host}:${config.tcpPort}`)
 selfLogger.info(`Server started on ${config.host}:${config.port}`)
 selfLogger.info(`Store backend: ${config.storeBackend}`)
 selfLogger.info(`Ring buffer: ${config.ringBufferMaxEntries} entries / ${config.ringBufferMaxBytes} bytes`)
+
+// ─── Graceful Shutdown ───────────────────────────────────────────────
+
+async function shutdown(signal: string): Promise<void> {
+  console.log(`\n[${signal}] Shutting down...`)
+  selfLogger.info(`Server shutting down (${signal})`)
+  server.stop()          // stop accepting new connections
+  rpcBridge.shutdown()   // clear pending RPC timers
+  sessionManager.shutdown()  // clear session cleanup timer
+  await lokiForwarder.shutdown()  // flush remaining Loki buffer
+  console.log('Shutdown complete.')
+  process.exit(0)
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))

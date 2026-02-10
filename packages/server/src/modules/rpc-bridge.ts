@@ -135,6 +135,14 @@ export class RpcBridge {
     return this.pending.size
   }
 
+  /** Clear all pending RPC timers and requests. */
+  shutdown(): void {
+    for (const [, entry] of this.pending) {
+      clearTimeout(entry.timer)
+    }
+    this.pending.clear()
+  }
+
   // ─── Internals ───────────────────────────────────────────────────
 
   private sendErrorToViewer(ws: { send(data: string): void }, rpcId: string, error: string): void {
