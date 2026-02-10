@@ -128,7 +128,11 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       _isAutoScrolling = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          final pos = _scrollController.position;
+          final delta = pos.maxScrollExtent - pos.pixels;
+          if (delta > 28.0) {
+            _scrollController.jumpTo(pos.maxScrollExtent);
+          }
         }
         _isAutoScrolling = false;
       });

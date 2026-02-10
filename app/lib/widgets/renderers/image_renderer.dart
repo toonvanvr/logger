@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -22,8 +23,18 @@ class ImageRenderer extends StatefulWidget {
 
 class _ImageRendererState extends State<ImageRenderer> {
   bool _expanded = false;
+  Uint8List? _cachedBytes;
+  String? _cachedDataKey;
 
   static const _collapsedHeight = 200.0;
+
+  Uint8List _getDecodedBytes(String data) {
+    if (data != _cachedDataKey || _cachedBytes == null) {
+      _cachedBytes = base64Decode(data);
+      _cachedDataKey = data;
+    }
+    return _cachedBytes!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +79,7 @@ class _ImageRendererState extends State<ImageRenderer> {
 
   Widget _buildImage(ImageData image) {
     if (image.data != null) {
-      final bytes = base64Decode(image.data!);
+      final bytes = _getDecodedBytes(image.data!);
 
       // Check if image is too small to be useful (happens with test/demo data)
       if (bytes.length < 200 && (image.width == null || image.width! <= 4)) {
@@ -96,7 +107,15 @@ class _ImageRendererState extends State<ImageRenderer> {
         );
       }
 
-      final child = Image.memory(bytes, fit: BoxFit.contain);
+      final child = Image.memory(
+        bytes,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return const SizedBox(height: 48, width: 48);
+        },
+      );
 
       if (_expanded) return child;
 

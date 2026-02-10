@@ -190,10 +190,9 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
       child: MouseRegion(
         onEnter: (_) => _hoverNotifier.value = true,
         onExit: (_) => _hoverNotifier.value = false,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               if (widget.selectionMode)
                 GestureDetector(
                   onTap: widget.onSelect,
@@ -210,7 +209,10 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                     ),
                   ),
                 ),
-              SeverityBar(severity: widget.entry.severity),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 24),
+                child: SeverityBar(severity: widget.entry.severity),
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -248,7 +250,6 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                 ),
             ],
           ),
-        ),
       ),
     );
   }
