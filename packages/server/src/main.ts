@@ -14,6 +14,13 @@ import { setupTcp } from './transport/tcp'
 import { setupUdp } from './transport/udp'
 import { setupWebSocket } from './transport/ws'
 
+// HOW TO ADD A MODULE:
+// 1. Create module class in modules/ (implement shutdown() for lifecycle)
+// 2. Import above
+// 3. Construct instance below with config
+// 4. Add to `deps` object
+// 5. Add shutdown() call in shutdown() function
+
 // ─── Initialize all modules ─────────────────────────────────────────
 
 const rateLimiter = new RateLimiter(

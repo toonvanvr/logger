@@ -1,3 +1,8 @@
+// HOW TO ADD A SCHEMA:
+// 1. Create .ts file with Zod schema + inferred type export
+// 2. Add re-exports below in the appropriate section
+// 3. Update protocol conformance fixtures if any
+
 // session-message.ts — Session lifecycle messages
 export {
     ApplicationInfo,

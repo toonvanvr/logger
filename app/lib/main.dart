@@ -28,6 +28,11 @@ import 'services/uri_handler.dart';
 import 'services/window_service.dart';
 import 'theme/theme.dart';
 
+// HOW TO ADD A PLUGIN:
+// 1. Create plugin class in plugins/builtin/ (extend LoggerPlugin, mix in EnableablePlugin if needed)
+// 2. Import above
+// 3. Register instance in main() below with PluginRegistry.instance.register()
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Default to mini mode — hide window decoration at startup

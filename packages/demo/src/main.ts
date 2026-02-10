@@ -12,6 +12,11 @@ import { runSticky200 } from './scenarios/sticky-200'
 import { runStickyDemo } from './scenarios/sticky-demo'
 import { runStressTest } from './scenarios/stress-test'
 
+// HOW TO ADD A SCENARIO:
+// 1. Create scenario function in scenarios/ (export async function)
+// 2. Import above
+// 3. Add entry to the scenarios registry below
+
 const scenario = process.argv[2] ?? 'all'
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
