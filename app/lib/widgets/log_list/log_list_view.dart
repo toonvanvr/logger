@@ -121,7 +121,9 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
         stickyState: stickyState,
         processedUnpinIds: _processedUnpinIds,
         displayEntries: displayEntries,
-        firstVisibleIndex: _isLiveMode ? displayEntries.length : _firstVisibleIndex,
+        firstVisibleIndex: _isLiveMode
+            ? displayEntries.length
+            : _firstVisibleIndex,
         isLiveMode: _isLiveMode,
       );
     });

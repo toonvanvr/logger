@@ -132,8 +132,9 @@ void main() {
   });
 
   group('Duration badge', () {
-    testWidgets('renders duration badge for group with _duration_ms',
-        (tester) async {
+    testWidgets('renders duration badge for group with _duration_ms', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: createLoggerTheme(),
@@ -159,11 +160,7 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(
-                id: 'g1',
-                groupId: 'g1',
-                message: 'Group',
-              ),
+              entry: makeTestEntry(id: 'g1', groupId: 'g1', message: 'Group'),
             ),
           ),
         ),
