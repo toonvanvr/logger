@@ -125,12 +125,6 @@ class RowAction {
   });
 }
 
-/// A plugin that provides row-level actions on log entries.
-abstract class RowActionPlugin extends LoggerPlugin {
-  /// Build actions for the given entry. May return 0..N actions.
-  List<RowAction> buildActions(LogEntry entry);
-}
-
 /// Standard tool group identifiers for the settings panel.
 abstract class ToolGroups {
   static const connections = 'Connections';

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../models/log_entry.dart';
-import '../../plugins/plugin_registry.dart';
 import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
@@ -89,12 +88,6 @@ class _LogRowContentState extends State<LogRowContent> {
           onTap: (entry) => widget.onFilterByTag!(entry.tag!),
         ),
       );
-    }
-
-    final plugins = PluginRegistry.instance
-        .getEnabledPlugins<RowActionPlugin>();
-    for (final plugin in plugins) {
-      actions.addAll(plugin.buildActions(widget.entry));
     }
 
     return actions;
