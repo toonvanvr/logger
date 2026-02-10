@@ -51,7 +51,7 @@ class ImageData {
     return ImageData(
       data: json['data'] as String?,
       ref: json['ref'] as String?,
-      mimeType: json['mimeType'] as String?,
+      mimeType: json['mime_type'] as String?,
       label: json['label'] as String?,
       width: json['width'] as int?,
       height: json['height'] as int?,
@@ -61,7 +61,7 @@ class ImageData {
   Map<String, dynamic> toJson() => {
     if (data != null) 'data': data,
     if (ref != null) 'ref': ref,
-    if (mimeType != null) 'mimeType': mimeType,
+    if (mimeType != null) 'mime_type': mimeType,
     if (label != null) 'label': label,
     if (width != null) 'width': width,
     if (height != null) 'height': height,

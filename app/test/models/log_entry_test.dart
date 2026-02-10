@@ -380,7 +380,7 @@ void main() {
     test('ImageData fromJson/toJson round-trip (data variant)', () {
       final json = {
         'data': 'base64data==',
-        'mimeType': 'image/jpeg',
+        'mime_type': 'image/jpeg',
         'label': 'photo',
         'width': 1920,
         'height': 1080,
@@ -389,7 +389,7 @@ void main() {
       final output = img.toJson();
 
       expect(output['data'], 'base64data==');
-      expect(output['mimeType'], 'image/jpeg');
+      expect(output['mime_type'], 'image/jpeg');
       expect(output['label'], 'photo');
       expect(output['width'], 1920);
       expect(output['height'], 1080);
