@@ -8,7 +8,7 @@ class LoggerTypography {
   LoggerTypography._();
 
   /// Log line content — mono 12dp w400
-  static TextStyle logBody = GoogleFonts.jetBrainsMono(
+  static final TextStyle logBody = GoogleFonts.jetBrainsMono(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     height: 1.35,
@@ -16,7 +16,7 @@ class LoggerTypography {
   );
 
   /// Timestamps, line numbers — mono 10dp w400
-  static TextStyle logMeta = GoogleFonts.jetBrainsMono(
+  static final TextStyle logMeta = GoogleFonts.jetBrainsMono(
     fontSize: 10,
     fontWeight: FontWeight.w400,
     height: 1.20,
@@ -24,7 +24,7 @@ class LoggerTypography {
   );
 
   /// Group header text — mono 12dp w600
-  static TextStyle groupTitle = GoogleFonts.jetBrainsMono(
+  static final TextStyle groupTitle = GoogleFonts.jetBrainsMono(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     height: 1.35,
@@ -32,7 +32,7 @@ class LoggerTypography {
   );
 
   /// Section names — ui 11dp w700
-  static TextStyle sectionH = GoogleFonts.inter(
+  static final TextStyle sectionH = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w700,
     height: 1.30,
@@ -41,7 +41,7 @@ class LoggerTypography {
   );
 
   /// Header app session buttons — ui 11dp w500
-  static TextStyle headerBtn = GoogleFonts.inter(
+  static final TextStyle headerBtn = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w500,
     height: 1.30,
@@ -49,7 +49,7 @@ class LoggerTypography {
   );
 
   /// Count badges, severity labels — ui 9dp w700
-  static TextStyle badge = GoogleFonts.inter(
+  static final TextStyle badge = GoogleFonts.inter(
     fontSize: 9,
     fontWeight: FontWeight.w700,
     height: 1.30,
@@ -58,7 +58,7 @@ class LoggerTypography {
   );
 
   /// Tooltip text — ui 11dp w400
-  static TextStyle tooltip = GoogleFonts.inter(
+  static final TextStyle tooltip = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w400,
     height: 1.30,
@@ -66,7 +66,7 @@ class LoggerTypography {
   );
 
   /// Drawer panel text — ui 12dp w400
-  static TextStyle drawer = GoogleFonts.inter(
+  static final TextStyle drawer = GoogleFonts.inter(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     height: 1.30,
@@ -74,7 +74,7 @@ class LoggerTypography {
   );
 
   /// Timestamps in time-travel mode — mono 10dp w400
-  static TextStyle timestamp = GoogleFonts.jetBrainsMono(
+  static final TextStyle timestamp = GoogleFonts.jetBrainsMono(
     fontSize: 10,
     fontWeight: FontWeight.w400,
     height: 1.20,
