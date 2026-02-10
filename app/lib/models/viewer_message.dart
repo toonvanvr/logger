@@ -43,10 +43,16 @@ class ViewerSubscribeMessage extends ViewerMessage {
 }
 
 class ViewerUnsubscribeMessage extends ViewerMessage {
-  const ViewerUnsubscribeMessage();
+  final List<String>? sessionIds;
+
+  const ViewerUnsubscribeMessage({this.sessionIds});
 
   @override
-  Map<String, dynamic> toJson() => {'type': 'unsubscribe'};
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{'type': 'unsubscribe'};
+    if (sessionIds != null) map['session_ids'] = sessionIds;
+    return map;
+  }
 }
 
 class ViewerHistoryQueryMessage extends ViewerMessage {

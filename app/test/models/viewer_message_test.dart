@@ -28,11 +28,20 @@ void main() {
 
     // ── Test 2: unsubscribe toJson ──
 
-    test('unsubscribe toJson', () {
+    test('unsubscribe toJson bare', () {
       const msg = ViewerUnsubscribeMessage();
       final json = msg.toJson();
 
       expect(json['type'], 'unsubscribe');
+      expect(json.containsKey('session_ids'), isFalse);
+    });
+
+    test('unsubscribe toJson with sessionIds', () {
+      const msg = ViewerUnsubscribeMessage(sessionIds: ['s1', 's2']);
+      final json = msg.toJson();
+
+      expect(json['type'], 'unsubscribe');
+      expect(json['session_ids'], ['s1', 's2']);
     });
 
     // ── Test 3: history_query with all fields ──
