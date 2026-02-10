@@ -130,4 +130,135 @@ void main() {
       expect(padding.padding, isNotNull);
     });
   });
+
+  group('Duration badge', () {
+    testWidgets('renders duration badge for group with _duration_ms',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'HTTP Request',
+                labels: {'_duration_ms': '45'},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('45ms'), findsOneWidget);
+    });
+
+    testWidgets('does not render badge without _duration_ms', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'Group',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // No duration text should be found
+      expect(find.textContaining('ms'), findsNothing);
+      expect(find.textContaining('s'), findsNothing);
+    });
+
+    testWidgets('formats seconds for >= 1000ms', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'Slow',
+                labels: {'_duration_ms': '2500'},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('2.5s'), findsOneWidget);
+    });
+
+    testWidgets('green color for duration < 100ms', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'Fast',
+                labels: {'_duration_ms': '50'},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byType(Container).last);
+      final decoration = container.decoration as BoxDecoration;
+      // Green at 15% alpha
+      expect(decoration.color, const Color(0xFFA8CC7E).withAlpha(38));
+    });
+
+    testWidgets('amber color for duration 100-499ms', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'Medium',
+                labels: {'_duration_ms': '250'},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byType(Container).last);
+      final decoration = container.decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFE6B455).withAlpha(38));
+    });
+
+    testWidgets('red color for duration >= 500ms', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: createLoggerTheme(),
+          home: Scaffold(
+            body: LogRowContent(
+              entry: makeTestEntry(
+                id: 'g1',
+                groupId: 'g1',
+                message: 'Slow',
+                labels: {'_duration_ms': '750'},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byType(Container).last);
+      final decoration = container.decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFE06C60).withAlpha(38));
+    });
+  });
 }

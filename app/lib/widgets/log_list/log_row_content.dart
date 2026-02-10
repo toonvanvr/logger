@@ -108,8 +108,8 @@ class _LogRowContentState extends State<LogRowContent> {
     if (widget.entry.groupId != null &&
         widget.entry.id == widget.entry.groupId) {
       final label = widget.entry.message ?? widget.entry.groupId ?? 'Group';
+      final durationMs = widget.entry.labels?['_duration_ms'];
       content = Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           if (widget.showGroupChevron) ...[
             Icon(
@@ -119,7 +119,10 @@ class _LogRowContentState extends State<LogRowContent> {
             ),
             const SizedBox(width: 4),
           ],
-          Text(label, style: LoggerTypography.groupTitle),
+          Expanded(
+            child: Text(label, style: LoggerTypography.groupTitle),
+          ),
+          if (durationMs != null) _DurationBadge(durationMs: durationMs),
         ],
       );
     } else {
@@ -189,6 +192,44 @@ class _LogRowContentState extends State<LogRowContent> {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _DurationBadge extends StatelessWidget {
+  final String durationMs;
+
+  const _DurationBadge({required this.durationMs});
+
+  @override
+  Widget build(BuildContext context) {
+    final ms = double.tryParse(durationMs) ?? 0;
+    final color = ms < 100
+        ? const Color(0xFFA8CC7E)
+        : ms < 500
+            ? const Color(0xFFE6B455)
+            : const Color(0xFFE06C60);
+
+    final text = ms < 1000
+        ? '${ms.round()}ms'
+        : '${(ms / 1000).toStringAsFixed(1)}s';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(38),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: color,
+          height: 1.2,
+        ),
+      ),
     );
   }
 }

@@ -166,3 +166,22 @@ List<DisplayEntry> processGrouping({
 
   return result;
 }
+
+/// Scans entries for group headers with `_collapsed: "true"` label.
+/// Adds newly-seen collapsed groups to [collapsedGroups].
+/// [seenGroupIds] tracks processed groups (prevents re-collapse after toggle).
+void autoCollapseGroups({
+  required List<LogEntry> entries,
+  required Set<String> collapsedGroups,
+  required Set<String> seenGroupIds,
+}) {
+  for (final entry in entries) {
+    if (entry.groupId != null && entry.id == entry.groupId) {
+      if (seenGroupIds.add(entry.groupId!)) {
+        if (entry.labels != null && entry.labels!['_collapsed'] == 'true') {
+          collapsedGroups.add(entry.groupId!);
+        }
+      }
+    }
+  }
+}

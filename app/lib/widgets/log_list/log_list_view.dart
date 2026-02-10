@@ -63,6 +63,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
   final LogFilterCache _filterCache = LogFilterCache();
   final Set<String> _seenEntryIds = {};
   final Set<String> _collapsedGroups = {};
+  final Set<String> _autoCollapsedSeen = {};
   final Set<String> _expandedStacks = {};
   final Map<String, int> _stackActiveIndices = {};
   final Set<String> _processedUnpinIds = {};
@@ -95,6 +96,13 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       activeSeverities: widget.activeSeverities,
       selectedSessionIds: widget.selectedSessionIds,
     );
+    // Pre-scan for auto-collapse on first encounter of groups.
+    autoCollapseGroups(
+      entries: filteredEntries,
+      collapsedGroups: _collapsedGroups,
+      seenGroupIds: _autoCollapsedSeen,
+    );
+
     final displayEntries = processGrouping(
       entries: filteredEntries,
       textFilter: widget.textFilter,

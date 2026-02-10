@@ -341,4 +341,151 @@ void main() {
       expect(result[2].parentGroupId, isNull);
     });
   });
+
+  group('autoCollapseGroups', () {
+    test('adds group with _collapsed label to collapsedGroups', () {
+      final entries = [
+        _makeEntry(
+          id: 'grp1',
+          groupId: 'grp1',
+          message: 'Collapsed Group',
+          labels: {'_collapsed': 'true'},
+        ),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{};
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      expect(collapsed, contains('grp1'));
+      expect(seen, contains('grp1'));
+    });
+
+    test('does not add group without _collapsed label', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Open Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{};
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      expect(collapsed, isEmpty);
+      expect(seen, contains('grp1'));
+    });
+
+    test('does not re-collapse after group was already seen', () {
+      final entries = [
+        _makeEntry(
+          id: 'grp1',
+          groupId: 'grp1',
+          message: 'Group',
+          labels: {'_collapsed': 'true'},
+        ),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{'grp1'}; // already seen
+
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      expect(collapsed, isEmpty); // not re-added
+    });
+
+    test('handles multiple groups with mixed labels', () {
+      final entries = [
+        _makeEntry(
+          id: 'grp1',
+          groupId: 'grp1',
+          message: 'Collapsed',
+          labels: {'_collapsed': 'true'},
+        ),
+        _makeEntry(id: 'grp2', groupId: 'grp2', message: 'Open'),
+        _makeEntry(
+          id: 'grp3',
+          groupId: 'grp3',
+          message: 'Also Collapsed',
+          labels: {'_collapsed': 'true'},
+        ),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{};
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      expect(collapsed, {'grp1', 'grp3'});
+      expect(seen, {'grp1', 'grp2', 'grp3'});
+    });
+
+    test('ignores non-header entries', () {
+      final entries = [
+        _makeEntry(
+          id: 'a',
+          groupId: 'grp1',
+          message: 'child with label',
+          labels: {'_collapsed': 'true'},
+        ),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{};
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      expect(collapsed, isEmpty);
+      expect(seen, isEmpty);
+    });
+
+    test('integrates with processGrouping to hide children', () {
+      final entries = [
+        _makeEntry(
+          id: 'grp1',
+          groupId: 'grp1',
+          message: 'Auto-collapsed',
+          labels: {'_collapsed': 'true'},
+        ),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'hidden child'),
+        _makeEntry(id: 'b', message: 'visible'),
+      ];
+
+      final collapsed = <String>{};
+      final seen = <String>{};
+      autoCollapseGroups(
+        entries: entries,
+        collapsedGroups: collapsed,
+        seenGroupIds: seen,
+      );
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: collapsed,
+      );
+
+      expect(result.length, 2);
+      expect(result[0].entry.id, 'grp1');
+      expect(result[1].entry.id, 'b');
+    });
+  });
 }
