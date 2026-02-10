@@ -1,15 +1,13 @@
 import {
-  DataMessage,
-  EventMessage,
   SessionMessage,
 } from '@logger/shared'
-import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
+import { normalizeSession } from '../core/normalizer'
+import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-handlers'
 import { ingest } from './ingest'
 import type { ServerDeps } from './types'
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-const MAX_BATCH_SIZE = 1000
 const MAX_UPLOAD_SIZE = 16 * 1024 * 1024 // 16 MB
 const startTime = Date.now()
 
@@ -281,82 +279,4 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
       },
     },
   }
-}
-
-// ─── Internal Handlers ───────────────────────────────────────────────
-
-function handleSingleEvent(body: unknown, deps: ServerDeps): Response {
-  const parsed = EventMessage.safeParse(body)
-  if (!parsed.success) {
-    const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
-    return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
-  }
-
-  const entry = normalizeEvent(parsed.data)
-  if (!deps.rateLimiter.tryConsume(entry.session_id)) {
-    return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
-  }
-
-  ingest(entry, deps)
-  return Response.json({ ok: true, id: entry.id })
-}
-
-function handleEventBatch(items: unknown[], deps: ServerDeps): Response {
-  if (items.length === 0 || items.length > MAX_BATCH_SIZE) {
-    return Response.json({ ok: false, error: `Batch must contain 1 to ${MAX_BATCH_SIZE} items` }, { status: 400 })
-  }
-
-  const results = items.map((item) => {
-    const parsed = EventMessage.safeParse(item)
-    if (!parsed.success) {
-      const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
-      return { ok: false as const, error: 'validation_error', message: msg }
-    }
-    const entry = normalizeEvent(parsed.data)
-    if (!deps.rateLimiter.tryConsume(entry.session_id)) {
-      return { ok: false as const, error: 'rate_limited', message: 'Rate limit exceeded' }
-    }
-    ingest(entry, deps)
-    return { ok: true as const, id: entry.id }
-  })
-
-  return Response.json({ ok: true, results })
-}
-
-function handleSingleData(body: unknown, deps: ServerDeps): Response {
-  const parsed = DataMessage.safeParse(body)
-  if (!parsed.success) {
-    const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
-    return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
-  }
-
-  const entry = normalizeData(parsed.data)
-  if (!deps.rateLimiter.tryConsume(entry.session_id)) {
-    return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
-  }
-
-  ingest(entry, deps)
-  return Response.json({ ok: true, id: entry.id })
-}
-
-function handleDataBatch(items: unknown[], deps: ServerDeps): Response {
-  if (items.length === 0 || items.length > MAX_BATCH_SIZE) {
-    return Response.json({ ok: false, error: `Batch must contain 1 to ${MAX_BATCH_SIZE} items` }, { status: 400 })
-  }
-
-  const results = items.map((item) => {
-    const parsed = DataMessage.safeParse(item)
-    if (!parsed.success) {
-      const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
-      return { ok: false as const, error: 'validation_error', message: msg }
-    }
-    const entry = normalizeData(parsed.data)
-    if (!deps.rateLimiter.tryConsume(entry.session_id)) {
-      return { ok: false as const, error: 'rate_limited', message: 'Rate limit exceeded' }
-    }
-    ingest(entry, deps)
-    return { ok: true as const, id: entry.id }
-  })
-
-  return Response.json({ ok: true, results })
 }
