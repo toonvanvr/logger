@@ -51,7 +51,7 @@ void main() {
       );
       final json = msg.toJson();
 
-      expect(json['type'], 'history_query');
+      expect(json['type'], 'history');
       expect(json['query_id'], 'q1');
       expect(json['from'], '2026-01-01T00:00:00Z');
       expect(json['to'], '2026-02-07T00:00:00Z');
