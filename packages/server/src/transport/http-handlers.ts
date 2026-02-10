@@ -1,11 +1,7 @@
-import { DataMessage, EventMessage } from '@logger/shared'
+import { DataMessage, EventMessage, MAX_BATCH_SIZE } from '@logger/shared'
 import { normalizeData, normalizeEvent } from '../core/normalizer'
 import { ingest } from './ingest'
 import type { ServerDeps } from './types'
-
-// ─── Constants ───────────────────────────────────────────────────────
-
-export const MAX_BATCH_SIZE = 1000
 
 // ─── Event Handlers ──────────────────────────────────────────────────
 
