@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/typography.dart';
 
 /// Geometric "L" logo painter — amber stroke wh quadratic curve.
 class LogoPainter extends CustomPainter {
@@ -53,11 +53,7 @@ class StepRow extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               number,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: LoggerColors.fgMuted,
-              ),
+              style: LoggerTypography.stepNumber,
             ),
           ),
           const SizedBox(width: 10),
@@ -166,17 +162,9 @@ class ConnectButton extends StatelessWidget {
 
 // ── Shared text styles ──
 
-TextStyle _inter(double size, FontWeight w, Color c) =>
-    GoogleFonts.inter(fontSize: size, fontWeight: w, color: c);
-TextStyle _mono(double size, Color c) => GoogleFonts.jetBrainsMono(
-  fontSize: size,
-  fontWeight: FontWeight.w400,
-  color: c,
-);
-
-final _titleStyle = _inter(11, FontWeight.w500, LoggerColors.fgPrimary);
-final _codeStyle = _mono(10, LoggerColors.fgSecondary);
-final _kbdKeyStyle = _mono(10, LoggerColors.fgPrimary);
-final _kbdLabelStyle = _inter(10, FontWeight.w400, LoggerColors.fgMuted);
-final _linkStyle = _inter(11, FontWeight.w400, LoggerColors.fgSecondary);
-final _connectStyle = _inter(12, FontWeight.w600, const Color(0xFFE6B455));
+final _titleStyle = LoggerTypography.bodySmall;
+final _codeStyle = LoggerTypography.codeSnippet;
+final _kbdKeyStyle = LoggerTypography.kbdKey;
+final _kbdLabelStyle = LoggerTypography.kbdLabel;
+final _linkStyle = LoggerTypography.linkLabel;
+final _connectStyle = LoggerTypography.connectBtn;

@@ -80,4 +80,82 @@ class LoggerTypography {
     height: 1.20,
     color: LoggerColors.fgSecondary,
   );
+
+  /// Landing page title — ui 20dp w700
+  static final TextStyle landingTitle = GoogleFonts.inter(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    height: 1.30,
+    color: LoggerColors.fgPrimary,
+  );
+
+  /// Landing page subtitle — ui 12dp w400
+  static final TextStyle landingSubtitle = GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 1.30,
+    color: LoggerColors.fgSecondary,
+  );
+
+  /// Small label — ui 10dp w400
+  static final TextStyle smallLabel = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    height: 1.30,
+    color: LoggerColors.fgSecondary,
+  );
+
+  /// Small step numbers — ui 10dp w600
+  static final TextStyle stepNumber = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.30,
+    color: LoggerColors.fgMuted,
+  );
+
+  /// Small link text — ui 11dp w400
+  static final TextStyle linkLabel = GoogleFonts.inter(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    height: 1.30,
+    color: LoggerColors.fgSecondary,
+  );
+
+  /// Small body text — ui 11dp w500
+  static final TextStyle bodySmall = GoogleFonts.inter(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    height: 1.30,
+    color: LoggerColors.fgPrimary,
+  );
+
+  /// Connect button label — ui 12dp w600
+  static final TextStyle connectBtn = GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.30,
+    color: LoggerColors.borderFocus,
+  );
+
+  /// Code snippet text — mono 10dp w400
+  static final TextStyle codeSnippet = GoogleFonts.jetBrainsMono(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    color: LoggerColors.fgSecondary,
+  );
+
+  /// Keyboard shortcut key text — mono 10dp w400
+  static final TextStyle kbdKey = GoogleFonts.jetBrainsMono(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    color: LoggerColors.fgPrimary,
+  );
+
+  /// Keyboard shortcut label — ui 10dp w400
+  static final TextStyle kbdLabel = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    height: 1.30,
+    color: LoggerColors.fgMuted,
+  );
 }

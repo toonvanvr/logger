@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
+import '../../theme/typography.dart';
 import 'landing_helpers.dart';
 
 /// Full-screen landing page shown when there are no logs and no active
@@ -35,19 +35,12 @@ class EmptyLandingPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Logger',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: LoggerColors.fgPrimary,
-                  ),
+                  style: LoggerTypography.landingTitle,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Real-time structured log viewer',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: LoggerColors.fgSecondary,
-                  ),
+                  style: LoggerTypography.landingSubtitle,
                 ),
                 const SizedBox(height: 32),
                 ConnectButton(onTap: onConnect),
@@ -141,10 +134,7 @@ class EmptyLandingPage extends StatelessWidget {
                   cursor: SystemMouseCursors.click,
                   child: Text(
                     'View All →',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: LoggerColors.fgSecondary,
-                    ),
+                    style: LoggerTypography.smallLabel,
                   ),
                 ),
               ),
@@ -178,9 +168,4 @@ void _openUrl(BuildContext context, String url) {
   }
 }
 
-final _sectionHeader = GoogleFonts.inter(
-  fontSize: 11,
-  fontWeight: FontWeight.w700,
-  letterSpacing: 0.8,
-  color: LoggerColors.fgPrimary,
-);
+final _sectionHeader = LoggerTypography.sectionH;
