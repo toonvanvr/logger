@@ -46,20 +46,20 @@ export function handleRpcRequest(
   enqueue: (entry: QueuedMessage) => void,
   buildBase: (severity: Severity) => QueuedMessage,
 ): void {
-  if (msg.type !== 'rpc_request' || typeof msg.rpc_method !== 'string') return
+  if (msg.type !== 'rpc_request' || typeof msg.method !== 'string') return
 
-  const handler = handlers.get(msg.rpc_method)
+  const handler = handlers.get(msg.method)
   if (!handler) {
     enqueue({
       ...buildBase('error'),
       kind: 'rpc_response',
       rpc_id: msg.rpc_id as string,
-      error: `Unknown RPC method: ${msg.rpc_method}`,
+      error: `Unknown RPC method: ${msg.method}`,
     })
     return
   }
 
-  Promise.resolve(handler.handler(msg.rpc_args)).then(
+  Promise.resolve(handler.handler(msg.args)).then(
     (result) => {
       enqueue({
         ...buildBase('info'),
