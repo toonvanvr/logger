@@ -103,7 +103,8 @@ class _LogRowContentState extends State<LogRowContent> {
     Widget content;
 
     // For group header entries, show collapse icon and group label
-    if (widget.entry.groupId != null) {
+    if (widget.entry.groupId != null &&
+        widget.entry.id == widget.entry.groupId) {
       final label = widget.entry.message ?? widget.entry.groupId ?? 'Group';
       content = Row(
         mainAxisSize: MainAxisSize.min,
@@ -190,7 +191,7 @@ class _LogRowContentState extends State<LogRowContent> {
 
 /// Serialize a log entry to a clipboard-friendly string.
 String serializeLogEntry(LogEntry entry) {
-  if (entry.groupId != null) {
+  if (entry.groupId != null && entry.id == entry.groupId) {
     return entry.message ?? entry.groupId ?? 'Group';
   }
   final text = entry.message ?? '';

@@ -26,9 +26,9 @@ class DisplayEntry {
 
 /// Process entries to compute group depths and filter collapsed groups.
 ///
-/// In v2, groups are identified by [LogEntry.groupId] (header) and
-/// [LogEntry.parentId] (child membership). There are no explicit
-/// open/close group actions.
+/// In v2, group headers have `id == groupId` (self-referencing),
+/// group children carry `groupId` pointing to their enclosing group,
+/// and group-close sentinels have `groupId` set with empty message.
 List<DisplayEntry> processGrouping({
   required List<LogEntry> entries,
   required String? textFilter,
@@ -36,15 +36,36 @@ List<DisplayEntry> processGrouping({
   Set<String>? stickyOverrideIds,
   LogStore? logStore,
 }) {
-  // Pre-scan: collect group hierarchy and find groups with children.
-  final groupIdsWithChildren = <String>{};
+  // Pre-scan: build group hierarchy using entry-order stack approach.
+  final groupStack = <String>[];
   final groupParents = <String, String?>{};
+  final groupIdsWithChildren = <String>{};
+
   for (final entry in entries) {
-    if (entry.groupId != null) {
-      groupParents[entry.groupId!] = entry.parentId;
+    // Skip control messages in pre-scan.
+    if (entry.labels != null && entry.labels!['_sticky_action'] == 'unpin') {
+      continue;
     }
-    if (entry.parentId != null) {
-      groupIdsWithChildren.add(entry.parentId!);
+    final isHeader = entry.groupId != null && entry.id == entry.groupId;
+    final isClose =
+        entry.groupId != null &&
+        entry.id != entry.groupId &&
+        (entry.message == null || entry.message == '');
+
+    if (isHeader) {
+      groupParents[entry.groupId!] = groupStack.isNotEmpty
+          ? groupStack.last
+          : null;
+      groupStack.add(entry.groupId!);
+      if (groupStack.length > 1) {
+        groupIdsWithChildren.add(groupStack[groupStack.length - 2]);
+      }
+    } else if (isClose) {
+      if (groupStack.isNotEmpty && groupStack.last == entry.groupId) {
+        groupStack.removeLast();
+      }
+    } else if (entry.groupId != null) {
+      groupIdsWithChildren.add(entry.groupId!);
     }
   }
 
@@ -83,24 +104,40 @@ List<DisplayEntry> processGrouping({
   final result = <DisplayEntry>[];
 
   for (final entry in entries) {
-    final isGroupHeader = entry.groupId != null;
-    final parentId = entry.parentId;
+    final isGroupHeader = entry.groupId != null && entry.id == entry.groupId;
+    final isGroupClose =
+        !isGroupHeader &&
+        entry.groupId != null &&
+        (entry.message == null || entry.message == '');
+
+    // Skip group-close sentinel entries.
+    if (isGroupClose) continue;
+
+    // Skip unpin control messages.
+    if (entry.labels != null && entry.labels!['_sticky_action'] == 'unpin') {
+      continue;
+    }
 
     // Compute depth.
     int depth;
     if (isGroupHeader) {
       depth = groupDepths[entry.groupId] ?? 0;
-    } else if (parentId != null) {
-      depth = (groupDepths[parentId] ?? 0) + 1;
+    } else if (entry.groupId != null) {
+      depth = (groupDepths[entry.groupId] ?? 0) + 1;
     } else {
       depth = 0;
     }
 
-    // Check if hidden by collapsed ancestor.
-    if (parentId != null && isCollapsed(parentId)) continue;
+    // Check collapsed — headers check parent, members check their group.
+    final parentGid = isGroupHeader
+        ? groupParents[entry.groupId]
+        : entry.groupId;
+    if (parentGid != null && isCollapsed(parentGid)) continue;
 
-    // Determine sticky state — only manual pin via stickyOverrideIds.
-    final isSticky = stickyOverrideIds?.contains(entry.id) ?? false;
+    // Sticky: check both manual override AND server labels.
+    final isSticky =
+        (stickyOverrideIds?.contains(entry.id) ?? false) ||
+        (entry.labels != null && entry.labels!['_sticky'] == 'true');
 
     if (isGroupHeader) {
       final gid = entry.groupId!;
@@ -111,7 +148,7 @@ List<DisplayEntry> processGrouping({
           depth: depth,
           stackDepth: logStore?.stackDepth(entry.id) ?? 1,
           isSticky: isSticky,
-          parentGroupId: parentId,
+          parentGroupId: groupParents[entry.groupId],
           isStandalone: !hasChildren && hasTextFilter,
         ),
       );
@@ -122,7 +159,7 @@ List<DisplayEntry> processGrouping({
           depth: depth,
           stackDepth: logStore?.stackDepth(entry.id) ?? 1,
           isSticky: isSticky,
-          parentGroupId: parentId,
+          parentGroupId: entry.groupId,
         ),
       );
     }

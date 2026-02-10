@@ -98,7 +98,14 @@ mixin _SelectionMixin on State<LogViewerScreen> {
 
   void _stickySelected() {
     setState(() {
-      _stickyOverrideIds.addAll(_selectedEntryIds);
+      final allPinned = _selectedEntryIds.every(
+        (id) => _stickyOverrideIds.contains(id),
+      );
+      if (allPinned) {
+        _stickyOverrideIds.removeAll(_selectedEntryIds);
+      } else {
+        _stickyOverrideIds.addAll(_selectedEntryIds);
+      }
     });
   }
 }

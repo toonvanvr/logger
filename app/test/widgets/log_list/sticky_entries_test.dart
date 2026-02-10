@@ -84,18 +84,18 @@ void main() {
       final store = LogStore();
       store.addEntries([
         _makeEntry(
-          id: 'g1-open',
+          id: 'g1',
           groupId: 'g1',
           message: 'Build Output',
           display: DisplayLocation.static_,
         ),
-        _makeEntry(id: 'g1-a', message: 'Compiling...', parentId: 'g1'),
-        _makeEntry(id: 'g1-b', message: 'Build done', parentId: 'g1'),
+        _makeEntry(id: 'g1-a', groupId: 'g1', message: 'Compiling...'),
+        _makeEntry(id: 'g1-b', groupId: 'g1', message: 'Build done'),
         _makeEntry(id: 'normal', message: 'After group'),
       ]);
 
       await tester.pumpWidget(
-        _wrap(logStore: store, stickyOverrideIds: {'g1-open'}),
+        _wrap(logStore: store, stickyOverrideIds: {'g1'}),
       );
       await tester.pumpAndSettle();
 
@@ -109,23 +109,23 @@ void main() {
       (tester) async {
         final store = LogStore();
         store.addEntries([
-          _makeEntry(id: 'g2-open', groupId: 'g2', message: 'API Pipeline'),
-          _makeEntry(id: 'g2-a', message: 'Parsing body...', parentId: 'g2'),
-          _makeEntry(id: 'g2-b', message: 'Validating...', parentId: 'g2'),
+          _makeEntry(id: 'g2', groupId: 'g2', message: 'API Pipeline'),
+          _makeEntry(id: 'g2-a', groupId: 'g2', message: 'Parsing body...'),
+          _makeEntry(id: 'g2-b', groupId: 'g2', message: 'Validating...'),
           _makeEntry(
             id: 'g2-c',
+            groupId: 'g2',
             message: 'Auth verified',
-            parentId: 'g2',
             display: DisplayLocation.static_,
           ),
-          _makeEntry(id: 'g2-d', message: 'DB query...', parentId: 'g2'),
+          _makeEntry(id: 'g2-d', groupId: 'g2', message: 'DB query...'),
           _makeEntry(
             id: 'g2-e',
+            groupId: 'g2',
             message: '201 Created',
-            parentId: 'g2',
             display: DisplayLocation.static_,
           ),
-          _makeEntry(id: 'g2-f', message: 'Done', parentId: 'g2'),
+          _makeEntry(id: 'g2-f', groupId: 'g2', message: 'Done'),
         ]);
 
         await tester.pumpWidget(

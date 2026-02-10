@@ -18,13 +18,16 @@ List<StickySection> computeStickySections(
 
   final grouped = <String?, List<DisplayEntry>>{};
   for (final entry in stickyEntries) {
-    if (entry.entry.groupId != null) continue; // skip group headers
+    // Skip group headers (self-referencing groupId)
+    if (entry.entry.groupId != null && entry.entry.id == entry.entry.groupId) {
+      continue;
+    }
     if (dismissedIds.contains(entry.entry.id)) continue;
     grouped.putIfAbsent(entry.parentGroupId, () => []).add(entry);
   }
 
   for (final entry in stickyEntries) {
-    if (entry.entry.groupId != null) {
+    if (entry.entry.groupId != null && entry.entry.id == entry.entry.groupId) {
       final gid = entry.entry.groupId!;
       grouped.putIfAbsent(gid, () => []);
     }
@@ -46,7 +49,9 @@ List<StickySection> computeStickySections(
     if (parentId != null) {
       for (int i = 0; i < entries.length; i++) {
         final d = entries[i];
-        if (d.entry.groupId != null && d.entry.groupId == parentId) {
+        if (d.entry.groupId != null &&
+            d.entry.id == d.entry.groupId &&
+            d.entry.groupId == parentId) {
           groupHeader = d.entry;
           groupDepth = d.depth;
           groupHeaderIndex = i;
@@ -64,7 +69,7 @@ List<StickySection> computeStickySections(
             (d) =>
                 d.parentGroupId == parentId &&
                 !d.isSticky &&
-                d.entry.groupId == null,
+                !(d.entry.groupId != null && d.entry.id == d.entry.groupId),
           )
           .length;
     }
@@ -83,7 +88,7 @@ List<StickySection> computeStickySections(
           .where(
             (d) =>
                 d.parentGroupId == parentId &&
-                d.entry.groupId == null &&
+                !(d.entry.groupId != null && d.entry.id == d.entry.groupId) &&
                 !dismissedIds.contains(d.entry.id),
           )
           .take(10)
@@ -94,7 +99,7 @@ List<StickySection> computeStickySections(
           .where(
             (d) =>
                 d.parentGroupId == parentId &&
-                d.entry.groupId == null &&
+                !(d.entry.groupId != null && d.entry.id == d.entry.groupId) &&
                 !dismissedIds.contains(d.entry.id),
           )
           .length;
@@ -118,11 +123,21 @@ List<StickySection> computeStickySections(
   return sections;
 }
 
-/// No-op in v2: stickyAction was removed from the schema.
+/// Process unpin control entries to remove sticky state.
 void processUnpinEntries({
   required LogStore logStore,
   required StickyStateService stickyState,
   required Set<String> processedUnpinIds,
 }) {
-  // v2 schema removed stickyAction; unpin is handled externally.
+  for (final entry in logStore.entries) {
+    if (processedUnpinIds.contains(entry.id)) continue;
+    final action = entry.labels?['_sticky_action'];
+    if (action == 'unpin') {
+      processedUnpinIds.add(entry.id);
+      final targetId = entry.groupId ?? entry.id;
+      if (targetId.isNotEmpty) {
+        stickyState.dismiss(targetId);
+      }
+    }
+  }
 }

@@ -12,6 +12,7 @@ LogEntry _makeEntry({
   DisplayLocation display = DisplayLocation.defaultLoc,
   String? groupId,
   String? parentId,
+  Map<String, String>? labels,
 }) {
   return makeTestEntry(
     id: id,
@@ -21,6 +22,7 @@ LogEntry _makeEntry({
     display: display,
     groupId: groupId,
     parentId: parentId,
+    labels: labels,
   );
 }
 
@@ -111,13 +113,55 @@ void main() {
 
       expect(result[0].isSticky, false);
     });
+
+    test('server sticky labels detected', () {
+      final entries = [
+        _makeEntry(
+          id: 'a',
+          message: 'server pinned',
+          labels: {'_sticky': 'true'},
+        ),
+        _makeEntry(id: 'b', message: 'normal'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+      );
+
+      expect(result[0].isSticky, true);
+      expect(result[1].isSticky, false);
+    });
+
+    test('mixed sticky sources — both override and labels', () {
+      final entries = [
+        _makeEntry(
+          id: 'a',
+          message: 'both sources',
+          labels: {'_sticky': 'true'},
+        ),
+        _makeEntry(id: 'b', message: 'override only'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        stickyOverrideIds: {'a', 'b'},
+      );
+
+      expect(result[0].isSticky, true);
+      expect(result[1].isSticky, true);
+    });
   });
 
   group('processGrouping basic grouping', () {
     test('computes correct depth for group header and child', () {
+      // v2: header has id == groupId (self-ref), child has groupId set
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Outer'),
-        _makeEntry(id: 'a', message: 'inside outer', parentId: 'grp1'),
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Outer'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'inside outer'),
       ];
 
       final result = processGrouping(
@@ -133,8 +177,8 @@ void main() {
 
     test('hides entries in collapsed groups', () {
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Group'),
-        _makeEntry(id: 'a', message: 'hidden child', parentId: 'grp1'),
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'hidden child'),
       ];
 
       final result = processGrouping(
@@ -145,21 +189,55 @@ void main() {
 
       // Group header visible, child hidden
       expect(result.length, 1);
-      expect(result[0].entry.id, 'g1');
+      expect(result[0].entry.id, 'grp1');
     });
-  });
 
-  group('processGrouping nested groups', () {
-    test('computes depth for deeply nested groups', () {
+    test('group close entries are filtered out', () {
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+        // Close sentinel: groupId set, message empty, id != groupId
+        _makeEntry(id: 'close1', groupId: 'grp1', message: ''),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+      );
+
+      expect(result.length, 2);
+      expect(result[0].entry.id, 'grp1');
+      expect(result[1].entry.id, 'a');
+    });
+
+    test('unpin entries are filtered out', () {
+      final entries = [
+        _makeEntry(id: 'a', message: 'normal'),
         _makeEntry(
-          id: 'g2',
-          groupId: 'inner',
-          parentId: 'outer',
-          message: 'Inner',
+          id: 'unpin1',
+          message: '',
+          labels: {'_sticky_action': 'unpin'},
         ),
-        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
+        _makeEntry(id: 'b', message: 'also normal'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+      );
+
+      expect(result.length, 2);
+      expect(result[0].entry.id, 'a');
+      expect(result[1].entry.id, 'b');
+    });
+
+    test('non-header group members get correct depth', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'My Group'),
+        _makeEntry(id: 'c1', groupId: 'grp1', message: 'child 1'),
+        _makeEntry(id: 'c2', groupId: 'grp1', message: 'child 2'),
       ];
 
       final result = processGrouping(
@@ -169,6 +247,33 @@ void main() {
       );
 
       expect(result.length, 3);
+      expect(result[0].depth, 0); // header
+      expect(result[1].depth, 1); // child
+      expect(result[2].depth, 1); // child
+    });
+  });
+
+  group('processGrouping nested groups', () {
+    test('computes depth for deeply nested groups', () {
+      // v2: nested group headers are self-ref, nesting by entry order
+      final entries = [
+        _makeEntry(id: 'outer', groupId: 'outer', message: 'Outer'),
+        _makeEntry(id: 'inner', groupId: 'inner', message: 'Inner'),
+        _makeEntry(id: 'a', groupId: 'inner', message: 'deep'),
+        // close inner
+        _makeEntry(id: 'close-inner', groupId: 'inner', message: ''),
+        // close outer
+        _makeEntry(id: 'close-outer', groupId: 'outer', message: ''),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+      );
+
+      // close entries filtered, so 3 results
+      expect(result.length, 3);
       expect(result[0].depth, 0); // outer header
       expect(result[1].depth, 1); // inner header (child of outer)
       expect(result[2].depth, 2); // leaf child
@@ -176,14 +281,11 @@ void main() {
 
     test('collapsing outer hides inner group and its children', () {
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
-        _makeEntry(
-          id: 'g2',
-          groupId: 'inner',
-          parentId: 'outer',
-          message: 'Inner',
-        ),
-        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
+        _makeEntry(id: 'outer', groupId: 'outer', message: 'Outer'),
+        _makeEntry(id: 'inner', groupId: 'inner', message: 'Inner'),
+        _makeEntry(id: 'a', groupId: 'inner', message: 'deep'),
+        _makeEntry(id: 'close-inner', groupId: 'inner', message: ''),
+        _makeEntry(id: 'close-outer', groupId: 'outer', message: ''),
       ];
 
       final result = processGrouping(
@@ -194,20 +296,17 @@ void main() {
 
       // Only outer header visible
       expect(result.length, 1);
-      expect(result[0].entry.id, 'g1');
+      expect(result[0].entry.id, 'outer');
     });
 
     test('collapsing inner hides only its children', () {
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'outer', message: 'Outer'),
-        _makeEntry(
-          id: 'g2',
-          groupId: 'inner',
-          parentId: 'outer',
-          message: 'Inner',
-        ),
-        _makeEntry(id: 'a', message: 'deep', parentId: 'inner'),
-        _makeEntry(id: 'b', message: 'sibling', parentId: 'outer'),
+        _makeEntry(id: 'outer', groupId: 'outer', message: 'Outer'),
+        _makeEntry(id: 'inner', groupId: 'inner', message: 'Inner'),
+        _makeEntry(id: 'a', groupId: 'inner', message: 'deep'),
+        _makeEntry(id: 'close-inner', groupId: 'inner', message: ''),
+        _makeEntry(id: 'b', groupId: 'outer', message: 'sibling'),
+        _makeEntry(id: 'close-outer', groupId: 'outer', message: ''),
       ];
 
       final result = processGrouping(
@@ -218,15 +317,16 @@ void main() {
 
       // Outer header + inner header + sibling visible, deep hidden
       expect(result.length, 3);
-      expect(result[0].entry.id, 'g1');
-      expect(result[1].entry.id, 'g2');
+      expect(result[0].entry.id, 'outer');
+      expect(result[1].entry.id, 'inner');
       expect(result[2].entry.id, 'b');
     });
 
     test('entries without group have zero depth', () {
       final entries = [
-        _makeEntry(id: 'g1', groupId: 'grp1', message: 'Group'),
-        _makeEntry(id: 'a', message: 'child', parentId: 'grp1'),
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+        _makeEntry(id: 'close1', groupId: 'grp1', message: ''),
         _makeEntry(id: 'b', message: 'top-level'),
       ];
 

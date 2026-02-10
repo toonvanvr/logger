@@ -231,7 +231,10 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
           _selectedIndex = _selectedIndex == index ? -1 : index;
         });
       },
-      onGroupToggle: entry.groupId != null && !display.isStandalone
+      onGroupToggle:
+          entry.groupId != null &&
+              entry.id == entry.groupId &&
+              !display.isStandalone
           ? () => setState(() {
               final gid = entry.groupId!;
               _collapsedGroups.contains(gid)
@@ -241,6 +244,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
           : null,
       isCollapsed:
           entry.groupId != null &&
+          entry.id == entry.groupId &&
           !display.isStandalone &&
           _collapsedGroups.contains(entry.groupId!),
     );

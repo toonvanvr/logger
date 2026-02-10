@@ -82,7 +82,7 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(groupId: 'g1', message: 'HTTP'),
+              entry: makeTestEntry(id: 'g1', groupId: 'g1', message: 'HTTP'),
             ),
           ),
         ),
@@ -98,7 +98,11 @@ void main() {
           theme: createLoggerTheme(),
           home: Scaffold(
             body: LogRowContent(
-              entry: makeTestEntry(groupId: 'g2', message: 'Collapsed'),
+              entry: makeTestEntry(
+                id: 'g2',
+                groupId: 'g2',
+                message: 'Collapsed',
+              ),
               isCollapsed: true,
             ),
           ),
