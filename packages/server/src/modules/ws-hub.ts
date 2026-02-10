@@ -1,5 +1,6 @@
 import type { ServerBroadcast, StoredEntry } from '@logger/shared'
 import type { ServerWebSocket } from 'bun'
+import type { WsData } from '../transport/ws'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -16,7 +17,7 @@ export interface ViewerSubscription {
 }
 
 interface ViewerEntry {
-  ws: ServerWebSocket<any>
+  ws: ServerWebSocket<WsData>
   subscription: ViewerSubscription
 }
 
@@ -33,10 +34,10 @@ const SEVERITY_ORDER: Record<string, number> = {
 // ─── WebSocket Hub ───────────────────────────────────────────────────
 
 export class WebSocketHub {
-  private viewers = new Map<ServerWebSocket<any>, ViewerEntry>();
+  private viewers = new Map<ServerWebSocket<WsData>, ViewerEntry>();
 
   /** Register a viewer WebSocket connection. */
-  addViewer(ws: ServerWebSocket<any>): void {
+  addViewer(ws: ServerWebSocket<WsData>): void {
     this.viewers.set(ws, {
       ws,
       subscription: { sessionIds: [] },
@@ -44,7 +45,7 @@ export class WebSocketHub {
   }
 
   /** Unregister a viewer WebSocket connection. */
-  removeViewer(ws: ServerWebSocket<any>): void {
+  removeViewer(ws: ServerWebSocket<WsData>): void {
     this.viewers.delete(ws)
   }
 
@@ -54,7 +55,7 @@ export class WebSocketHub {
   }
 
   /** Update a viewer's subscription filter. */
-  setSubscription(ws: ServerWebSocket<any>, sub: ViewerSubscription): void {
+  setSubscription(ws: ServerWebSocket<WsData>, sub: ViewerSubscription): void {
     const entry = this.viewers.get(ws)
     if (entry) {
       entry.subscription = sub
@@ -62,7 +63,7 @@ export class WebSocketHub {
   }
 
   /** Get a viewer's current subscription. */
-  getSubscription(ws: ServerWebSocket<any>): ViewerSubscription | undefined {
+  getSubscription(ws: ServerWebSocket<WsData>): ViewerSubscription | undefined {
     return this.viewers.get(ws)?.subscription
   }
 
@@ -78,7 +79,7 @@ export class WebSocketHub {
   }
 
   /** Process an incoming viewer message (subscribe/unsubscribe). */
-  handleViewerMessage(ws: ServerWebSocket<any>, message: ViewerMessage): void {
+  handleViewerMessage(ws: ServerWebSocket<WsData>, message: ViewerMessage): void {
     switch (message.type) {
       case 'subscribe': {
         this.setSubscription(ws, {
