@@ -105,8 +105,8 @@ class ViewerRpcRequestMessage extends ViewerMessage {
     final map = <String, dynamic>{'type': 'rpc_request'};
     if (rpcId != null) map['rpc_id'] = rpcId;
     if (targetSessionId != null) map['target_session_id'] = targetSessionId;
-    if (rpcMethod != null) map['rpc_method'] = rpcMethod;
-    if (rpcArgs != null) map['rpc_args'] = rpcArgs;
+    if (rpcMethod != null) map['method'] = rpcMethod;
+    if (rpcArgs != null) map['args'] = rpcArgs;
     return map;
   }
 }
@@ -126,7 +126,7 @@ class ViewerDataQueryMessage extends ViewerMessage {
   @override
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'type': 'data_query'};
-    if (dataSessionId != null) map['data_session_id'] = dataSessionId;
+    if (dataSessionId != null) map['session_id'] = dataSessionId;
     return map;
   }
 }

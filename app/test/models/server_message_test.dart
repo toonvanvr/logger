@@ -9,7 +9,7 @@ void main() {
     test('type ack parses ackIds', () {
       final msg = ServerMessage.fromJson({
         'type': 'ack',
-        'ack_ids': ['id-1', 'id-2'],
+        'ids': ['id-1', 'id-2'],
       });
 
       expect(msg, isA<AckMessage>());
@@ -22,9 +22,9 @@ void main() {
     test('type error parses errorCode, errorMessage, errorEntryId', () {
       final msg = ServerMessage.fromJson({
         'type': 'error',
-        'error_code': 'INVALID_FORMAT',
-        'error_message': 'bad payload',
-        'error_entry_id': 'e-bad',
+        'code': 'INVALID_FORMAT',
+        'message': 'bad payload',
+        'entry_id': 'e-bad',
       });
 
       expect(msg, isA<ErrorMessage>());
@@ -91,8 +91,8 @@ void main() {
       final msg = ServerMessage.fromJson({
         'type': 'rpc_request',
         'rpc_id': 'rpc-1',
-        'rpc_method': 'getState',
-        'rpc_args': {'key': 'theme'},
+        'method': 'getState',
+        'args': {'key': 'theme'},
       });
 
       expect(msg, isA<RpcRequestMessage>());
@@ -108,8 +108,8 @@ void main() {
       final msg = ServerMessage.fromJson({
         'type': 'rpc_response',
         'rpc_id': 'rpc-1',
-        'rpc_response': {'value': 'dark'},
-        'rpc_error': null,
+        'result': {'value': 'dark'},
+        'error': null,
       });
 
       expect(msg, isA<RpcResponseMessage>());
@@ -191,9 +191,9 @@ void main() {
     test('type data_update parses dataKey, dataValue, dataDisplay', () {
       final msg = ServerMessage.fromJson({
         'type': 'data_update',
-        'data_key': 'theme',
-        'data_value': 'dark',
-        'data_display': 'shelf',
+        'key': 'theme',
+        'value': 'dark',
+        'display': 'shelf',
       });
 
       expect(msg, isA<DataUpdateMessage>());
@@ -208,9 +208,9 @@ void main() {
     test('type data_update parses dataWidget', () {
       final msg = ServerMessage.fromJson({
         'type': 'data_update',
-        'data_key': 'cpu',
-        'data_value': 87.5,
-        'data_widget': {'type': 'gauge', 'max': 100},
+        'key': 'cpu',
+        'value': 87.5,
+        'widget': {'type': 'gauge', 'max': 100},
       });
 
       expect(msg, isA<DataUpdateMessage>());
@@ -226,7 +226,7 @@ void main() {
       final msg = ServerMessage.fromJson({
         'type': 'history',
         'query_id': 'q1',
-        'history_entries': [
+        'entries': [
           {
             'id': 'e1',
             'timestamp': '2026-02-07T12:00:00Z',

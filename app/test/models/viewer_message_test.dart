@@ -75,8 +75,8 @@ void main() {
         expect(json['type'], 'rpc_request');
         expect(json['target_session_id'], 'sess-1');
         expect(json['rpc_id'], 'rpc-1');
-        expect(json['rpc_method'], 'getState');
-        expect(json['rpc_args'], {'key': 'theme'});
+        expect(json['method'], 'getState');
+        expect(json['args'], {'key': 'theme'});
       },
     );
 
@@ -96,7 +96,7 @@ void main() {
       final json = msg.toJson();
 
       expect(json['type'], 'data_query');
-      expect(json['data_session_id'], 'sess-1');
+      expect(json['session_id'], 'sess-1');
     });
 
     // ── Test 7: excludes null optional fields ──
@@ -130,15 +130,15 @@ void main() {
 
       expect(json.containsKey('rpc_id'), isFalse);
       expect(json.containsKey('target_session_id'), isFalse);
-      expect(json.containsKey('rpc_method'), isFalse);
-      expect(json.containsKey('rpc_args'), isFalse);
+      expect(json.containsKey('method'), isFalse);
+      expect(json.containsKey('args'), isFalse);
     });
 
     test('data_query toJson excludes null optional fields', () {
       const msg = ViewerDataQueryMessage();
       final json = msg.toJson();
 
-      expect(json.containsKey('data_session_id'), isFalse);
+      expect(json.containsKey('session_id'), isFalse);
     });
   });
 

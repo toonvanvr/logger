@@ -48,12 +48,12 @@ sealed class ServerMessage {
     final typeStr = json['type'] as String? ?? 'error';
     return switch (typeStr) {
       'ack' => AckMessage(
-        ackIds: (json['ack_ids'] as List<dynamic>?)?.cast<String>() ?? [],
+        ackIds: (json['ids'] as List<dynamic>?)?.cast<String>() ?? [],
       ),
       'error' => ErrorMessage(
-        errorCode: json['error_code'] as String?,
-        errorMessage: json['error_message'] as String?,
-        errorEntryId: json['error_entry_id'] as String?,
+        errorCode: json['code'] as String?,
+        errorMessage: json['message'] as String?,
+        errorEntryId: json['entry_id'] as String?,
       ),
       'event' || 'log' =>
         json['entry'] != null
@@ -69,21 +69,21 @@ sealed class ServerMessage {
             [],
       ),
       'rpc_request' =>
-        json['rpc_id'] != null && json['rpc_method'] != null
+        json['rpc_id'] != null && json['method'] != null
             ? RpcRequestMessage(
                 rpcId: json['rpc_id'] as String,
-                rpcMethod: json['rpc_method'] as String,
-                rpcArgs: json['rpc_args'],
+                rpcMethod: json['method'] as String,
+                rpcArgs: json['args'],
               )
             : ErrorMessage(
-                errorMessage: 'rpc_request missing rpc_id or rpc_method',
+                errorMessage: 'rpc_request missing rpc_id or method',
               ),
       'rpc_response' =>
         json['rpc_id'] != null
             ? RpcResponseMessage(
                 rpcId: json['rpc_id'] as String,
-                rpcResponse: json['rpc_response'],
-                rpcError: json['rpc_error'] as String?,
+                rpcResponse: json['result'],
+                rpcError: json['error'] as String?,
               )
             : ErrorMessage(errorMessage: 'rpc_response missing rpc_id'),
       'session_list' => SessionListMessage(
@@ -111,24 +111,24 @@ sealed class ServerMessage {
             {},
       ),
       'data_update' =>
-        json['data_key'] != null
+        json['key'] != null
             ? DataUpdateMessage(
-                dataKey: json['data_key'] as String,
-                dataValue: json['data_value'],
-                dataDisplay: json['data_display'] != null
-                    ? parseDisplayLocation(json['data_display'] as String)
+                dataKey: json['key'] as String,
+                dataValue: json['value'],
+                dataDisplay: json['display'] != null
+                    ? parseDisplayLocation(json['display'] as String)
                     : null,
-                dataWidget: json['data_widget'] != null
+                dataWidget: json['widget'] != null
                     ? WidgetPayload.fromJson(
-                        json['data_widget'] as Map<String, dynamic>,
+                        json['widget'] as Map<String, dynamic>,
                       )
                     : null,
               )
-            : ErrorMessage(errorMessage: 'data_update missing data_key'),
+            : ErrorMessage(errorMessage: 'data_update missing key'),
       'history' => HistoryMessage(
         queryId: json['query_id'] as String?,
         entries:
-            (json['history_entries'] as List<dynamic>?)
+            (json['entries'] as List<dynamic>?)
                 ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
