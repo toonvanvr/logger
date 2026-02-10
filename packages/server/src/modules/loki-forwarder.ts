@@ -152,7 +152,7 @@ export class LokiForwarder {
     }
     if (entry.kind) meta.kind = entry.kind
     if (entry.tag) meta.tag = entry.tag
-    const widgetType = (entry.widget as any)?.type
+    const widgetType = entry.widget?.type
     if (widgetType) meta.widget_type = widgetType
 
     return meta
