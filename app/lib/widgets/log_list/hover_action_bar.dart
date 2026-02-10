@@ -1,24 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
+import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
-
-/// Data class representing a single action in the hover icon bar.
-class RowAction {
-  final String id;
-  final IconData icon;
-  final String tooltip;
-  final void Function(LogEntry) onTap;
-  final bool Function(LogEntry)? isActive;
-
-  const RowAction({
-    required this.id,
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.isActive,
-  });
-}
 
 /// Horizontal row of icon action buttons shown on log row hover.
 ///

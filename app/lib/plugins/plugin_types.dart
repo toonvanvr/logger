@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../models/log_entry.dart';
 import '../models/status_bar_item.dart';
-import '../widgets/log_list/hover_action_bar.dart';
 import 'plugin_manifest.dart';
 import 'plugin_registry.dart';
 
@@ -108,6 +107,23 @@ abstract class ToolPlugin extends LoggerPlugin {
 }
 
 // ─── Row Action Plugin ────────────────────────────────────────────────
+
+/// Data class representing a single action in the hover icon bar.
+class RowAction {
+  final String id;
+  final IconData icon;
+  final String tooltip;
+  final void Function(LogEntry) onTap;
+  final bool Function(LogEntry)? isActive;
+
+  const RowAction({
+    required this.id,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.isActive,
+  });
+}
 
 /// A plugin that provides row-level actions on log entries.
 abstract class RowActionPlugin extends LoggerPlugin {
