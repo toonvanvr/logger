@@ -32,6 +32,9 @@ const hookManager = new HookManager({ redactPatterns: config.hookRedactPatterns 
 const ringBuffer = new RingBuffer(config.ringBufferMaxEntries, config.ringBufferMaxBytes)
 const sessionManager = new SessionManager()
 const wsHub = new WebSocketHub()
+
+const selfLogger = new SelfLogger(ringBuffer, wsHub, sessionManager)
+
 const lokiForwarder = new LokiForwarder({
   lokiUrl: config.lokiUrl,
   batchSize: config.lokiBatchSize,
@@ -39,14 +42,12 @@ const lokiForwarder = new LokiForwarder({
   maxBuffer: config.lokiMaxBuffer,
   retries: config.lokiRetries,
   environment: config.environment,
-})
+}, selfLogger)
 const fileStore = new FileStore({
   storePath: config.imageStorePath,
   maxBytes: config.imageStoreMaxBytes,
 })
 const rpcBridge = new RpcBridge()
-
-const selfLogger = new SelfLogger(ringBuffer, wsHub, sessionManager)
 
 // ─── Initialize store adapters ───────────────────────────────────────
 
@@ -82,6 +83,7 @@ const deps = {
   lokiForwarder,
   fileStore,
   rpcBridge,
+  selfLogger,
   storeWriter,
   storeReader,
 }

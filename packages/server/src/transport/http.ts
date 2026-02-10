@@ -102,7 +102,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
           )
           return Response.json({ ok: true, ref })
         } catch (err) {
-          console.error('[HTTP] File upload error:', err)
+          try { deps.selfLogger.error(`[HTTP] File upload error: ${err}`) } catch { console.error('[HTTP] File upload error:', err) }
           return Response.json({ ok: false, error: 'Internal server error' }, { status: 500 })
         }
       },

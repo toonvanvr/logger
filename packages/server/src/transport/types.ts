@@ -4,6 +4,7 @@ import type { FileStore } from '../modules/file-store'
 import type { LokiForwarder } from '../modules/loki-forwarder'
 import type { RingBuffer } from '../modules/ring-buffer'
 import type { RpcBridge } from '../modules/rpc-bridge'
+import type { SelfLogger } from '../modules/self-logger'
 import type { SessionManager } from '../modules/session-manager'
 import type { WebSocketHub } from '../modules/ws-hub'
 import type { LogStoreReader } from '../store/log-store-reader'
@@ -28,6 +29,7 @@ export interface ServerDeps {
   lokiForwarder: LokiForwarder
   fileStore: FileStore
   rpcBridge: RpcBridge
+  selfLogger: SelfLogger
   storeWriter?: LogStoreWriter
   storeReader?: LogStoreReader
 }

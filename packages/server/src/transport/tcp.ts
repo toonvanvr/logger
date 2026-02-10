@@ -39,7 +39,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
           state.buffer = state.buffer.slice(newlineIndex + 1)
 
           if (line.length > MAX_LINE_SIZE) {
-            console.warn('[TCP] Line exceeds 16MB limit, dropping')
+            try { deps.selfLogger.warn('[TCP] Line exceeds 16MB limit, dropping') } catch { console.warn('[TCP] Line exceeds 16MB limit, dropping') }
             continue
           }
 
@@ -68,7 +68,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
 
         // Guard against unbounded buffer growth
         if (state.buffer.length > MAX_LINE_SIZE) {
-          console.warn('[TCP] Buffer exceeds 16MB, clearing')
+          try { deps.selfLogger.warn('[TCP] Buffer exceeds 16MB, clearing') } catch { console.warn('[TCP] Buffer exceeds 16MB, clearing') }
           state.buffer = ''
         }
       },
@@ -76,7 +76,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
       close() { },
 
       error(_socket, err) {
-        console.error('[TCP] Socket error:', err)
+        try { deps.selfLogger.error(`[TCP] Socket error: ${err}`) } catch { console.error('[TCP] Socket error:', err) }
       },
 
       timeout(socket) {

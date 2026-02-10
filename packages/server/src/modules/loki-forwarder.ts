@@ -1,4 +1,5 @@
 import type { StoredEntry } from '@logger/shared'
+import type { SelfLogger } from './self-logger'
 
 export interface LokiForwarderConfig {
   lokiUrl: string
@@ -20,16 +21,18 @@ export class LokiForwarder {
   private consecutiveFailures = 0;
   private readonly cfg: LokiForwarderConfig & { retryBaseMs: number }
   private flushing = false;
+  private selfLogger?: SelfLogger;
 
-  constructor(config: LokiForwarderConfig) {
+  constructor(config: LokiForwarderConfig, selfLogger?: SelfLogger) {
     this.cfg = { retryBaseMs: 1000, ...config }
+    this.selfLogger = selfLogger
     this.flushTimer = setInterval(() => this.flush(), this.cfg.flushIntervalMs)
   }
 
   /** Add entry to buffer for async forwarding. Drops if buffer full. */
   push(entry: StoredEntry): void {
     if (this.buffer.length >= this.cfg.maxBuffer) {
-      console.warn('[LokiForwarder] Buffer full, dropping entry')
+      try { this.selfLogger?.warn('[LokiForwarder] Buffer full, dropping entry') } catch { console.warn('[LokiForwarder] Buffer full, dropping entry') }
       this.updateHealth()
       return
     }
