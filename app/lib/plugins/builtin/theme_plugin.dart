@@ -10,8 +10,7 @@ import '../plugin_types.dart';
 ///
 /// Provides a settings panel for selecting the active color scheme.
 /// Always present (not disableable).
-class ThemePlugin extends ToolPlugin {
-  final bool _enabled = true;
+class ThemePlugin extends ToolPlugin with EnableablePlugin {
   String _activeTheme = 'Ayu Dark';
 
   static const _availableThemes = ['Ayu Dark'];
@@ -29,9 +28,6 @@ class ThemePlugin extends ToolPlugin {
 
   @override
   String get description => 'Color scheme configuration for the viewer.';
-
-  @override
-  bool get enabled => _enabled;
 
   @override
   PluginManifest get manifest => const PluginManifest(
