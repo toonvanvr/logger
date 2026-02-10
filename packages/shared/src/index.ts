@@ -1,11 +1,11 @@
-// ─── Session ─────────────────────────────────────────────────────────
+// session-message.ts — Session lifecycle messages
 export {
     ApplicationInfo,
     SessionMessage,
     type ApplicationInfo as ApplicationInfoType
 } from './session-message.js'
 
-// ─── Events ──────────────────────────────────────────────────────────
+// event-message.ts — Structured log events
 export {
     EventMessage,
     ExceptionData,
@@ -13,39 +13,39 @@ export {
     Severity,
 } from './event-message.js'
 
-// ─── Data ────────────────────────────────────────────────────────────
+// data-message.ts — Key-value state updates
 export {
     DataMessage,
     DisplayLocation,
     WidgetConfig,
 } from './data-message.js'
 
-// ─── Widgets ─────────────────────────────────────────────────────────
+// widget.ts — Rich widget payload types
 export {
     TreeNodeSchema,
     WidgetPayload,
     type TreeNode
 } from './widget.js'
 
-// ─── Stored Entry ────────────────────────────────────────────────────
+// stored-entry.ts — Wire protocol (source of truth)
 export {
     EntryKind,
     StoredEntry
 } from './stored-entry.js'
 
-// ─── Server Broadcast ───────────────────────────────────────────────
+// server-broadcast.ts — Server → Viewer broadcast messages
 export {
     DataState,
     ServerBroadcast,
     SessionInfo
 } from './server-broadcast.js'
 
-// ─── Viewer Command ──────────────────────────────────────────────────
+// viewer-command.ts — Viewer → Server command messages
 export {
     ViewerCommand
 } from './viewer-command.js'
 
-// ─── Constants ───────────────────────────────────────────────────────
+// constants.ts — Shared size limits, network defaults, error codes
 export {
     DEFAULT_DATA_URL,
     DEFAULT_EVENTS_URL,
