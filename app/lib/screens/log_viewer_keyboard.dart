@@ -35,6 +35,28 @@ mixin _KeyboardMixin on State<LogViewerScreen>, _SelectionMixin {
       return true;
     }
 
+    // Cmd+C / Ctrl+C → explicitly dispatch copy to the focused context
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyC &&
+        (HardwareKeyboard.instance.logicalKeysPressed
+                .contains(LogicalKeyboardKey.metaLeft) ||
+            HardwareKeyboard.instance.logicalKeysPressed
+                .contains(LogicalKeyboardKey.metaRight) ||
+            HardwareKeyboard.instance.logicalKeysPressed
+                .contains(LogicalKeyboardKey.controlLeft) ||
+            HardwareKeyboard.instance.logicalKeysPressed
+                .contains(LogicalKeyboardKey.controlRight))) {
+      final ctx = primaryFocus?.context;
+      if (ctx != null) {
+        final action = Actions.maybeFind<CopySelectionTextIntent>(ctx);
+        if (action != null) {
+          Actions.invoke(ctx, CopySelectionTextIntent.copy);
+          return true;
+        }
+      }
+      return false;
+    }
+
     final shiftHeld =
         HardwareKeyboard.instance.logicalKeysPressed.contains(
           LogicalKeyboardKey.shiftLeft,
