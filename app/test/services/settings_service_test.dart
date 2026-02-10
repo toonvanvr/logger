@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:app/services/settings_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,7 +8,8 @@ void main() {
     test('initial defaults', () {
       final svc = SettingsService();
       expect(svc.fileOpenCommand, 'code -g {file}:{line}');
-      expect(svc.urlOpenCommand, 'xdg-open {url}');
+      final expectedCmd = Platform.isMacOS ? 'open {url}' : Platform.isWindows ? 'start {url}' : 'xdg-open {url}';
+      expect(svc.urlOpenCommand, expectedCmd);
       expect(svc.miniMode, isTrue);
       expect(svc.stateViewCollapsed, isFalse);
       expect(svc.shelfCollapsed, isTrue);
