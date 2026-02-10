@@ -61,17 +61,21 @@ mixin _KeyboardMixin on State<LogViewerScreen>, _SelectionMixin {
       return false;
     }
 
-    final shiftHeld =
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftLeft,
-        ) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftRight,
-        );
-    if (shiftHeld && !_selectionMode) {
-      setState(() => _selectionMode = true);
-    } else if (!shiftHeld && _selectionMode && _selectedEntryIds.isEmpty) {
-      setState(() => _selectionMode = false);
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.shiftLeft ||
+            event.logicalKey == LogicalKeyboardKey.shiftRight)) {
+      if (!_selectionMode) {
+        setState(() => _selectionMode = true);
+      }
+      return false;
+    }
+    if (event is KeyUpEvent &&
+        (event.logicalKey == LogicalKeyboardKey.shiftLeft ||
+            event.logicalKey == LogicalKeyboardKey.shiftRight)) {
+      if (_selectionMode && _selectedEntryIds.isEmpty) {
+        setState(() => _selectionMode = false);
+      }
+      return false;
     }
     return false;
   }

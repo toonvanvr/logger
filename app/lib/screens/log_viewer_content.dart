@@ -156,29 +156,30 @@ mixin _ContentMixin on _KeyboardMixin, _SelectionMixin, _ConnectionMixin {
               final selectedSessions = context
                   .watch<SessionStore>()
                   .selectedSessionIds;
+              final logListView = LogListView(
+                tagFilter: _selectedSection,
+                activeSeverities: _activeSeverities,
+                textFilter: _effectiveFilter,
+                selectedSessionIds: selectedSessions,
+                selectionMode: _selectionMode,
+                selectedEntryIds: _selectedEntryIds,
+                onEntrySelected: _onEntrySelected,
+                onEntryRangeSelected: _onEntryRangeSelected,
+                bookmarkedEntryIds: _bookmarkedEntryIds,
+                stickyOverrideIds: _stickyOverrideIds,
+                onFilterClear: () {
+                  setState(() {
+                    _activeSeverities = _defaultSeverities;
+                    _textFilter = '';
+                    _stateFilterStack = [];
+                  });
+                },
+              );
               return Stack(
                 children: [
-                  SelectionArea(
-                    child: LogListView(
-                      tagFilter: _selectedSection,
-                      activeSeverities: _activeSeverities,
-                      textFilter: _effectiveFilter,
-                      selectedSessionIds: selectedSessions,
-                      selectionMode: _selectionMode,
-                      selectedEntryIds: _selectedEntryIds,
-                      onEntrySelected: _onEntrySelected,
-                      onEntryRangeSelected: _onEntryRangeSelected,
-                      bookmarkedEntryIds: _bookmarkedEntryIds,
-                      stickyOverrideIds: _stickyOverrideIds,
-                      onFilterClear: () {
-                        setState(() {
-                          _activeSeverities = _defaultSeverities;
-                          _textFilter = '';
-                          _stateFilterStack = [];
-                        });
-                      },
-                    ),
-                  ),
+                  _selectionMode
+                      ? logListView
+                      : SelectionArea(child: logListView),
                   if (_selectedEntryIds.isNotEmpty)
                     Positioned(
                       bottom: 12,
