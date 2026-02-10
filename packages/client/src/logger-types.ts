@@ -3,6 +3,12 @@ import type { TransportAdapter } from './transport/types.js'
 
 // ─── Message routing ─────────────────────────────────────────────────
 
+/**
+ * Message kinds sent by the client to the server.
+ *
+ * Core: 'session' | 'event' | 'data' — structured log messages via all transports.
+ * RPC extension: 'rpc_response' | 'register_tools' — WebSocket-only bidirectional RPC.
+ */
 export type MessageKind = 'session' | 'event' | 'data' | 'rpc_response' | 'register_tools'
 
 export interface QueuedMessage {
