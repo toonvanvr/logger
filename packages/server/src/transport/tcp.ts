@@ -1,6 +1,4 @@
-import { DataMessage, EventMessage, SessionMessage } from '@logger/shared'
-import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
-import { ingest } from './ingest'
+import { parseAndIngest } from './ingest'
 import type { ServerDeps } from './types'
 
 // ─── Constants ───────────────────────────────────────────────────────
@@ -65,19 +63,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
             continue // skip malformed lines
           }
 
-          if (parsed.type === 'session') {
-            const result = SessionMessage.safeParse(parsed)
-            if (!result.success) continue
-            ingest(normalizeSession(result.data), deps)
-          } else if (parsed.type === 'data') {
-            const result = DataMessage.safeParse(parsed)
-            if (!result.success) continue
-            ingest(normalizeData(result.data), deps)
-          } else {
-            const result = EventMessage.safeParse(parsed)
-            if (!result.success) continue
-            ingest(normalizeEvent(result.data), deps)
-          }
+          parseAndIngest(parsed, deps)
         }
 
         // Guard against unbounded buffer growth

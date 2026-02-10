@@ -1,4 +1,5 @@
-import type { StoredEntry } from '@logger/shared'
+import { DataMessage, EventMessage, SessionMessage, type StoredEntry } from '@logger/shared'
+import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
 import { isSystemSession } from '../modules/self-logger'
 import type { ServerDeps } from './types'
 
@@ -31,4 +32,30 @@ export function ingest(entry: StoredEntry, deps: ServerDeps): void {
   }
 
   wsHub.broadcast({ type: 'event', entry })
+}
+
+/**
+ * Parse a raw JSON object by type and ingest via the normalizer pipeline.
+ * Returns true if the message was valid and ingested, false otherwise.
+ */
+export function parseAndIngest(
+  parsed: { type?: string;[k: string]: unknown },
+  deps: ServerDeps,
+): boolean {
+  if (parsed.type === 'session') {
+    const r = SessionMessage.safeParse(parsed)
+    if (!r.success) return false
+    ingest(normalizeSession(r.data), deps)
+    return true
+  }
+  if (parsed.type === 'data') {
+    const r = DataMessage.safeParse(parsed)
+    if (!r.success) return false
+    ingest(normalizeData(r.data), deps)
+    return true
+  }
+  const r = EventMessage.safeParse(parsed)
+  if (!r.success) return false
+  ingest(normalizeEvent(r.data), deps)
+  return true
 }

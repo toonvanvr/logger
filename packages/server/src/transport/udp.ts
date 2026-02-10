@@ -1,6 +1,4 @@
-import { DataMessage, EventMessage, SessionMessage } from '@logger/shared'
-import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
-import { ingest } from './ingest'
+import { parseAndIngest } from './ingest'
 import type { ServerDeps } from './types'
 
 // ─── UDP Transport ───────────────────────────────────────────────────
@@ -27,19 +25,7 @@ export async function setupUdp(deps: ServerDeps): Promise<void> {
           return // silent drop — fire-and-forget, no response channel
         }
 
-        if (parsed.type === 'session') {
-          const result = SessionMessage.safeParse(parsed)
-          if (!result.success) return
-          ingest(normalizeSession(result.data), deps)
-        } else if (parsed.type === 'data') {
-          const result = DataMessage.safeParse(parsed)
-          if (!result.success) return
-          ingest(normalizeData(result.data), deps)
-        } else {
-          const result = EventMessage.safeParse(parsed)
-          if (!result.success) return
-          ingest(normalizeEvent(result.data), deps)
-        }
+        parseAndIngest(parsed, deps)
       },
     },
   })
