@@ -153,7 +153,7 @@ void main() {
         final msg = ServerMessage.fromJson({
           'type': 'session_update',
           'session_id': 'sess-1',
-          'session_action': 'start',
+          'action': 'start',
           'application': {'name': 'MyApp', 'version': '1.0.0'},
         });
 

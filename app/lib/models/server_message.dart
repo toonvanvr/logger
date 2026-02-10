@@ -95,7 +95,7 @@ sealed class ServerMessage {
       ),
       'session_update' => SessionUpdateMessage(
         sessionId: json['session_id'] as String?,
-        sessionAction: parseSessionAction(json['session_action'] as String?),
+        sessionAction: parseSessionAction(json['action'] as String?),          
         application: json['application'] != null
             ? ApplicationInfo.fromJson(
                 json['application'] as Map<String, dynamic>,
