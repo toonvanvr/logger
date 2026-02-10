@@ -35,6 +35,9 @@ class MiniTitleBar extends StatelessWidget {
             child: CustomPaint(painter: LogoPainter()),
           ),
           const SizedBox(width: 4),
+          // Center: Drag area for window move
+          const Expanded(child: _DragArea()),
+          // Right: Action buttons + Window controls
           // Filter toggle
           _MiniButton(
             icon: Icons.filter_list,
@@ -57,9 +60,7 @@ class MiniTitleBar extends StatelessWidget {
               context.read<SettingsService>().setMiniMode(false);
             },
           ),
-          // Center: Drag area for window move
-          const Expanded(child: _DragArea()),
-          // Right: Window control buttons
+          // Window control buttons
           const _PinButton(),
           _WindowButton(
             icon: Icons.minimize,
@@ -84,9 +85,12 @@ class _DragArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: (_) => WindowService.startDrag(),
-      child: const SizedBox.expand(),
+    return Listener(
+      onPointerDown: (_) => WindowService.startDrag(),
+      child: const MouseRegion(
+        cursor: SystemMouseCursors.move,
+        child: SizedBox.expand(),
+      ),
     );
   }
 }
