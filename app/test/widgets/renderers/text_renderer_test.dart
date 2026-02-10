@@ -89,15 +89,7 @@ void main() {
     final exception = ExceptionData(
       type: 'TypeError',
       message: 'null is not an object',
-      stackTrace: [
-        StackFrame(
-          location: SourceLocation(uri: 'app.js', line: 10, column: 5),
-        ),
-        StackFrame(
-          location: SourceLocation(uri: 'vendor.js', line: 1, column: 1),
-          isVendor: true,
-        ),
-      ],
+      stackTrace: 'app.js:10:5\nvendor.js:1:1',
     );
 
     await tester.pumpWidget(

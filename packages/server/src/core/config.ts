@@ -1,3 +1,4 @@
+// TODO: align with rest of codebase by using zod schema. The config object can become a z.object() with proper parsing and validation + actual critical errors if humans inject wrong values accidentally
 function safeInt(env: string | undefined, fallback: number): number {
   if (!env) return fallback
   const val = parseInt(env, 10)

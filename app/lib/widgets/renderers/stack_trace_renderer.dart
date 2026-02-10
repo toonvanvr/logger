@@ -12,6 +12,25 @@ import 'stack_frame_list.dart';
 /// expands the full list. Vendor frames are dimmed.
 /// Stack trace frames are clickable — clicking opens the file in the
 /// configured editor. URLs are opened with the system URL handler.
+/// Parses a raw stack trace string into [StackFrame] objects.
+///
+/// Splits on newlines, trims, and skips empty lines.
+/// Each line becomes a [StackFrame] with the raw text stored.
+List<StackFrame> _parseFrames(String? raw) {
+  if (raw == null || raw.isEmpty) return [];
+  return raw
+      .split('\n')
+      .map((l) => l.trim())
+      .where((l) => l.isNotEmpty)
+      .map(
+        (l) => StackFrame(
+          location: SourceLocation(uri: l),
+          raw: l,
+        ),
+      )
+      .toList();
+}
+
 class StackTraceRenderer extends StatefulWidget {
   final ExceptionData exception;
 
@@ -34,7 +53,7 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
   @override
   Widget build(BuildContext context) {
     final exception = widget.exception;
-    final frames = exception.stackTrace ?? [];
+    final frames = _parseFrames(exception.stackTrace);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,10 +127,10 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
           ),
         ],
         // Nested cause chain
-        if (exception.cause != null) ...[
+        if (exception.inner != null) ...[
           const SizedBox(height: 6),
           CauseChainWidget(
-            firstCause: exception.cause!,
+            firstCause: exception.inner!,
             parentCauseDepth: widget.causeDepth,
           ),
         ],

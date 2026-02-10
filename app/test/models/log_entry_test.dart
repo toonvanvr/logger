@@ -91,24 +91,22 @@ void main() {
         'exception': {
           'type': 'TypeError',
           'message': 'null is not an object',
-          'stackTrace': [
-            {
-              'location': {'uri': 'app.dart', 'line': 10, 'column': 5},
-              'isVendor': false,
-            },
-          ],
-          'cause': {'type': 'RangeError', 'message': 'index out of range'},
+          'stack_trace': 'at app.dart:10:5',
+          'source': 'app.dart',
+          'handled': false,
+          'inner': {'type': 'RangeError', 'message': 'index out of range'},
         },
       });
 
       expect(entry.exception, isNotNull);
       expect(entry.exception!.type, 'TypeError');
       expect(entry.exception!.message, 'null is not an object');
-      expect(entry.exception!.stackTrace, hasLength(1));
-      expect(entry.exception!.stackTrace!.first.location.uri, 'app.dart');
-      expect(entry.exception!.cause, isNotNull);
-      expect(entry.exception!.cause!.type, 'RangeError');
-      expect(entry.exception!.cause!.message, 'index out of range');
+      expect(entry.exception!.stackTrace, 'at app.dart:10:5');
+      expect(entry.exception!.source, 'app.dart');
+      expect(entry.exception!.handled, isFalse);
+      expect(entry.exception!.inner, isNotNull);
+      expect(entry.exception!.inner!.type, 'RangeError');
+      expect(entry.exception!.inner!.message, 'index out of range');
     });
 
     // ── Test 5: widget payload ──
@@ -347,20 +345,20 @@ void main() {
       final json = {
         'type': 'HttpError',
         'message': '404 Not Found',
-        'stackTrace': [
-          {
-            'location': {'uri': 'http.dart', 'line': 20},
-          },
-        ],
-        'cause': {'message': 'DNS resolution failed'},
+        'stack_trace': 'at http.dart:20',
+        'source': 'http.dart',
+        'handled': true,
+        'inner': {'message': 'DNS resolution failed'},
       };
       final exc = ExceptionData.fromJson(json);
       final output = exc.toJson();
 
       expect(output['type'], 'HttpError');
       expect(output['message'], '404 Not Found');
-      expect((output['stackTrace'] as List), hasLength(1));
-      expect(output['cause']['message'], 'DNS resolution failed');
+      expect(output['stack_trace'], 'at http.dart:20');
+      expect(output['source'], 'http.dart');
+      expect(output['handled'], isTrue);
+      expect(output['inner']['message'], 'DNS resolution failed');
     });
 
     // ── Test 21: IconRef ──

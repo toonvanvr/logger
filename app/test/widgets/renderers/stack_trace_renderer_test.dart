@@ -1,6 +1,5 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/services/settings_service.dart';
-import 'package:app/theme/colors.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/renderers/stack_trace_renderer.dart';
 import 'package:flutter/material.dart';
@@ -47,12 +46,7 @@ void main() {
       const exception = ExceptionData(
         type: 'Error',
         message: 'oops',
-        stackTrace: [
-          StackFrame(
-            location: SourceLocation(uri: 'app.dart', line: 42, column: 5),
-          ),
-          StackFrame(location: SourceLocation(uri: 'lib.dart', line: 10)),
-        ],
+        stackTrace: 'app.dart:42:5\nlib.dart:10',
       );
 
       await tester.pumpWidget(
@@ -71,32 +65,27 @@ void main() {
       expect(find.text('▸ all 1'), findsOneWidget);
     });
 
-    // ── Test 3: vendor frames are dimmed ──
+    // ── Test 3: raw frames render without vendor detection ──
 
-    testWidgets('vendor frames are dimmed', (tester) async {
+    testWidgets('raw frames render with default style', (tester) async {
       const exception = ExceptionData(
         type: 'Error',
         message: 'fail',
-        stackTrace: [
-          StackFrame(
-            location: SourceLocation(uri: 'vendor.dart', line: 1),
-            isVendor: true,
-          ),
-        ],
+        stackTrace: 'vendor.dart:1',
       );
 
       await tester.pumpWidget(
         _wrap(const StackTraceRenderer(exception: exception)),
       );
 
-      // Vendor frame should use fgMuted color
-      final vendorText = tester.widget<Text>(
+      // Frame should render (raw line used as URI in parsed StackFrame).
+      expect(
         find.byWidgetPredicate(
           (w) =>
               w is Text && w.data != null && w.data!.contains('vendor.dart:1'),
         ),
+        findsOneWidget,
       );
-      expect(vendorText.style!.color, LoggerColors.fgMuted);
     });
   });
 }

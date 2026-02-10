@@ -277,8 +277,16 @@
 
     "@logger/client/@logger/shared": ["@logger/shared@file:packages/shared", { "dependencies": { "zod": "^4.3.6" }, "devDependencies": { "@types/bun": "^1.3.8" } }],
 
+    "@logger/docker-sidecar/@logger/client": ["@logger/client@file:packages/client", { "dependencies": { "@logger/shared": "file:../shared" }, "devDependencies": { "@types/bun": "^1.3.8" } }],
+
     "@logger/mcp/@logger/shared": ["@logger/shared@file:packages/shared", { "dependencies": { "zod": "^4.3.6" }, "devDependencies": { "@types/bun": "^1.3.8" } }],
 
+    "demo/@logger/client": ["@logger/client@file:packages/client", { "dependencies": { "@logger/shared": "file:../shared" }, "devDependencies": { "@types/bun": "^1.3.8" } }],
+
     "logger/@logger/shared": ["@logger/shared@file:packages/shared", { "dependencies": { "zod": "^4.3.6" }, "devDependencies": { "@types/bun": "^1.3.8" } }],
+
+    "@logger/docker-sidecar/@logger/client/@logger/shared": ["@logger/shared@file:packages/shared", {}],
+
+    "demo/@logger/client/@logger/shared": ["@logger/shared@file:packages/shared", {}],
   }
 }

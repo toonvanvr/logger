@@ -35,7 +35,7 @@ class _CauseChainWidgetState extends State<CauseChainWidget> {
     ExceptionData? current = firstCause;
     while (current != null) {
       causeCount++;
-      current = current.cause;
+      current = current.inner;
     }
 
     return Container(
@@ -70,7 +70,7 @@ class _CauseChainWidgetState extends State<CauseChainWidget> {
             causeDepth: widget.parentCauseDepth + 1,
           ),
           // If there are deeper causes beyond the first, show them collapsed.
-          if (causeCount > 1 && firstCause.cause != null) ...[
+          if (causeCount > 1 && firstCause.inner != null) ...[
             if (!_causesExpanded)
               GestureDetector(
                 onTap: () => setState(() => _causesExpanded = true),
@@ -87,7 +87,7 @@ class _CauseChainWidgetState extends State<CauseChainWidget> {
             if (_causesExpanded)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: _buildExpandedCauses(firstCause.cause!),
+                child: _buildExpandedCauses(firstCause.inner!),
               ),
           ],
         ],

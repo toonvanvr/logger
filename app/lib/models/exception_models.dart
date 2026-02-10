@@ -66,34 +66,39 @@ class StackFrame {
 class ExceptionData {
   final String? type;
   final String message;
-  final List<StackFrame>? stackTrace;
-  final ExceptionData? cause;
+  final String? stackTrace;
+  final ExceptionData? inner;
+  final String? source;
+  final bool handled;
 
   const ExceptionData({
     this.type,
     required this.message,
     this.stackTrace,
-    this.cause,
+    this.inner,
+    this.source,
+    this.handled = true,
   });
 
   factory ExceptionData.fromJson(Map<String, dynamic> json) {
     return ExceptionData(
       type: json['type'] as String?,
       message: json['message'] as String,
-      stackTrace: (json['stackTrace'] as List<dynamic>?)
-          ?.map((e) => StackFrame.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      cause: json['cause'] != null
-          ? ExceptionData.fromJson(json['cause'] as Map<String, dynamic>)
+      stackTrace: json['stack_trace'] as String?,
+      inner: json['inner'] != null
+          ? ExceptionData.fromJson(json['inner'] as Map<String, dynamic>)
           : null,
+      source: json['source'] as String?,
+      handled: (json['handled'] as bool?) ?? true,
     );
   }
 
   Map<String, dynamic> toJson() => {
     if (type != null) 'type': type,
     'message': message,
-    if (stackTrace != null)
-      'stackTrace': stackTrace!.map((f) => f.toJson()).toList(),
-    if (cause != null) 'cause': cause!.toJson(),
+    if (stackTrace != null) 'stack_trace': stackTrace,
+    if (inner != null) 'inner': inner!.toJson(),
+    if (source != null) 'source': source,
+    'handled': handled,
   };
 }
