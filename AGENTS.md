@@ -44,18 +44,20 @@ logger/
 │   ├── server/       Bun-based log server (TypeScript)
 │   │   └── src/
 │   │       ├── main.ts           Entry point, module wiring
-│   │       ├── core/             Config, shared utilities
+│   │       ├── core/             Config, normalizer, hooks, rate limiter
 │   │       ├── modules/          Ring buffer, Loki forwarder, session mgr, RPC bridge, WS hub
-│   │       ├── schema/           Zod validation schemas
 │   │       ├── store/            Storage abstractions
 │   │       └── transport/        HTTP, WebSocket, UDP, TCP handlers
 │   ├── shared/       Shared types & schemas (TypeScript)
 │   │   └── src/
-│   │       ├── log-entry.ts      LogEntry Zod schema (source of truth)
-│   │       ├── server-message.ts Server→Viewer messages
-│   │       ├── viewer-message.ts Viewer→Server messages
-│   │       ├── custom-renderers.ts  Custom renderer type definitions
-│   │       └── constants.ts      Shared constants
+│   │       ├── stored-entry.ts     StoredEntry Zod schema (source of truth)
+│   │       ├── event-message.ts    Event log input schema
+│   │       ├── data-message.ts     Data/state input schema
+│   │       ├── session-message.ts  Session lifecycle input schema
+│   │       ├── server-broadcast.ts Server→Viewer broadcast messages
+│   │       ├── viewer-command.ts   Viewer→Server command messages
+│   │       ├── widget.ts           Widget/custom renderer type definitions
+│   │       └── constants.ts        Shared constants
 │   ├── docker-sidecar/ Docker container log forwarding sidecar
 │   ├── mcp/          MCP tool server for AI debugging
 │   └── demo/         Demo log generator with scenarios
@@ -76,14 +78,15 @@ logger/
 
 | File | Purpose |
 |------|---------|
-| `packages/shared/src/log-entry.ts` | **LogEntry Zod schema** — single source of truth for the log protocol |
-| `packages/shared/src/server-message.ts` | Server→Viewer WebSocket message schema |
-| `packages/shared/src/viewer-message.ts` | Viewer→Server WebSocket message schema |
+| `packages/shared/src/stored-entry.ts` | **StoredEntry Zod schema** — single source of truth for the log protocol |
+| `packages/shared/src/server-broadcast.ts` | Server→Viewer WebSocket broadcast messages |
+| `packages/shared/src/viewer-command.ts` | Viewer→Server WebSocket command messages |
 | `packages/server/src/main.ts` | Server entry point — wires all modules together |
 | `packages/server/src/core/config.ts` | All server configuration via env vars |
-| `packages/server/src/transport/http.ts` | HTTP route definitions (log ingestion, health, upload) |
+| `packages/server/src/transport/http.ts` | HTTP route definitions (`/api/v2/` — ingestion, health, upload) |
 | `packages/server/src/transport/ws.ts` | WebSocket handler for viewer connections |
-| `packages/server/src/transport/ingest.ts` | Log processing pipeline |
+| `packages/server/src/transport/ingest.ts` | Log ingestion pipeline (single `ingest()` function) |
+| `packages/server/src/core/normalizer.ts` | Normalizes input messages to StoredEntry |
 | `packages/server/src/modules/ring-buffer.ts` | In-memory log storage with eviction |
 | `packages/server/src/modules/loki-forwarder.ts` | Async batch forwarding to Loki |
 | `packages/server/src/modules/session-manager.ts` | Session lifecycle tracking |
@@ -95,12 +98,17 @@ logger/
 | `app/lib/services/connection_manager.dart` | Multi-server connection management with auto-reconnect |
 | `app/lib/services/time_range_service.dart` | Time range zoom/pan state management |
 | `app/lib/services/log_store.dart` | In-memory log storage with filtering |
+| `app/lib/services/log_store_stacking.dart` | Entry stacking (version history) logic |
+| `app/lib/screens/log_viewer_keyboard.dart` | Keyboard shortcut handler for log viewer |
 | `app/lib/widgets/header/filter_bar.dart` | Search/filter bar with autocomplete |
 | `app/lib/widgets/log_list/log_list_view.dart` | Scrollable log list with live mode |
 | `app/lib/widgets/state_view/state_view_section.dart` | Persistent state key-value view section |
 | `app/lib/widgets/state_view/shelf_card.dart` | Secondary state shelf card |
 | `app/lib/widgets/landing/empty_landing_page.dart` | Empty landing page when no sessions |
 | `app/lib/plugins/builtin/http_request_plugin.dart` | HTTP request tracking renderer plugin |
+| `app/lib/widgets/renderers/cause_chain_renderer.dart` | Exception cause chain renderer |
+| `app/lib/widgets/renderers/stack_frame_list.dart` | Stack frame list widget |
+| `app/lib/theme/constants.dart` | Theme dimension constants |
 | `packages/server/src/store/index.ts` | Store abstraction layer |
 | `packages/server/src/store/adapters/loki-adapter.ts` | Loki storage adapter |
 | `packages/server/src/store/adapters/memory-adapter.ts` | In-memory storage adapter |
@@ -200,7 +208,7 @@ See `docs/reference/plugin-api.md` for the full API.
 | `docs/guides/getting-started.md` | Step-by-step setup tutorial |
 | `docs/guides/features.md` | Feature overview for the viewer |
 | `docs/reference/configuration.md` | All `LOGGER_*` env vars |
-| `docs/reference/protocol.md` | LogEntry schema reference |
+| `docs/reference/protocol.md` | StoredEntry schema reference |
 | `docs/reference/plugin-api.md` | Plugin development guide |
 | `docs/design/ux-principles.md` | Core UX design principles |
 | `docs/design/color-system.md` | Color token reference |

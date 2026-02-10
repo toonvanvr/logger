@@ -11,36 +11,6 @@ mixin _SelectionMixin on State<LogViewerScreen> {
   final Set<String> _bookmarkedEntryIds = {};
   final Set<String> _stickyOverrideIds = {};
 
-  bool _handleKeyEvent(KeyEvent event) {
-    // Ctrl+M → toggle mini mode
-    if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.keyM &&
-        (HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.controlLeft,
-            ) ||
-            HardwareKeyboard.instance.logicalKeysPressed.contains(
-              LogicalKeyboardKey.controlRight,
-            ))) {
-      final settings = context.read<SettingsService>();
-      settings.setMiniMode(!settings.miniMode);
-      return true;
-    }
-
-    final shiftHeld =
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftLeft,
-        ) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftRight,
-        );
-    if (shiftHeld && !_selectionMode) {
-      setState(() => _selectionMode = true);
-    } else if (!shiftHeld && _selectionMode && _selectedEntryIds.isEmpty) {
-      setState(() => _selectionMode = false);
-    }
-    return false;
-  }
-
   void _onEntrySelected(String id) {
     setState(() {
       _lastSelectedEntryId = id;

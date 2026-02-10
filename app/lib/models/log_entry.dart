@@ -4,9 +4,13 @@
 /// matching the wire protocol.
 library;
 
+import 'data_state_models.dart';
+import 'exception_models.dart';
 import 'log_enums.dart';
 import 'log_sub_models.dart';
 
+export 'data_state_models.dart';
+export 'exception_models.dart';
 export 'log_enums.dart';
 export 'log_sub_models.dart';
 

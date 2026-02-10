@@ -10,7 +10,7 @@ const DEFAULT_WS_BASE = 'ws://localhost:8080'
 /**
  * WebSocket transport — primary, bidirectional.
  *
- * Sends each message as `{type: kind, ...payload}` (v2 envelope).
+ * Sends each message as `{type: kind, ...payload}` envelope.
  * Receives ServerMessages via optional onMessage handler.
  * Auto-reconnects with exponential backoff (1s → 30s).
  */
@@ -26,7 +26,7 @@ export class WsTransport implements TransportAdapter {
 
   constructor(options?: WsTransportOptions) {
     const raw = options?.url ?? DEFAULT_WS_BASE
-    // Normalise: ensure we point at the v2 stream endpoint.
+    // Normalise: ensure we point at the stream endpoint.
     const parsed = new URL(raw)
     if (!parsed.pathname || parsed.pathname === '/') {
       parsed.pathname = '/api/v2/stream'

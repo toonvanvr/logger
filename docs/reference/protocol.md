@@ -1,8 +1,8 @@
 # Log Entry Protocol Reference
 
-The Logger protocol uses a unified `LogEntry` schema for all transports (HTTP, UDP, TCP, WebSocket). The schema is defined in Zod at `packages/shared/src/log-entry.ts` — that file is the **single source of truth**.
+The Logger protocol uses a unified `StoredEntry` schema for internal storage. Input is split across three endpoint-specific schemas (`EventMessage`, `DataMessage`, `SessionMessage`) that normalize to `StoredEntry`. Schemas are defined in Zod at `packages/shared/src/` — `stored-entry.ts` is the **single source of truth** for the internal model.
 
-## LogEntry Schema
+## StoredEntry Schema
 
 ### Required Fields
 
@@ -125,7 +125,7 @@ Groups allow collapsible log sections.
 
 #### Built-in Custom Renderers
 
-The following `custom_type` values have built-in renderer support. Schemas are defined in `packages/shared/src/custom-renderers.ts`.
+The following `custom_type` values have built-in renderer support. Widget schemas are defined in `packages/shared/src/widget.ts`.
 
 | `custom_type` | Description | Key `custom_data` Fields |
 |---------------|-------------|---------------------------|
@@ -240,7 +240,7 @@ State keys prefixed with `_shelf.` are rendered in a secondary "shelf" area belo
 }
 ```
 
-Requires either `data` (inline base64) or `ref` (upload reference from `POST /api/v1/upload`).
+Requires either `data` (inline base64) or `ref` (upload reference from `POST /api/v2/upload`).
 
 ### IconRef
 
@@ -266,15 +266,20 @@ Multiple entries can be sent in a single request:
 
 | Transport | Endpoint | Format |
 |-----------|----------|--------|
-| HTTP | `POST /api/v1/log` | Single `LogEntry` JSON body |
-| HTTP | `POST /api/v1/logs` | `LogBatch` JSON body |
-| UDP | Port 8081 | JSON-encoded `LogEntry` per datagram |
-| TCP | Port 8082 | Newline-delimited JSON `LogEntry` |
-| WebSocket | Port 8082 | `ServerMessage` / `ViewerMessage` JSON frames |
+| HTTP | `POST /api/v2/session` | Session lifecycle JSON body |
+| HTTP | `POST /api/v2/events` | Event log entries (single or batch) |
+| HTTP | `POST /api/v2/data` | Data/state entries |
+| HTTP | `POST /api/v2/upload` | Image upload |
+| HTTP | `GET /api/v2/health` | Health check |
+| HTTP | `GET /api/v2/sessions` | List active sessions |
+| HTTP | `GET /api/v2/query` | Query stored entries |
+| UDP | Port 8081 | JSON-encoded entry per datagram |
+| TCP | Port 8082 | Newline-delimited JSON entries |
+| WebSocket | Port 8082 | `ServerBroadcast` / `ViewerCommand` JSON frames |
 
 ## Server Messages (Server → Viewer)
 
-Defined in `shared/src/server-message.ts`:
+Defined in `shared/src/server-broadcast.ts`:
 
 | Type | Description |
 |------|-------------|
@@ -292,7 +297,7 @@ Defined in `shared/src/server-message.ts`:
 
 ## Viewer Messages (Viewer → Server)
 
-Defined in `shared/src/viewer-message.ts`:
+Defined in `shared/src/viewer-command.ts`:
 
 | Type | Description |
 |------|-------------|
@@ -307,7 +312,7 @@ Defined in `shared/src/viewer-message.ts`:
 
 Images can be sent inline (base64 in `image.data`) or uploaded separately:
 
-1. `POST /api/v1/upload` with the image file → returns a `ref` ID
+1. `POST /api/v2/upload` with the image file → returns a `ref` ID
 2. Use `image.ref` in a subsequent log entry with `type: "image"`
 
 This avoids embedding large base64 payloads in log entries.

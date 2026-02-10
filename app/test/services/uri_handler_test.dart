@@ -68,7 +68,7 @@ void main() {
       expect(result, isTrue);
       expect(connectionManager.connections.length, 1);
       final conn = connectionManager.connections.values.first;
-      expect(conn.url, 'ws://myhost:9090/api/v1/stream');
+      expect(conn.url, 'ws://myhost:9090/api/v2/stream');
       expect(conn.label, 'myhost:9090');
     });
 
@@ -85,7 +85,7 @@ void main() {
       expect(result, isTrue);
       expect(connectionManager.connections.length, 1);
       final conn = connectionManager.connections.values.first;
-      expect(conn.url, 'ws://localhost:8080/api/v1/stream');
+      expect(conn.url, 'ws://localhost:8080/api/v2/stream');
     });
 
     test('handles logger://filter with query', () {

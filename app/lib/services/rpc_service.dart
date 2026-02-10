@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/viewer_message.dart';
-import 'log_connection.dart';
+import 'connection_manager.dart';
 
 // ─── Data classes ────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ class RpcService extends ChangeNotifier {
     String sessionId,
     String method,
     dynamic args,
-    LogConnection connection,
+    ConnectionManager connection,
   ) {
     final rpcId = _uuid.v4();
     final completer = Completer<dynamic>();

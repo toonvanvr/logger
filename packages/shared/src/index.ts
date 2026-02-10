@@ -1,31 +1,75 @@
-// ─── Log Entry & Core Types ──────────────────────────────────────────
+// ─── Session ─────────────────────────────────────────────────────────
 export {
-    ApplicationInfo, ExceptionData, GroupAction, IconRef,
-    ImageData, LogBatch, LogEntry, LogType, RpcDirection, SessionAction, Severity, SourceLocation,
-    StackFrame
-} from './log-entry';
+    ApplicationInfo,
+    ApplicationInfoSchema,
+    SessionMessage,
+    type ApplicationInfo as ApplicationInfoType
+} from './session-message.js'
 
-// ─── Server Messages ─────────────────────────────────────────────────
+// ─── Events ──────────────────────────────────────────────────────────
 export {
-    ServerMessage, ServerMessageType,
+    EventMessage,
+    ExceptionData,
+    ExceptionDataSchema,
+    IconRef,
+    IconRefSchema,
+    Severity,
+    SeveritySchema
+} from './event-message.js'
+
+// ─── Data ────────────────────────────────────────────────────────────
+export {
+    DataMessage,
+    DisplayLocation,
+    DisplayLocationSchema,
+    WidgetConfig,
+    WidgetConfigSchema
+} from './data-message.js'
+
+// ─── Widgets ─────────────────────────────────────────────────────────
+export {
+    TreeNodeSchema,
+    WidgetPayload,
+    type TreeNode
+} from './widget.js'
+
+// ─── Stored Entry ────────────────────────────────────────────────────
+export {
+    EntryKind,
+    StoredEntry
+} from './stored-entry.js'
+
+// ─── Server Broadcast ───────────────────────────────────────────────
+export {
+    DataState,
+    ServerBroadcast,
     SessionInfo
-} from './server-message';
+} from './server-broadcast.js'
 
-// ─── Viewer Messages ─────────────────────────────────────────────────
+// ─── Viewer Command ──────────────────────────────────────────────────
 export {
-    ViewerMessage, ViewerMessageType
-} from './viewer-message';
-
-// ─── Custom Renderers ────────────────────────────────────────────────
-export {
-    ChartRendererData, CustomRendererData, DiffRendererData, KvRendererData, ProgressRendererData, TableRendererData, TimelineRendererData, TreeNodeSchema, TreeRendererData
-} from './custom-renderers';
-export type { TreeNode } from './custom-renderers';
+    ViewerCommand
+} from './viewer-command.js'
 
 // ─── Constants ───────────────────────────────────────────────────────
 export {
-    DEFAULT_HOST, DEFAULT_HTTP_URL, DEFAULT_SERVER_PORT, DEFAULT_TCP_PORT, DEFAULT_UDP_PORT, DEFAULT_WS_URL, ERROR_CODES, MAX_BATCH_SIZE, MAX_BINARY_SIZE,
-    MAX_IMAGE_SIZE, MAX_JSON_SIZE, MAX_SESSION_ID_LENGTH, MAX_TAGS, MAX_TEXT_SIZE, RING_BUFFER_DEFAULT_SIZE
-} from './constants';
-export type { ErrorCode } from './constants';
+    DEFAULT_DATA_URL,
+    DEFAULT_EVENTS_URL,
+    DEFAULT_HOST,
+    DEFAULT_SERVER_PORT,
+    DEFAULT_SESSION_URL,
+    DEFAULT_TCP_PORT,
+    DEFAULT_UDP_PORT,
+    DEFAULT_WS_URL,
+    ERROR_CODES,
+    MAX_BATCH_SIZE,
+    MAX_BINARY_SIZE,
+    MAX_IMAGE_SIZE,
+    MAX_JSON_SIZE,
+    MAX_SESSION_ID_LENGTH,
+    MAX_TAGS,
+    MAX_TEXT_SIZE,
+    RING_BUFFER_DEFAULT_SIZE
+} from './constants.js'
+export type { ErrorCode } from './constants.js'
 

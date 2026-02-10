@@ -1,18 +1,18 @@
-import type { LogEntry } from '@logger/shared'
+import type { StoredEntry } from '@logger/shared'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { LokiForwarder, type LokiForwarderConfig } from './loki-forwarder'
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-function makeEntry(overrides: Partial<LogEntry> & { id: string }): LogEntry {
+function makeEntry(overrides: Partial<StoredEntry> & { id: string }): StoredEntry {
   return {
     timestamp: new Date().toISOString(),
     session_id: 'sess-1',
+    kind: 'event',
     severity: 'info',
-    type: 'text',
-    text: 'hello',
+    message: 'hello',
     ...overrides,
-  } as LogEntry
+  } as StoredEntry
 }
 
 interface MockLoki {
@@ -183,8 +183,8 @@ describe('LokiForwarder', () => {
       id: 'e1',
       session_id: 'sess-42',
       severity: 'warning',
-      type: 'json',
-      section: 'network',
+      kind: 'event',
+      tag: 'network',
       application: { name: 'my-api' },
     })
 
@@ -206,14 +206,14 @@ describe('LokiForwarder', () => {
     expect(JSON.parse(line).id).toBe('e1')
     expect(metadata).toEqual({
       session: 'sess-42',
+      kind: 'event',
       tag: 'network',
-      widget_type: 'json',
     })
 
     await f.shutdown()
   })
 
-  it('includes widget_type in structured metadata for v1 entries', async () => {
+  it('includes kind in structured metadata', async () => {
     const f = fw({ batchSize: 1 })
 
     f.push(makeEntry({ id: 'e1' }))
@@ -221,7 +221,7 @@ describe('LokiForwarder', () => {
 
     const [, , metadata] = mock.requests[0].streams[0].values[0]
     expect(metadata.session).toBe('sess-1')
-    expect(metadata.widget_type).toBe('text')
+    expect(metadata.kind).toBe('event')
 
     await f.shutdown()
   })

@@ -87,10 +87,10 @@ describe('logger.query scope=health', () => {
     }
 
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/health', { status: 200, body: healthData }]]),
+      new Map([['/api/v2/health', { status: 200, body: healthData }]]),
     )
 
-    const data = await fetchJson('/api/v1/health')
+    const data = await fetchJson('/api/v2/health')
     expect(data).toEqual(healthData)
 
     const result = { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] }
@@ -133,10 +133,10 @@ describe('logger.query scope=sessions', () => {
     ]
 
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/sessions', { status: 200, body: sessions }]]),
+      new Map([['/api/v2/sessions', { status: 200, body: sessions }]]),
     )
 
-    const data = await fetchJson('/api/v1/sessions')
+    const data = await fetchJson('/api/v2/sessions')
     expect(data).toEqual(sessions)
     expect(Array.isArray(data)).toBe(true)
     expect((data as unknown[]).length).toBe(2)
@@ -152,10 +152,10 @@ describe('logger.query scope=state', () => {
     const stateData = { mode: 'running', progress: 75, status: 'healthy' }
 
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/sessions/sess-1/state', { status: 200, body: stateData }]]),
+      new Map([['/api/v2/sessions/sess-1/state', { status: 200, body: stateData }]]),
     )
 
-    const data = await fetchJson('/api/v1/sessions/sess-1/state')
+    const data = await fetchJson('/api/v2/sessions/sess-1/state')
     expect(data).toEqual(stateData)
     expect((data as { mode: string }).mode).toBe('running')
   })
@@ -170,11 +170,11 @@ describe('logger.query scope=logs (default)', () => {
     const entries = [{ id: 'log-1', severity: 'info', text: 'hello' }]
 
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/query', { status: 200, body: entries }]]),
+      new Map([['/api/v2/query', { status: 200, body: entries }]]),
     )
 
     const queryBody = { limit: 20 }
-    const data = await fetchJson('/api/v1/query', {
+    const data = await fetchJson('/api/v2/query', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(queryBody),
@@ -197,17 +197,16 @@ describe('logger.send', () => {
     const confirmation = { ok: true, id: 'log-123' }
 
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/log', { status: 200, body: confirmation }]]),
+      new Map([['/api/v2/events', { status: 200, body: confirmation }]]),
     )
 
     const body = {
-      type: 'text',
+      session_id: 'mcp',
       severity: 'info',
-      text: 'Hello from MCP test',
-      timestamp: new Date().toISOString(),
+      message: 'Hello from MCP test',
     }
 
-    const data = await fetchJson('/api/v1/log', {
+    const data = await fetchJson('/api/v2/events', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
@@ -220,7 +219,7 @@ describe('logger.send', () => {
     // Verify fetch was called with POST
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
     const [calledUrl, calledInit] = (globalThis.fetch as unknown as ReturnType<typeof mock>).mock.calls[0] as [string, RequestInit]
-    expect(calledUrl).toBe('http://localhost:8080/api/v1/log')
+    expect(calledUrl).toBe('http://localhost:8080/api/v2/events')
     expect(calledInit.method).toBe('POST')
   })
 })
@@ -232,9 +231,9 @@ describe('logger.query error handling', () => {
 
   it('should throw on non-OK response', async () => {
     globalThis.fetch = mockFetch(
-      new Map([['/api/v1/health', { status: 500, body: { error: 'Internal error' } }]]),
+      new Map([['/api/v2/health', { status: 500, body: { error: 'Internal error' } }]]),
     )
 
-    expect(fetchJson('/api/v1/health')).rejects.toThrow('HTTP 500')
+    expect(fetchJson('/api/v2/health')).rejects.toThrow('HTTP 500')
   })
 })

@@ -38,24 +38,16 @@ export const DEFAULT_TCP_PORT = 8082
 /** Default host for all transports */
 export const DEFAULT_HOST = 'localhost'
 
-/** Default WebSocket URL */
-export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/stream`
+/** Default WebSocket stream URL */
+export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/stream`
 
-/** Default HTTP URL */
-export const DEFAULT_HTTP_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v1/log`
-
-// ─── v2 Endpoints ────────────────────────────────────────────────────
-
-/** v2 WebSocket stream URL */
-export const DEFAULT_WS_V2_URL = `ws://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/stream`
-
-/** v2 session endpoint */
+/** Default session endpoint */
 export const DEFAULT_SESSION_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/session`
 
-/** v2 events endpoint */
+/** Default events endpoint */
 export const DEFAULT_EVENTS_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/events`
 
-/** v2 data endpoint */
+/** Default data endpoint */
 export const DEFAULT_DATA_URL = `http://${DEFAULT_HOST}:${DEFAULT_SERVER_PORT}/api/v2/data`
 
 // ─── Error Codes ─────────────────────────────────────────────────────

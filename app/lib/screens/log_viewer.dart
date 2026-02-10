@@ -27,6 +27,8 @@ import '../widgets/status_bar/status_bar.dart';
 import '../widgets/time_travel/time_range_minimap.dart';
 
 part 'log_viewer_connection.dart';
+part 'log_viewer_content.dart';
+part 'log_viewer_keyboard.dart';
 part 'log_viewer_selection.dart';
 
 /// Main screen — the full log viewer UI.
@@ -39,7 +41,7 @@ class LogViewerScreen extends StatefulWidget {
 
   const LogViewerScreen({
     super.key,
-    this.serverUrl = 'ws://localhost:8080/api/v1/stream',
+    this.serverUrl = 'ws://localhost:8080/api/v2/stream',
     this.launchUri,
   });
 
@@ -48,25 +50,7 @@ class LogViewerScreen extends StatefulWidget {
 }
 
 class _LogViewerScreenState extends State<LogViewerScreen>
-    with _SelectionMixin, _ConnectionMixin {
-  static const Set<String> _defaultSeverities = {
-    'debug',
-    'info',
-    'warning',
-    'error',
-    'critical',
-  };
-
-  bool _isFilterExpanded = false;
-  Set<String> _activeSeverities = _defaultSeverities;
-  String _textFilter = '';
-  List<String> _stateFilterStack = [];
-  String? _selectedSection;
-  bool _settingsPanelVisible = false;
-  bool _hasEverReceivedEntries = false;
-  bool _landingDelayActive = true;
-  Timer? _landingDelayTimer;
-
+    with _SelectionMixin, _ConnectionMixin, _KeyboardMixin, _ContentMixin {
   @override
   void initState() {
     super.initState();
@@ -78,55 +62,6 @@ class _LogViewerScreenState extends State<LogViewerScreen>
     });
     _landingDelayTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted) setState(() => _landingDelayActive = false);
-    });
-  }
-
-  void _setupQueryStore() {
-    final queryStore = context.read<QueryStore>();
-    queryStore.onQueryLoaded = (query) {
-      setState(() {
-        _activeSeverities = Set.from(query.severities);
-        _textFilter = query.textFilter;
-        _stateFilterStack = [];
-      });
-    };
-  }
-
-  /// Process launch URI for filter, tab, and clear actions.
-  void _handleLaunchUri() {
-    final uri = widget.launchUri;
-    if (uri == null) return;
-    UriHandler.handleUri(
-      uri,
-      connectionManager: context.read<ConnectionManager>(),
-      onFilter: (query) => setState(() => _textFilter = query),
-      onTab: (name) => setState(() => _selectedSection = name),
-      onClear: () => setState(() {
-        _activeSeverities = _defaultSeverities;
-        _textFilter = '';
-        _stateFilterStack = [];
-      }),
-    );
-  }
-
-  /// Composes the effective filter from user text and state filter stack.
-  String get _effectiveFilter {
-    final parts = [
-      _textFilter,
-      ..._stateFilterStack.map((k) => 'state:$k'),
-    ].where((s) => s.isNotEmpty);
-    return parts.join(' ');
-  }
-
-  /// Toggles a state key in/out of the filter stack.
-  void _toggleStateFilter(String stateKey) {
-    setState(() {
-      if (_stateFilterStack.contains(stateKey)) {
-        _stateFilterStack.remove(stateKey);
-      } else {
-        _stateFilterStack.add(stateKey);
-      }
-      _isFilterExpanded = true;
     });
   }
 
@@ -146,216 +81,15 @@ class _LogViewerScreenState extends State<LogViewerScreen>
         children: [
           Column(
             children: [
-              if (settings.miniMode)
-                MiniTitleBar(
-                  isFilterExpanded: _isFilterExpanded,
-                  onFilterToggle: () {
-                    setState(() => _isFilterExpanded = !_isFilterExpanded);
-                  },
-                  onSettingsToggle: () {
-                    setState(
-                      () => _settingsPanelVisible = !_settingsPanelVisible,
-                    );
-                  },
-                )
-              else
-                SessionSelector(
-                  isFilterExpanded: _isFilterExpanded,
-                  onFilterToggle: () {
-                    setState(() => _isFilterExpanded = !_isFilterExpanded);
-                  },
-                  onRpcToggle: () {
-                    setState(
-                      () => _settingsPanelVisible = !_settingsPanelVisible,
-                    );
-                  },
-                ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: _isFilterExpanded
-                    ? FilterBar(
-                        activeSeverities: _activeSeverities,
-                        onSeverityChange: (severities) {
-                          setState(() => _activeSeverities = severities);
-                        },
-                        onTextFilterChange: (text) {
-                          setState(() => _textFilter = text);
-                        },
-                        onClear: () {
-                          setState(() {
-                            _activeSeverities = _defaultSeverities;
-                            _textFilter = '';
-                            _stateFilterStack = [];
-                          });
-                        },
-                        activeStateFilters: _stateFilterStack.toSet(),
-                        onStateFilterRemove: (key) {
-                          _toggleStateFilter(key);
-                        },
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final hasEntries = context.select<LogStore, bool>(
-                      (s) => s.entries.isNotEmpty,
-                    );
-                    final hasConnection = context
-                        .select<ConnectionManager, bool>(
-                          (c) => c.activeCount > 0,
-                        );
-                    final showLanding =
-                        !_hasEverReceivedEntries &&
-                        !hasEntries &&
-                        !hasConnection &&
-                        !_landingDelayActive;
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      layoutBuilder: (currentChild, previousChildren) {
-                        return Stack(
-                          alignment: Alignment.center,
-                          children: <Widget>[
-                            ...previousChildren,
-                            ?currentChild,
-                          ],
-                        );
-                      },
-                      child: showLanding
-                          ? EmptyLandingPage(
-                              key: const ValueKey('landing'),
-                              onConnect: () {
-                                setState(() => _settingsPanelVisible = true);
-                              },
-                            )
-                          : _buildMainContent(context),
-                    );
-                  },
-                ),
-              ),
+              _buildHeader(settings),
+              _buildFilterBar(),
+              _buildContentArea(),
               const StatusBar(),
             ],
           ),
-          // Scrim backdrop when settings panel is open
-          Positioned(
-            left: 0,
-            right: 0,
-            top: settings.miniMode ? 28 : 40,
-            bottom: 0,
-            child: IgnorePointer(
-              ignoring: !_settingsPanelVisible,
-              child: AnimatedOpacity(
-                opacity: _settingsPanelVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _settingsPanelVisible = false);
-                  },
-                  child: const ColoredBox(color: Color(0x40000000)),
-                ),
-              ),
-            ),
-          ),
-          // Settings panel overlay
-          Positioned(
-            right: 0,
-            top: settings.miniMode ? 28 : 40,
-            bottom: 0,
-            child: SettingsPanel(
-              isVisible: _settingsPanelVisible,
-              onClose: () {
-                setState(() => _settingsPanelVisible = false);
-              },
-            ),
-          ),
+          ..._buildSettingsOverlay(settings),
         ],
       ),
-    );
-  }
-
-  Widget _buildMainContent(BuildContext context) {
-    return Column(
-      key: const ValueKey('content'),
-      children: [
-        Builder(
-          builder: (context) {
-            final logStore = context.watch<LogStore>();
-            final sections = <String>{
-              for (final e in logStore.entries) ?e.tag,
-            }.toList()..sort();
-            return SectionTabs(
-              sections: sections,
-              selectedSection: _selectedSection,
-              onSectionChanged: (section) {
-                setState(() => _selectedSection = section);
-              },
-            );
-          },
-        ),
-        StateViewSection(
-          onStateFilter: (filter) {
-            // Extract raw key from 'state:key' format
-            final key = filter.startsWith('state:')
-                ? filter.substring(6)
-                : filter;
-            _toggleStateFilter(key);
-          },
-          activeStateFilters: _stateFilterStack.toSet(),
-        ),
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              final selectedSessions = context
-                  .watch<SessionStore>()
-                  .selectedSessionIds;
-              return Stack(
-                children: [
-                  SelectionArea(
-                    child: LogListView(
-                      sectionFilter: _selectedSection,
-                      activeSeverities: _activeSeverities,
-                      textFilter: _effectiveFilter,
-                      selectedSessionIds: selectedSessions,
-                      selectionMode: _selectionMode,
-                      selectedEntryIds: _selectedEntryIds,
-                      onEntrySelected: _onEntrySelected,
-                      onEntryRangeSelected: _onEntryRangeSelected,
-                      bookmarkedEntryIds: _bookmarkedEntryIds,
-                      stickyOverrideIds: _stickyOverrideIds,
-                      onFilterClear: () {
-                        setState(() {
-                          _activeSeverities = _defaultSeverities;
-                          _textFilter = '';
-                          _stateFilterStack = [];
-                        });
-                      },
-                    ),
-                  ),
-                  if (_selectedEntryIds.isNotEmpty)
-                    Positioned(
-                      bottom: 12,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: SelectionActions(
-                          selectedCount: _selectedEntryIds.length,
-                          onCopy: _copySelected,
-                          onExportJson: _exportSelectedJson,
-                          onBookmark: _bookmarkSelected,
-                          onSticky: _stickySelected,
-                          onClear: _clearSelection,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-        const TimeRangeMinimap(),
-      ],
     );
   }
 }

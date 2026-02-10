@@ -1,19 +1,18 @@
-import type { LogEntry } from '@logger/shared'
 import type {
   DataMessage,
   EventMessage,
   SessionMessage,
   StoredEntry,
-} from '@logger/shared/src/v2/index.ts'
+} from '@logger/shared'
 
 // ─── Normalizer ──────────────────────────────────────────────────────
-// Converts v2 input messages and v1 LogEntry to unified StoredEntry.
+// Converts input messages to unified StoredEntry.
 
 function now(): string {
   return new Date().toISOString()
 }
 
-/** Normalize a v2 SessionMessage → StoredEntry. */
+/** Normalize a SessionMessage → StoredEntry. */
 export function normalizeSession(msg: SessionMessage): StoredEntry {
   const ts = now()
   return {
@@ -50,7 +49,7 @@ export function normalizeSession(msg: SessionMessage): StoredEntry {
   }
 }
 
-/** Normalize a v2 EventMessage → StoredEntry. */
+/** Normalize an EventMessage → StoredEntry. */
 export function normalizeEvent(msg: EventMessage): StoredEntry {
   const ts = now()
   return {
@@ -87,7 +86,7 @@ export function normalizeEvent(msg: EventMessage): StoredEntry {
   }
 }
 
-/** Normalize a v2 DataMessage → StoredEntry. */
+/** Normalize a DataMessage → StoredEntry. */
 export function normalizeData(msg: DataMessage): StoredEntry {
   const ts = now()
   return {
@@ -124,43 +123,4 @@ export function normalizeData(msg: DataMessage): StoredEntry {
   }
 }
 
-/** Normalize a v1 LogEntry → StoredEntry (backward compat). */
-export function normalizeV1(entry: LogEntry): StoredEntry {
-  const ts = now()
-  const kind = entry.type === 'session'
-    ? 'session' as const
-    : 'event' as const
 
-  return {
-    id: entry.id,
-    timestamp: entry.timestamp,
-    session_id: entry.session_id,
-    kind,
-    severity: entry.severity ?? 'info',
-    // Event fields
-    message: entry.text ?? null,
-    tag: entry.section ?? null,
-    exception: entry.exception ?? null,
-    parent_id: entry.parent_id ?? null,
-    group_id: null,
-    prev_id: null,
-    next_id: null,
-    widget: null,
-    replace: entry.replace ?? false,
-    icon: entry.icon ?? null,
-    labels: entry.tags ?? null,
-    generated_at: entry.generated_at ?? null,
-    sent_at: entry.sent_at ?? null,
-    // Data fields
-    key: null,
-    value: undefined,
-    override: true,
-    display: 'default',
-    // Session fields
-    session_action: entry.session_action ?? null,
-    application: entry.application ?? null,
-    metadata: null,
-    // Server-assigned
-    received_at: ts,
-  }
-}

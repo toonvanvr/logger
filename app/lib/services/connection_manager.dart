@@ -99,7 +99,6 @@ class ConnectionManager extends ChangeNotifier {
     );
   }
 
-  /// For backward compatibility.
   bool get isConnected => activeCount > 0;
 
   // ─── Private ────────────────────────────────────────────────────

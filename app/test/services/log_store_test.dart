@@ -167,7 +167,7 @@ void main() {
         _makeEntry(id: 'e3', tag: 'network'),
       ]);
 
-      final result = store.filter(section: 'network');
+      final result = store.filter(tag: 'network');
       expect(result.length, 2);
       expect(result.every((e) => e.tag == 'network'), isTrue);
     });
@@ -215,7 +215,7 @@ void main() {
       final result = store.filter(
         sessionIds: {'sess-1'},
         minSeverity: Severity.error,
-        section: 'network',
+        tag: 'network',
         textSearch: 'timeout',
       );
       expect(result.length, 1);

@@ -6,7 +6,7 @@ import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
-/// Interactive JSON tree viewer for log entries of type [LogType.json].
+/// Interactive JSON tree viewer for log entries with JSON content.
 ///
 /// Collapsed by default — shows `{…}` / `[…]` with a property count.
 /// Tap to expand. Syntax coloured: keys in blue, strings in green,

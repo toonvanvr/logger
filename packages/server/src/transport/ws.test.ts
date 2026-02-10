@@ -1,13 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { HookManager } from '../core/hooks'
-import { processPipeline } from '../core/pipeline'
 import { RateLimiter } from '../core/rate-limiter'
 import { RingBuffer } from '../modules/ring-buffer'
 import { RpcBridge } from '../modules/rpc-bridge'
 import { SessionManager } from '../modules/session-manager'
 import { WebSocketHub } from '../modules/ws-hub'
 import type { ServerDeps } from './types'
-import { setupWebSocketV2 } from './ws-v2'
+import { setupWebSocket } from './ws'
 
 // ─── Mocks ───────────────────────────────────────────────────────────
 
@@ -27,7 +26,6 @@ class MockFileStore {
 function createTestDeps(): ServerDeps {
   return {
     config: { host: '127.0.0.1', port: 0, udpPort: 0, tcpPort: 0, apiKey: null, environment: 'test' },
-    pipeline: processPipeline,
     rateLimiter: new RateLimiter(10000, 1000, 2),
     hookManager: new HookManager(),
     ringBuffer: new RingBuffer(10000, 10 * 1024 * 1024),
@@ -41,21 +39,21 @@ function createTestDeps(): ServerDeps {
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
-describe('WebSocket v2', () => {
+describe('WebSocket', () => {
   let server: ReturnType<typeof Bun.serve>
   let baseUrl: string
   let deps: ServerDeps
-  let wsV2: ReturnType<typeof setupWebSocketV2>
+  let wsHandler: ReturnType<typeof setupWebSocket>
 
   beforeAll(() => {
     deps = createTestDeps()
-    wsV2 = setupWebSocketV2(deps)
+    wsHandler = setupWebSocket(deps)
     server = Bun.serve({
       port: 0,
       hostname: '127.0.0.1',
-      websocket: wsV2.handlers,
+      websocket: wsHandler.handlers,
       fetch(req) {
-        if (wsV2.upgrade(req, server)) return undefined
+        if (wsHandler.upgrade(req, server)) return undefined
         return new Response('WebSocket upgrade failed', { status: 400 })
       },
     })
@@ -73,7 +71,6 @@ describe('WebSocket v2', () => {
         headers: {
           'x-logger-role': 'client',
           'x-session-id': sessionId,
-          'sec-websocket-protocol': 'logger-v2',
         },
       } as any)
       ws.onopen = () => resolve(ws)
@@ -86,7 +83,6 @@ describe('WebSocket v2', () => {
       const ws = new WebSocket(baseUrl, {
         headers: {
           'x-logger-role': 'viewer',
-          'sec-websocket-protocol': 'logger-v2',
         },
       } as any)
       ws.onopen = () => resolve(ws)
@@ -99,25 +95,6 @@ describe('WebSocket v2', () => {
       ws.onmessage = (e) => resolve(JSON.parse(e.data))
     })
   }
-
-  it('isV2 returns true for logger-v2 protocol header', () => {
-    const req = new Request('http://localhost/ws', {
-      headers: { 'sec-websocket-protocol': 'logger-v2' },
-    })
-    expect(wsV2.isV2(req)).toBe(true)
-  })
-
-  it('isV2 returns true for x-logger-version: 2', () => {
-    const req = new Request('http://localhost/ws', {
-      headers: { 'x-logger-version': '2' },
-    })
-    expect(wsV2.isV2(req)).toBe(true)
-  })
-
-  it('isV2 returns false for regular requests', () => {
-    const req = new Request('http://localhost/ws')
-    expect(wsV2.isV2(req)).toBe(false)
-  })
 
   it('client can send event and receives ack', async () => {
     const ws = await connectClient('ws-test-sess-1')

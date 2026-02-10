@@ -1,6 +1,5 @@
 import { config } from './core/config'
 import { HookManager } from './core/hooks'
-import { processPipeline } from './core/pipeline'
 import { RateLimiter } from './core/rate-limiter'
 import { FileStore } from './modules/file-store'
 import { LokiForwarder } from './modules/loki-forwarder'
@@ -11,11 +10,9 @@ import { SessionManager } from './modules/session-manager'
 import { WebSocketHub } from './modules/ws-hub'
 import { createStoreReader, createStoreWriter } from './store'
 import { setupHttpRoutes } from './transport/http'
-import { setupHttpV2Routes } from './transport/http-v2'
 import { setupTcp } from './transport/tcp'
 import { setupUdp } from './transport/udp'
 import { setupWebSocket } from './transport/ws'
-import { setupWebSocketV2 } from './transport/ws-v2'
 
 // ─── Initialize all modules ─────────────────────────────────────────
 
@@ -70,7 +67,6 @@ sessionManager.on((event, session) => {
 
 const deps = {
   config,
-  pipeline: processPipeline,
   rateLimiter,
   hookManager,
   ringBuffer,
@@ -86,10 +82,7 @@ const deps = {
 // ─── Setup HTTP + WS server ─────────────────────────────────────────
 
 const ws = setupWebSocket(deps)
-const wsV2 = setupWebSocketV2(deps)
-const v1Routes = setupHttpRoutes(deps)
-const v2Routes = setupHttpV2Routes(deps)
-const routes = { ...v1Routes, ...v2Routes }
+const routes = setupHttpRoutes(deps)
 
 const server = Bun.serve({
   port: config.port,
@@ -98,18 +91,7 @@ const server = Bun.serve({
   websocket: ws.handlers,
   fetch(req) {
     const url = new URL(req.url)
-    // v2 WebSocket: detect via protocol header or path
     if (url.pathname === '/api/v2/stream') {
-      if (wsV2.upgrade(req, server)) return undefined
-      return new Response('WebSocket upgrade failed', { status: 400 })
-    }
-    // v1 WebSocket
-    if (url.pathname === '/api/v1/stream' || url.pathname === '/stream') {
-      // Check if v2 protocol was requested on v1 path
-      if (wsV2.isV2(req)) {
-        if (wsV2.upgrade(req, server)) return undefined
-        return new Response('WebSocket upgrade failed', { status: 400 })
-      }
       if (ws.upgrade(req, server)) return undefined
       return new Response('WebSocket upgrade failed', { status: 400 })
     }

@@ -56,7 +56,7 @@ cd app && flutter pub get && flutter run -d linux            # Run viewer
 cd packages/demo && bun install && bun run src/main.ts      # Send test logs
 ```
 
-The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. Loki warnings in the server console are expected without Docker.
+The viewer auto-connects to `ws://localhost:8080`. Loki warnings in the server console are expected without Docker.
 
 ### Full Stack (Docker)
 

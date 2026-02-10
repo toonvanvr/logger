@@ -10,7 +10,7 @@ const DEFAULT_BASE = 'http://localhost:8080'
 /**
  * HTTP transport — fallback, unidirectional.
  *
- * Routes messages by kind to v2 endpoints:
+ * Routes messages by kind to endpoints:
  *   session → POST /api/v2/session (one at a time)
  *   event   → POST /api/v2/events  (single or batch)
  *   data    → POST /api/v2/data    (single or batch)

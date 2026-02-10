@@ -1,4 +1,4 @@
-import type { LogEntry } from '@logger/shared'
+import type { StoredEntry } from '@logger/shared'
 
 export interface LokiForwarderConfig {
   lokiUrl: string
@@ -14,7 +14,7 @@ export interface LokiForwarderConfig {
 type HealthStatus = 'healthy' | 'warning' | 'full'
 
 export class LokiForwarder {
-  private buffer: LogEntry[] = [];
+  private buffer: StoredEntry[] = [];
   private flushTimer: Timer
   private health: HealthStatus = 'healthy';
   private consecutiveFailures = 0;
@@ -27,7 +27,7 @@ export class LokiForwarder {
   }
 
   /** Add entry to buffer for async forwarding. Drops if buffer full. */
-  push(entry: LogEntry): void {
+  push(entry: StoredEntry): void {
     if (this.buffer.length >= this.cfg.maxBuffer) {
       console.warn('[LokiForwarder] Buffer full, dropping entry')
       this.updateHealth()
@@ -82,7 +82,7 @@ export class LokiForwarder {
   }
 
   /** Batch and send entries (single label group) to Loki. */
-  private async sendBatch(entries: LogEntry[]): Promise<boolean> {
+  private async sendBatch(entries: StoredEntry[]): Promise<boolean> {
     if (entries.length === 0) return true
     const labels = this.extractLabels(entries[0]!)
     const values = entries.map((entry) => [
@@ -123,8 +123,8 @@ export class LokiForwarder {
   }
 
   /** Group entries into Loki streams by label set {app, severity, environment}. */
-  private groupByLabels(entries: LogEntry[]): Map<string, LogEntry[]> {
-    const groups = new Map<string, LogEntry[]>()
+  private groupByLabels(entries: StoredEntry[]): Map<string, StoredEntry[]> {
+    const groups = new Map<string, StoredEntry[]>()
     for (const entry of entries) {
       const key = labelKey(entry, this.cfg.environment)
       const group = groups.get(key)
@@ -137,7 +137,7 @@ export class LokiForwarder {
     return groups
   }
 
-  private extractLabels(entry: LogEntry): Record<string, string> {
+  private extractLabels(entry: StoredEntry): Record<string, string> {
     return {
       app: entry.application?.name ?? 'unknown',
       severity: entry.severity,
@@ -145,19 +145,14 @@ export class LokiForwarder {
     }
   }
 
-  /** Extract structured metadata for Loki 3.0. Supports both v1 and v2 entry shapes. */
-  private extractStructuredMetadata(entry: LogEntry): Record<string, string> {
-    const e = entry as Record<string, unknown>
-    // v2 StoredEntry has `kind`; v1 LogEntry has `type`
-    const kind = (e.kind as string) ?? undefined
-    const tag = (e.tag as string) ?? (e.section as string) ?? undefined
-    const widgetType = (e.widget as any)?.type ?? (e.type as string) ?? undefined
-
+  /** Extract structured metadata for Loki 3.0. */
+  private extractStructuredMetadata(entry: StoredEntry): Record<string, string> {
     const meta: Record<string, string> = {
       session: entry.session_id,
     }
-    if (kind) meta.kind = kind
-    if (tag) meta.tag = tag
+    if (entry.kind) meta.kind = entry.kind
+    if (entry.tag) meta.tag = entry.tag
+    const widgetType = (entry.widget as any)?.type
     if (widgetType) meta.widget_type = widgetType
 
     return meta
@@ -177,7 +172,7 @@ export class LokiForwarder {
   }
 }
 
-function labelKey(entry: LogEntry, environment: string): string {
+function labelKey(entry: StoredEntry, environment: string): string {
   return `${entry.application?.name ?? 'unknown'}|${entry.severity}|${environment}`
 }
 

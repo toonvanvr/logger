@@ -65,7 +65,7 @@ The server is a Bun-based TypeScript application with modular architecture:
 | **HTTP Transport** | `transport/http.ts` | REST API for log ingestion, health checks, image upload |
 | **UDP Transport** | `transport/udp.ts` | High-throughput UDP log ingestion |
 | **TCP Transport** | `transport/tcp.ts` | TCP + WebSocket for viewer connections |
-| **Ingest Pipeline** | `transport/ingest.ts` | Validates, timestamps, routes incoming logs |
+| **Ingest Pipeline** | `transport/ingest.ts` | Validates, normalizes, routes incoming logs |
 | **Ring Buffer** | `modules/ring-buffer.ts` | In-memory log storage with size-based eviction |
 | **Session Manager** | `modules/session-manager.ts` | Tracks active sessions, heartbeats, lifecycle |
 | **Loki Forwarder** | `modules/loki-forwarder.ts` | Async batch push to Grafana Loki |
@@ -102,10 +102,13 @@ Flutter desktop application (Linux-first):
 
 Zod schemas that serve as the **single source of truth** for the protocol:
 
-- `log-entry.ts` — `LogEntry` schema with all fields and types
-- `server-message.ts` — Messages from server to viewer
-- `viewer-message.ts` — Messages from viewer to server
-- `custom-renderers.ts` — Custom renderer type definitions
+- `stored-entry.ts` — `StoredEntry` schema with all fields and types
+- `event-message.ts` — Event log input schema
+- `data-message.ts` — Data/state input schema
+- `session-message.ts` — Session lifecycle input schema
+- `server-broadcast.ts` — Messages from server to viewer
+- `viewer-command.ts` — Messages from viewer to server
+- `widget.ts` — Widget/custom renderer type definitions
 
 ## Data Flow
 
@@ -122,8 +125,8 @@ sequenceDiagram
 
     App->>SDK: logger.info("message", data)
     SDK->>SDK: Build LogEntry (id, timestamp, session_id)
-    SDK->>Srv: POST /api/v1/log (or UDP/TCP)
-    Srv->>Srv: Validate via Zod schema
+    SDK->>Srv: POST /api/v2/events (or UDP/TCP)
+    Srv->>Srv: Validate & normalize to StoredEntry
     Srv->>RB: Store in ring buffer
     Srv->>WS: Broadcast to subscribed viewers
     Srv->>LF: Queue for Loki push

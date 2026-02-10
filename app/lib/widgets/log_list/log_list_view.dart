@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../services/log_connection.dart';
+import '../../services/connection_manager.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
 import '../../services/time_range_service.dart';
@@ -21,7 +21,7 @@ part 'log_list_scroll.dart';
 
 /// Main virtualized log list with auto-scroll (LIVE mode) and sticky headers.
 class LogListView extends StatefulWidget {
-  final String? sectionFilter;
+  final String? tagFilter;
   final String? textFilter;
   final Set<String> selectedSessionIds;
   final Set<String> activeSeverities;
@@ -36,7 +36,7 @@ class LogListView extends StatefulWidget {
 
   const LogListView({
     super.key,
-    this.sectionFilter,
+    this.tagFilter,
     this.textFilter,
     this.selectedSessionIds = const {},
     this.activeSeverities = const {
@@ -98,7 +98,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
     final filteredEntries = _filterCache.getFiltered(
       logStore: logStore,
       timeRange: timeRange,
-      sectionFilter: widget.sectionFilter,
+      tagFilter: widget.tagFilter,
       textFilter: widget.textFilter,
       activeSeverities: widget.activeSeverities,
       selectedSessionIds: widget.selectedSessionIds,

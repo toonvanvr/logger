@@ -249,23 +249,6 @@ void main() {
     test('unknown type defaults to error', () {
       expect(parseServerMessageType('unknown'), ServerMessageType.error);
     });
-
-    // ── v1 backward compat ──
-
-    test('v1 "log" maps to event', () {
-      expect(parseServerMessageType('log'), ServerMessageType.event);
-    });
-
-    test('v1 "logs" maps to eventBatch', () {
-      expect(parseServerMessageType('logs'), ServerMessageType.eventBatch);
-    });
-
-    test('v1 "state_snapshot" maps to dataSnapshot', () {
-      expect(
-        parseServerMessageType('state_snapshot'),
-        ServerMessageType.dataSnapshot,
-      );
-    });
   });
 
   group('SessionInfo', () {

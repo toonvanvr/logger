@@ -23,7 +23,7 @@ cd packages/server && bun install && bun run src/main.ts
 cd app && flutter pub get && flutter run -d linux
 ```
 
-The viewer auto-connects to `ws://localhost:8080/api/v1/stream`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
+The viewer auto-connects to `ws://localhost:8080`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
 
 ### Send Test Logs
 
@@ -72,7 +72,7 @@ flutter build linux
 ./build/linux/x64/release/bundle/app
 ```
 
-The viewer connects to `ws://localhost:8080/api/v1/stream` and begins displaying log entries from the demo service.
+The viewer connects to `ws://localhost:8080` and begins displaying log entries from the demo service.
 
 ### Explore
 

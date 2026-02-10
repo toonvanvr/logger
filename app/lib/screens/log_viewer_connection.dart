@@ -5,6 +5,7 @@ part of 'log_viewer.dart';
 /// Manages WebSocket subscription, message routing, and session tracking.
 mixin _ConnectionMixin on State<LogViewerScreen> {
   StreamSubscription<ServerMessage>? _messageSub;
+  bool _hasEverReceivedEntries = false;
 
   void _initConnection() {
     final url = widget.serverUrl;
@@ -79,9 +80,8 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
 
   /// Mark that entries have been received, preventing landing page from showing.
   void _markEntriesReceived() {
-    final state = this as _LogViewerScreenState;
-    if (!state._hasEverReceivedEntries) {
-      setState(() => state._hasEverReceivedEntries = true);
+    if (!_hasEverReceivedEntries) {
+      setState(() => _hasEverReceivedEntries = true);
     }
   }
 }

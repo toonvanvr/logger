@@ -25,15 +25,12 @@ ServerMessageType parseServerMessageType(String value) {
     'ack' => ServerMessageType.ack,
     'error' => ServerMessageType.error,
     'event' => ServerMessageType.event,
-    'log' => ServerMessageType.event, // v1 compat
     'event_batch' => ServerMessageType.eventBatch,
-    'logs' => ServerMessageType.eventBatch, // v1 compat
     'rpc_request' => ServerMessageType.rpcRequest,
     'rpc_response' => ServerMessageType.rpcResponse,
     'session_list' => ServerMessageType.sessionList,
     'session_update' => ServerMessageType.sessionUpdate,
     'data_snapshot' => ServerMessageType.dataSnapshot,
-    'state_snapshot' => ServerMessageType.dataSnapshot, // v1 compat
     'data_update' => ServerMessageType.dataUpdate,
     'history' => ServerMessageType.history,
     'subscribe_ack' => ServerMessageType.subscribeAck,

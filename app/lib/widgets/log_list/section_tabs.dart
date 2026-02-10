@@ -4,20 +4,20 @@ import 'package:flutter/material.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 
-/// Tabs for filtering logs by section (State, Events, custom sections).
+/// Tabs for filtering logs by tag (State, Events, custom tags).
 ///
-/// Sections appear only when logs with that section name have been received.
+/// Tags appear only when logs with that tag name have been received.
 /// Supports horizontal scrolling with arrow buttons when tabs overflow.
 class SectionTabs extends StatefulWidget {
-  final List<String> sections;
-  final String? selectedSection;
-  final ValueChanged<String?> onSectionChanged;
+  final List<String> tags;
+  final String? selectedTag;
+  final ValueChanged<String?> onTagChanged;
 
   const SectionTabs({
     super.key,
-    required this.sections,
-    required this.selectedSection,
-    required this.onSectionChanged,
+    required this.tags,
+    required this.selectedTag,
+    required this.onTagChanged,
   });
 
   @override
@@ -77,7 +77,7 @@ class _SectionTabsState extends State<SectionTabs> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.sections.length <= 1) return const SizedBox.shrink();
+    if (widget.tags.length <= 1) return const SizedBox.shrink();
 
     return Container(
       height: 28,
@@ -110,14 +110,14 @@ class _SectionTabsState extends State<SectionTabs> {
                   children: [
                     _SectionTab(
                       label: 'ALL',
-                      isSelected: widget.selectedSection == null,
-                      onTap: () => widget.onSectionChanged(null),
+                      isSelected: widget.selectedTag == null,
+                      onTap: () => widget.onTagChanged(null),
                     ),
-                    for (final section in widget.sections)
+                    for (final section in widget.tags)
                       _SectionTab(
                         label: section.toUpperCase(),
-                        isSelected: widget.selectedSection == section,
-                        onTap: () => widget.onSectionChanged(section),
+                        isSelected: widget.selectedTag == section,
+                        onTap: () => widget.onTagChanged(section),
                       ),
                   ],
                 ),

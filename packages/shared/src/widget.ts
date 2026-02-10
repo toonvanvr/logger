@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_TEXT_SIZE } from '../constants.js'
+import { MAX_TEXT_SIZE } from './constants.js'
 
 // ─── TreeNode (recursive) ────────────────────────────────────────────
 

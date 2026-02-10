@@ -2,7 +2,7 @@
 export { Logger } from './logger.js'
 export type { LoggerOptions, Middleware } from './logger.js'
 
-// ─── v2 Message types ────────────────────────────────────────────────
+// ─── Message types ───────────────────────────────────────────────────
 export type { Severity } from './logger-builders.js'
 export type { MessageKind, QueuedMessage } from './logger-types.js'
 
@@ -16,5 +16,5 @@ export { LogQueue } from './queue.js'
 export { parseStackTrace } from './stack-parser.js'
 
 // ─── Color Helpers ───────────────────────────────────────────────────
-export * as color from './color.js';
+export * as color from './color.js'
 

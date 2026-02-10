@@ -1,5 +1,4 @@
-import type { ApplicationInfo, LogEntry, SessionAction } from '@logger/shared'
-import type { StoredEntry } from '@logger/shared/src/v2/index.ts'
+import type { ApplicationInfo, StoredEntry } from '@logger/shared'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -41,40 +40,8 @@ export class SessionManager {
     this.listeners.push(listener)
   }
 
-  /** Process a session-type log entry (start/end/heartbeat). */
-  handleSessionAction(entry: LogEntry): void {
-    const action = entry.session_action as SessionAction | undefined
-    if (!action) return
-
-    switch (action) {
-      case 'start': {
-        const session = this.getOrCreate(entry.session_id, entry.application)
-        session.isActive = true
-        session.lastHeartbeat = entry.timestamp
-        this.emit('session-start', session)
-        break
-      }
-      case 'end': {
-        const session = this.sessions.get(entry.session_id)
-        if (session) {
-          session.isActive = false
-          session.lastHeartbeat = entry.timestamp
-          this.emit('session-end', session)
-        }
-        break
-      }
-      case 'heartbeat': {
-        const session = this.sessions.get(entry.session_id)
-        if (session) {
-          this.updateHeartbeat(session.sessionId, entry.timestamp)
-        }
-        break
-      }
-    }
-  }
-
-  /** Process a v2 StoredEntry with kind=session. */
-  handleV2Session(entry: StoredEntry): void {
+  /** Process a StoredEntry with kind=session. */
+  handleSession(entry: StoredEntry): void {
     const action = entry.session_action
     if (!action) return
 

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../services/log_connection.dart';
+import '../../services/connection_manager.dart';
 import '../../services/rpc_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
@@ -132,7 +132,7 @@ class _RpcToolTileState extends State<RpcToolTile> {
 
   Future<void> _onInvoke() async {
     final rpcService = context.read<RpcService>();
-    final connection = context.read<LogConnection>();
+    final connection = context.read<ConnectionManager>();
 
     if (widget.requiresConfirm) {
       final confirmed = await showDialog<bool>(

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_TEXT_SIZE } from '../constants.js'
+import { MAX_TEXT_SIZE } from './constants.js'
 import { WidgetPayload } from './widget.js'
 
 // ─── Enums & Sub-schemas ─────────────────────────────────────────────
@@ -56,5 +56,5 @@ export type EventMessage = z.infer<typeof EventMessage>
 export type Severity = z.infer<typeof Severity>
 export type ExceptionData = z.infer<typeof ExceptionData>
 export type IconRef = z.infer<typeof IconRef>
-export { ExceptionData as ExceptionDataSchema, IconRef as IconRefSchema, Severity as SeveritySchema };
+export { ExceptionData as ExceptionDataSchema, IconRef as IconRefSchema, Severity as SeveritySchema }
 

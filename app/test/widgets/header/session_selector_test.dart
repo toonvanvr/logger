@@ -1,6 +1,5 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/models/server_message.dart';
-import 'package:app/services/log_connection.dart';
 import 'package:app/services/session_store.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/header/session_selector.dart';
@@ -22,13 +21,9 @@ SessionInfo _makeSession(String id, String name, int colorIndex) {
 
 Widget _buildTestWidget({
   SessionStore? sessionStore,
-  LogConnection? connection,
 }) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider<LogConnection>(
-        create: (_) => connection ?? LogConnection(),
-      ),
       ChangeNotifierProvider<SessionStore>(
         create: (_) => sessionStore ?? SessionStore(),
       ),

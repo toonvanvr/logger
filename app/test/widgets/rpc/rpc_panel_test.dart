@@ -1,4 +1,4 @@
-import 'package:app/services/log_connection.dart';
+import 'package:app/services/connection_manager.dart';
 import 'package:app/services/rpc_service.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/rpc/rpc_panel.dart';
@@ -11,7 +11,7 @@ Widget _wrap({required RpcService rpcService, required Widget child}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: rpcService),
-      ChangeNotifierProvider(create: (_) => LogConnection()),
+      ChangeNotifierProvider(create: (_) => ConnectionManager()),
     ],
     child: MaterialApp(
       theme: createLoggerTheme(),
@@ -78,8 +78,9 @@ void main() {
       expect(find.byType(RpcToolTile), findsOneWidget);
     });
 
-    testWidgets('invoke button triggers action (starts loading)',
-        (tester) async {
+    testWidgets('invoke button triggers action (starts loading)', (
+      tester,
+    ) async {
       final rpcService = RpcService();
       rpcService.updateTools('sess-1', [
         const RpcToolInfo(

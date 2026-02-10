@@ -34,7 +34,7 @@ void main() {
 
     test('handleResponse resolves pending future', () async {
       // We cannot easily create a pending via invoke without a real
-      // LogConnection, so test handleResponse directly:
+      // ConnectionManager, so test handleResponse directly:
       // calling handleResponse with an unknown rpcId should simply store the
       // result and not throw.
       service.handleResponse('rpc-123', {'key': 'value'}, null);
@@ -74,7 +74,7 @@ void main() {
 
     test('handleResponse with pending completer resolves success', () async {
       // Create a completer by calling invoke with a mock-like connection
-      // Since we can't easily mock LogConnection, we test handleResponse
+      // Since we can't easily mock ConnectionManager, we test handleResponse
       // by manually adding a pending completer via invoke's side effects.
       // Instead, test the result storage + notifyListeners behavior.
       var notified = false;

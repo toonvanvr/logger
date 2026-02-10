@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { normalizeData, normalizeEvent, normalizeSession, normalizeV1 } from './normalizer'
+import { normalizeData, normalizeEvent, normalizeSession } from './normalizer'
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
@@ -143,52 +143,4 @@ describe('normalizeData', () => {
   })
 })
 
-describe('normalizeV1', () => {
-  it('normalizes a v1 text entry', () => {
-    const entry = normalizeV1({
-      id: 'v1-id',
-      timestamp: '2026-01-01T00:00:00.000Z',
-      session_id: 'sess-1',
-      severity: 'warning',
-      type: 'text',
-      text: 'hello from v1',
-      section: 'network',
-    } as any)
 
-    expect(entry.kind).toBe('event')
-    expect(entry.id).toBe('v1-id')
-    expect(entry.message).toBe('hello from v1')
-    expect(entry.tag).toBe('network')
-    expect(entry.severity).toBe('warning')
-    expect(entry.timestamp).toBe('2026-01-01T00:00:00.000Z')
-  })
-
-  it('normalizes a v1 session entry', () => {
-    const entry = normalizeV1({
-      id: 'v1-sess',
-      timestamp: '2026-01-01T00:00:00.000Z',
-      session_id: 'sess-1',
-      severity: 'info',
-      type: 'session',
-      session_action: 'start',
-      application: { name: 'test-app' },
-    } as any)
-
-    expect(entry.kind).toBe('session')
-    expect(entry.session_action).toBe('start')
-    expect(entry.application?.name).toBe('test-app')
-  })
-
-  it('maps v1 tags to labels', () => {
-    const entry = normalizeV1({
-      id: 'v1-tags',
-      timestamp: '2026-01-01T00:00:00.000Z',
-      session_id: 'sess-1',
-      severity: 'info',
-      type: 'text',
-      tags: { env: 'prod', region: 'us-east' },
-    } as any)
-
-    expect(entry.labels).toEqual({ env: 'prod', region: 'us-east' })
-  })
-})

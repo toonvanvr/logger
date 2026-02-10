@@ -57,7 +57,7 @@ void main() {
       final result = cache.getFiltered(
         logStore: store,
         timeRange: timeRange,
-        sectionFilter: null,
+        tagFilter: null,
         textFilter: null,
         activeSeverities: {'info'},
         selectedSessionIds: {},
@@ -86,7 +86,7 @@ void main() {
       final result = cache.getFiltered(
         logStore: store,
         timeRange: timeRange,
-        sectionFilter: null,
+        tagFilter: null,
         textFilter: null,
         activeSeverities: {'info'},
         selectedSessionIds: {},
@@ -105,7 +105,7 @@ void main() {
       final result = cache.getFiltered(
         logStore: store,
         timeRange: timeRange,
-        sectionFilter: null,
+        tagFilter: null,
         textFilter: null,
         activeSeverities: {'info'},
         selectedSessionIds: {},
@@ -135,7 +135,7 @@ void main() {
       final result = cache.getFiltered(
         logStore: store,
         timeRange: timeRange,
-        sectionFilter: null,
+        tagFilter: null,
         textFilter: 'state:cpu',
         activeSeverities: {'info'},
         selectedSessionIds: {},
@@ -159,7 +159,7 @@ void main() {
       final result = cache.getFiltered(
         logStore: store,
         timeRange: timeRange,
-        sectionFilter: null,
+        tagFilter: null,
         textFilter: 'state:nonexistent',
         activeSeverities: {'info'},
         selectedSessionIds: {},

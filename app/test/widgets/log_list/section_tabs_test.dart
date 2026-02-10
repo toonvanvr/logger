@@ -18,9 +18,9 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           SectionTabs(
-            sections: const ['network'],
-            selectedSection: null,
-            onSectionChanged: (_) {},
+            tags: const ['network'],
+            selectedTag: null,
+            onTagChanged: (_) {},
           ),
         ),
       );
@@ -35,9 +35,9 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           SectionTabs(
-            sections: const ['network', 'metrics'],
-            selectedSection: null,
-            onSectionChanged: (_) {},
+            tags: const ['network', 'metrics'],
+            selectedTag: null,
+            onTagChanged: (_) {},
           ),
         ),
       );
@@ -51,9 +51,9 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           SectionTabs(
-            sections: const ['network', 'ui'],
-            selectedSection: null,
-            onSectionChanged: (_) {},
+            tags: const ['network', 'ui'],
+            selectedTag: null,
+            onTagChanged: (_) {},
           ),
         ),
       );
@@ -71,9 +71,9 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           SectionTabs(
-            sections: const ['network', 'ui'],
-            selectedSection: null,
-            onSectionChanged: (s) => selected = s,
+            tags: const ['network', 'ui'],
+            selectedTag: null,
+            onTagChanged: (s) => selected = s,
           ),
         ),
       );

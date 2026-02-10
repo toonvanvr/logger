@@ -5,7 +5,7 @@ import '../plugin_manifest.dart';
 import '../plugin_registry.dart';
 import '../plugin_types.dart';
 
-/// Filter plugin that restricts visible entries to specific [LogType]s.
+/// Filter plugin that restricts visible entries to specific log types.
 ///
 /// When no types are selected, all entries pass through (no filtering).
 /// The suggestion list is dynamically built from the current log data.

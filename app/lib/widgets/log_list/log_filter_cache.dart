@@ -10,7 +10,7 @@ import '../../services/time_range_service.dart';
 class LogFilterCache {
   List<LogEntry>? _cached;
   int _storeVersion = -1;
-  String? _sectionFilter;
+  String? _tagFilter;
   String? _textFilter;
   Set<String> _activeSeverities = const {};
   Set<String> _sessionIds = const {};
@@ -22,7 +22,7 @@ class LogFilterCache {
   List<LogEntry> getFiltered({
     required LogStore logStore,
     required TimeRangeService timeRange,
-    required String? sectionFilter,
+    required String? tagFilter,
     required String? textFilter,
     required Set<String> activeSeverities,
     required Set<String> selectedSessionIds,
@@ -34,7 +34,7 @@ class LogFilterCache {
 
     if (_cached != null &&
         version == _storeVersion &&
-        sectionFilter == _sectionFilter &&
+        tagFilter == _tagFilter &&
         textFilter == _textFilter &&
         setEquals(activeSeverities, _activeSeverities) &&
         setEquals(selectedSessionIds, _sessionIds) &&
@@ -47,13 +47,13 @@ class LogFilterCache {
     _cached = _computeFiltered(
       logStore: logStore,
       timeRange: timeRange,
-      sectionFilter: sectionFilter,
+      tagFilter: tagFilter,
       textFilter: textFilter,
       activeSeverities: activeSeverities,
       selectedSessionIds: selectedSessionIds,
     );
     _storeVersion = version;
-    _sectionFilter = sectionFilter;
+    _tagFilter = tagFilter;
     _textFilter = textFilter;
     _activeSeverities = activeSeverities;
     _sessionIds = selectedSessionIds;
@@ -66,13 +66,13 @@ class LogFilterCache {
   static List<LogEntry> _computeFiltered({
     required LogStore logStore,
     required TimeRangeService timeRange,
-    required String? sectionFilter,
+    required String? tagFilter,
     required String? textFilter,
     required Set<String> activeSeverities,
     required Set<String> selectedSessionIds,
   }) {
     var results = logStore
-        .filter(section: sectionFilter)
+        .filter(tag: tagFilter)
         .where((e) => activeSeverities.contains(e.severity.name));
 
     // Text filter via SmartSearchPlugin for prefix-aware matching.

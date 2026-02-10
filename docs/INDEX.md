@@ -132,8 +132,8 @@ sequenceDiagram
 
     App->>SDK: logger.info("message", data)
     SDK->>SDK: Build LogEntry (id, timestamp, session_id)
-    SDK->>Srv: POST /api/v1/log (or UDP/TCP)
-    Srv->>Srv: Validate via Zod schema
+    SDK->>Srv: POST /api/v2/events (or UDP/TCP)
+    Srv->>Srv: Validate & normalize to StoredEntry
     Srv->>RB: Store in ring buffer
     Srv->>WS: Broadcast to subscribed viewers
     Srv->>LF: Queue for Loki push
@@ -184,17 +184,17 @@ The server is a modular Bun/TypeScript application. Entry point: `packages/serve
 
 | Module | File | Lines | Responsibility |
 |--------|------|-------|----------------|
-| **HTTP Transport** | `transport/http.ts` | 192 | REST API: `POST /api/v1/log`, `/logs`, `/upload`, `GET /health` |
+| **HTTP Transport** | `transport/http.ts` | 192 | REST API: `/api/v2/` endpoints (session, events, data, upload, health, query) |
 | **UDP Transport** | `transport/udp.ts` | ~50 | High-throughput UDP log ingestion via `Bun.udpSocket()` |
 | **TCP Transport** | `transport/tcp.ts` | 92 | TCP + WebSocket for viewer connections |
-| **Ingest Pipeline** | `transport/ingest.ts` | ~80 | Validates via Zod, timestamps, routes to buffer/hub/loki |
+| **Ingest Pipeline** | `transport/ingest.ts` | ~80 | Validates via Zod, normalizes to StoredEntry, routes to buffer/hub/loki |
 | **Ring Buffer** | `modules/ring-buffer.ts` | 179 | In-memory log storage with size-based and count-based eviction |
 | **Session Manager** | `modules/session-manager.ts` | 157 | Tracks active sessions, heartbeats, lifecycle events |
 | **Loki Forwarder** | `modules/loki-forwarder.ts` | 177 | Async batch push to Grafana Loki with retry logic |
 | **WebSocket Hub** | `modules/ws-hub.ts` | 154 | Manages viewer connections, subscriptions, broadcasting |
 | **RPC Bridge** | `modules/rpc-bridge.ts` | 147 | Bidirectional RPC between viewers and client applications |
 | **File Store** | `modules/file-store.ts` | 183 | Disk-based storage for uploaded images |
-| **Pipeline** | `core/pipeline.ts` | 121 | Server-side ingestion pipeline with hooks |
+| **Normalizer** | `core/normalizer.ts` | ~80 | Normalizes input messages to StoredEntry |
 | **Hooks** | `core/hooks.ts` | 80 | Extensible hook system for the pipeline |
 | **Rate Limiter** | `core/rate-limiter.ts` | 79 | Global and per-session rate limiting |
 | **Config** | `core/config.ts` | ~50 | Environment variable configuration |
@@ -308,8 +308,10 @@ The desktop viewer is a Flutter/Dart application (Linux-first). Entry point: `ap
 | `widgets/renderers/json_renderer.dart` | 232 | JSON syntax-highlighted rendering |
 | `screens/log_viewer.dart` | 221 | Main log viewer screen layout |
 | `widgets/log_list/log_row.dart` | 219 | Individual log entry row widget |
-| `services/log_connection.dart` | 115 | WebSocket connection management |
+| `services/connection_manager.dart` | ~120 | Multi-server connection management with auto-reconnect |
 | `services/log_store.dart` | 104 | Log entry state management |
+| `services/log_store_stacking.dart` | ~80 | Entry stacking (version history) logic |
+| `screens/log_viewer_keyboard.dart` | ~80 | Keyboard shortcut handler |
 | `services/session_store.dart` | 71 | Session state management |
 
 #### State Management
@@ -398,10 +400,13 @@ Zod schemas that serve as the **single source of truth** for the protocol. Consu
 
 | File | Responsibility |
 |------|----------------|
-| `log-entry.ts` | `LogEntry` schema — all fields, types, and validation |
-| `server-message.ts` | Server → Viewer WebSocket message types |
-| `viewer-message.ts` | Viewer → Server WebSocket message types |
-| `custom-renderers.ts` | Custom renderer type definitions (chart, progress, table, kv) |
+| `stored-entry.ts` | `StoredEntry` schema — all fields, types, and validation |
+| `event-message.ts` | Event log input schema |
+| `data-message.ts` | Data/state input schema |
+| `session-message.ts` | Session lifecycle input schema |
+| `server-broadcast.ts` | Server → Viewer WebSocket broadcast messages |
+| `viewer-command.ts` | Viewer → Server WebSocket command messages |
+| `widget.ts` | Widget/custom renderer type definitions |
 | `constants.ts` | Shared constants (ports, limits, defaults) |
 | `index.ts` | Re-exports for package consumers |
 
@@ -778,7 +783,7 @@ Resource limits: Server 512 MB, Loki 4 GB, Grafana 1 GB.
 
 ## 7. Protocol Reference
 
-The Logger protocol uses a unified `LogEntry` Zod schema defined in `packages/shared/src/log-entry.ts`.
+The Logger protocol uses a unified `StoredEntry` Zod schema defined in `packages/shared/src/stored-entry.ts`.
 
 ### 7.1 Required Fields
 
@@ -869,17 +874,18 @@ The Logger protocol uses a unified `LogEntry` Zod schema defined in `packages/sh
 
 | Transport | Endpoint | Format |
 |-----------|----------|--------|
-| HTTP | `POST /api/v1/log` | Single `LogEntry` JSON body |
-| HTTP | `POST /api/v1/logs` | Batch: `{entries: LogEntry[]}` (1–1000) |
-| HTTP | `POST /api/v1/upload` | Multipart image upload, returns `ref` |
-| HTTP | `GET /health` | Server health status |
-| UDP | Port 8081 | JSON `LogEntry` per datagram |
-| TCP | Port 8082 | Newline-delimited JSON `LogEntry` |
-| WebSocket | Port 8082 | `ServerMessage` / `ViewerMessage` frames |
+| HTTP | `POST /api/v2/session` | Session lifecycle JSON body |
+| HTTP | `POST /api/v2/events` | Event log entries (single or batch) |
+| HTTP | `POST /api/v2/data` | Data/state entries |
+| HTTP | `POST /api/v2/upload` | Image upload, returns `ref` |
+| HTTP | `GET /api/v2/health` | Server health status |
+| UDP | Port 8081 | JSON entry per datagram |
+| TCP | Port 8082 | Newline-delimited JSON entries |
+| WebSocket | Port 8080 | `ServerBroadcast` / `ViewerCommand` frames |
 
 ### 7.10 WebSocket Messages
 
-**Server → Viewer** (`packages/shared/src/server-message.ts`):
+**Server → Viewer** (`packages/shared/src/server-broadcast.ts`):
 
 | Type | Description |
 |------|-------------|
@@ -895,7 +901,7 @@ The Logger protocol uses a unified `LogEntry` Zod schema defined in `packages/sh
 | `rpc_response` | RPC response forwarded from client |
 | `subscribe_ack` | Subscription confirmed |
 
-**Viewer → Server** (`packages/shared/src/viewer-message.ts`):
+**Viewer → Server** (`packages/shared/src/viewer-command.ts`):
 
 | Type | Description |
 |------|-------------|
@@ -950,9 +956,8 @@ logger/
 │   ├── server/                 Bun-based log server (TypeScript)
 │   │   └── src/
 │   │       ├── main.ts             Entry point, module wiring
-│   │       ├── core/               Config, pipeline, hooks, rate-limiter
+│   │       ├── core/               Config, normalizer, hooks, rate-limiter
 │   │       ├── modules/            Ring buffer, Loki forwarder, session mgr, WS hub, RPC bridge
-│   │       ├── schema/             Zod validation (imports from shared/)
 │   │       ├── store/              Storage abstractions
 │   │       └── transport/          HTTP, UDP, TCP, WebSocket handlers, ingest pipeline
 │   │
@@ -968,10 +973,13 @@ logger/
 │   │
 │   ├── shared/                 Shared types & schemas (TypeScript/Zod)
 │   │   └── src/
-│   │       ├── log-entry.ts        LogEntry Zod schema (source of truth)
-│   │       ├── server-message.ts   Server → Viewer message types
-│   │       ├── viewer-message.ts   Viewer → Server message types
-│   │       ├── custom-renderers.ts Custom renderer type definitions
+│   │       ├── stored-entry.ts     StoredEntry Zod schema (source of truth)
+│   │       ├── event-message.ts    Event log input schema
+│   │       ├── data-message.ts     Data/state input schema
+│   │       ├── session-message.ts  Session lifecycle input schema
+│   │       ├── server-broadcast.ts Server → Viewer broadcast messages
+│   │       ├── viewer-command.ts   Viewer → Server command messages
+│   │       ├── widget.ts           Widget/custom renderer type definitions
 │   │       └── constants.ts        Shared constants
 │   │
 │   ├── mcp/                    MCP tool server for AI agent access
@@ -1063,4 +1071,4 @@ cd app && flutter test               # Flutter widget & unit tests
 
 ---
 
-*Generated: 2026-02-08 | Source of truth for schemas: `packages/shared/src/log-entry.ts`*
+*Generated: 2026-02-08 | Source of truth for schemas: `packages/shared/src/stored-entry.ts`*

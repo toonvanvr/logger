@@ -1,27 +1,28 @@
-import type { ServerMessage } from '@logger/shared';
-
 // ─── Types ───────────────────────────────────────────────────────────
 
+/** Outbound WebSocket message. */
+type ServerMessage = Record<string, unknown>
+
 export interface RpcToolInfo {
-  name: string;
-  description: string;
-  category: 'getter' | 'tool';
-  argsSchema?: Record<string, unknown>;
-  confirm?: boolean;
+  name: string
+  description: string
+  category: 'getter' | 'tool'
+  argsSchema?: Record<string, unknown>
+  confirm?: boolean
 }
 
 export interface RpcRequest {
-  rpcId: string;
-  targetSessionId: string;
-  method: string;
-  args: unknown;
-  viewerWs: { send(data: string): void };
+  rpcId: string
+  targetSessionId: string
+  method: string
+  args: unknown
+  viewerWs: { send(data: string): void }
 }
 
 interface PendingRequest {
-  viewerWs: { send(data: string): void };
-  timer: Timer;
-  resolve: () => void;
+  viewerWs: { send(data: string): void }
+  timer: Timer
+  resolve: () => void
 }
 
 // ─── RPC Bridge ──────────────────────────────────────────────────────
@@ -30,30 +31,30 @@ export class RpcBridge {
   private tools = new Map<string, RpcToolInfo[]>();
   private pending = new Map<string, PendingRequest>();
   private clientSender: ((sessionId: string, message: ServerMessage) => void) | null = null;
-  private readonly timeoutMs: number;
+  private readonly timeoutMs: number
 
   constructor(options?: { timeoutMs?: number }) {
-    this.timeoutMs = options?.timeoutMs ?? 30_000;
+    this.timeoutMs = options?.timeoutMs ?? 30_000
   }
 
   /** Set the function used to route messages to client sessions. */
   setClientSender(fn: (sessionId: string, message: ServerMessage) => void): void {
-    this.clientSender = fn;
+    this.clientSender = fn
   }
 
   /** Register a client's available RPC tools. */
   registerTools(sessionId: string, tools: RpcToolInfo[]): void {
-    this.tools.set(sessionId, tools);
+    this.tools.set(sessionId, tools)
   }
 
   /** Get available tools for a session. */
   getTools(sessionId: string): RpcToolInfo[] {
-    return this.tools.get(sessionId) ?? [];
+    return this.tools.get(sessionId) ?? []
   }
 
   /** Get all tools across all sessions. */
   getAllTools(): Map<string, RpcToolInfo[]> {
-    return new Map(this.tools);
+    return new Map(this.tools)
   }
 
   /**
@@ -61,36 +62,36 @@ export class RpcBridge {
    * Routes to the target client session and waits for response or timeout.
    */
   async handleRequest(request: RpcRequest): Promise<void> {
-    const { rpcId, targetSessionId, method, args, viewerWs } = request;
+    const { rpcId, targetSessionId, method, args, viewerWs } = request
 
     // Check if session has registered tools
-    const sessionTools = this.tools.get(targetSessionId);
+    const sessionTools = this.tools.get(targetSessionId)
     if (!sessionTools) {
-      this.sendErrorToViewer(viewerWs, rpcId, `Session "${targetSessionId}" not found`);
-      return;
+      this.sendErrorToViewer(viewerWs, rpcId, `Session "${targetSessionId}" not found`)
+      return
     }
 
     // Check if the requested method exists
-    const tool = sessionTools.find((t) => t.name === method);
+    const tool = sessionTools.find((t) => t.name === method)
     if (!tool) {
-      this.sendErrorToViewer(viewerWs, rpcId, `Unknown method "${method}" on session "${targetSessionId}"`);
-      return;
+      this.sendErrorToViewer(viewerWs, rpcId, `Unknown method "${method}" on session "${targetSessionId}"`)
+      return
     }
 
     if (!this.clientSender) {
-      this.sendErrorToViewer(viewerWs, rpcId, 'No client sender configured');
-      return;
+      this.sendErrorToViewer(viewerWs, rpcId, 'No client sender configured')
+      return
     }
 
     // Create pending request with timeout
     return new Promise<void>((resolve) => {
       const timer = setTimeout(() => {
-        this.pending.delete(rpcId);
-        this.sendErrorToViewer(viewerWs, rpcId, `RPC timeout after ${this.timeoutMs}ms`);
-        resolve();
-      }, this.timeoutMs);
+        this.pending.delete(rpcId)
+        this.sendErrorToViewer(viewerWs, rpcId, `RPC timeout after ${this.timeoutMs}ms`)
+        resolve()
+      }, this.timeoutMs)
 
-      this.pending.set(rpcId, { viewerWs, timer, resolve });
+      this.pending.set(rpcId, { viewerWs, timer, resolve })
 
       // Forward request to client
       this.clientSender!(targetSessionId, {
@@ -98,40 +99,40 @@ export class RpcBridge {
         rpc_id: rpcId,
         rpc_method: method,
         rpc_args: args,
-      });
-    });
+      })
+    })
   }
 
   /** Handle incoming RPC response from client. */
   handleResponse(response: { rpcId: string; data?: unknown; error?: string }): void {
-    const entry = this.pending.get(response.rpcId);
-    if (!entry) return;
+    const entry = this.pending.get(response.rpcId)
+    if (!entry) return
 
-    clearTimeout(entry.timer);
-    this.pending.delete(response.rpcId);
+    clearTimeout(entry.timer)
+    this.pending.delete(response.rpcId)
 
     if (response.error) {
-      this.sendErrorToViewer(entry.viewerWs, response.rpcId, response.error);
+      this.sendErrorToViewer(entry.viewerWs, response.rpcId, response.error)
     } else {
       const msg: ServerMessage = {
         type: 'rpc_response',
         rpc_id: response.rpcId,
         rpc_response: response.data,
-      };
-      entry.viewerWs.send(JSON.stringify(msg));
+      }
+      entry.viewerWs.send(JSON.stringify(msg))
     }
 
-    entry.resolve();
+    entry.resolve()
   }
 
   /** Unregister all tools and cancel pending requests for a session. */
   unregisterSession(sessionId: string): void {
-    this.tools.delete(sessionId);
+    this.tools.delete(sessionId)
   }
 
   /** Get the number of pending requests (for diagnostics). */
   getPendingCount(): number {
-    return this.pending.size;
+    return this.pending.size
   }
 
   // ─── Internals ───────────────────────────────────────────────────
@@ -141,7 +142,7 @@ export class RpcBridge {
       type: 'rpc_response',
       rpc_id: rpcId,
       rpc_error: error,
-    };
-    ws.send(JSON.stringify(msg));
+    }
+    ws.send(JSON.stringify(msg))
   }
 }

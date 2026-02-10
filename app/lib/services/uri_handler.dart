@@ -31,7 +31,7 @@ class UriHandler {
         final host = parsed.queryParameters['host'] ?? 'localhost';
         final port =
             int.tryParse(parsed.queryParameters['port'] ?? '8080') ?? 8080;
-        final url = 'ws://$host:$port/api/v1/stream';
+        final url = 'ws://$host:$port/api/v2/stream';
         connectionManager.addConnection(url, label: '$host:$port');
         return true;
 

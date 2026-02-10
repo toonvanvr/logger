@@ -104,19 +104,14 @@ mixin _LogListScrollMixin on State<LogListView> {
 
   /// Request more historical entries from the server.
   void _requestMoreHistory() {
-    // Subclasses / parent widget must provide a LogConnection via Provider.
-    // We guard with try/catch since Provider.of may throw if not available.
+    // Guard with try/catch since Provider.of may throw if not available.
     try {
-      final connection = Provider.of<LogConnection>(context, listen: false);
+      final connection = Provider.of<ConnectionManager>(context, listen: false);
       if (!connection.isConnected) return;
       _isFetchingHistorical = true;
-      connection.queryHistory(
-        cursor: _historicalCursor,
-        limit: 500,
-        source: 'auto',
-      );
+      connection.queryHistory(cursor: _historicalCursor, limit: 500);
     } catch (_) {
-      // No LogConnection available in the widget tree — skip.
+      // No ConnectionManager available in the widget tree — skip.
     }
   }
 

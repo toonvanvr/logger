@@ -1,198 +1,362 @@
-import { ingestEntry, processEntry } from './ingest';
-import type { ServerDeps } from './types';
+import {
+  DataMessage,
+  EventMessage,
+  SessionMessage,
+} from '@logger/shared'
+import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
+import { ingest } from './ingest'
+import type { ServerDeps } from './types'
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-const MAX_UPLOAD_SIZE = 16 * 1024 * 1024; // 16 MB
-const startTime = Date.now();
+const MAX_BATCH_SIZE = 1000
+const MAX_UPLOAD_SIZE = 16 * 1024 * 1024 // 16 MB
+const startTime = Date.now()
 
 // ─── Auth Helper ─────────────────────────────────────────────────────
 
 function checkAuth(req: Request, apiKey: string | null): Response | null {
-  if (!apiKey) return null;
-
-  const authHeader = req.headers.get('authorization');
-  const apiKeyHeader = req.headers.get('x-api-key');
-
-  if (authHeader === `Bearer ${apiKey}` || apiKeyHeader === apiKey) {
-    return null;
-  }
-
-  return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+  if (!apiKey) return null
+  const authHeader = req.headers.get('authorization')
+  const apiKeyHeader = req.headers.get('x-api-key')
+  if (authHeader === `Bearer ${apiKey}` || apiKeyHeader === apiKey) return null
+  return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 }
 
 // ─── Route Setup ─────────────────────────────────────────────────────
 
 export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
-  const { config, rateLimiter, ringBuffer, sessionManager, wsHub, lokiForwarder, fileStore, rpcBridge } = deps;
+  const { config, rateLimiter, ringBuffer, sessionManager, lokiForwarder, fileStore, rpcBridge } = deps
 
   return {
+    // ─── Health ──────────────────────────────────────────────────────
+
     '/health': {
-      GET: () => Response.json({ ok: true }),
+      GET: () => Response.json({ status: 'ok' }),
     },
 
-    '/api/v1/health': {
+    '/api/v2/health': {
       GET: (req: Request) => {
-        const authError = checkAuth(req, config.apiKey);
-        if (authError) return authError;
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
 
-        const lokiHealth = lokiForwarder.getHealth();
+        const lokiHealth = lokiForwarder.getHealth()
         return Response.json({
-          ok: true,
+          status: 'ok',
           uptime: Math.floor((Date.now() - startTime) / 1000),
-          connections: wsHub.getViewerCount(),
-          buffer: {
-            entries: ringBuffer.size,
-            bytes: ringBuffer.byteEstimate,
-          },
-          loki: lokiHealth,
+          buffer: { size: ringBuffer.size, bytes: ringBuffer.byteEstimate },
           sessions: sessionManager.getSessions().length,
+          connections: deps.wsHub.getViewerCount(),
+          loki: lokiHealth,
           rpcPending: rpcBridge.getPendingCount(),
-        });
+        })
       },
     },
 
-    '/api/v1/log': {
-      POST: async (req: Request) => {
-        const authError = checkAuth(req, config.apiKey);
-        if (authError) return authError;
+    // ─── Sessions ────────────────────────────────────────────────────
 
-        let body: unknown;
-        try {
-          body = await req.json();
-        } catch {
-          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
-        }
+    '/api/v2/sessions': {
+      GET: (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
 
-        const processed = processEntry(body, deps);
-        if (!processed.ok) {
-          return Response.json({ ok: false, error: processed.error }, { status: 400 });
-        }
-
-        const entry = processed.entry;
-
-        if (!rateLimiter.tryConsume(entry.session_id)) {
-          return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 });
-        }
-
-        ingestEntry(entry, deps);
-        return Response.json({ ok: true, id: entry.id });
+        return Response.json(sessionManager.getSessions())
       },
     },
 
-    '/api/v1/logs': {
+    // ─── Upload ──────────────────────────────────────────────────────
+
+    '/api/v2/upload': {
       POST: async (req: Request) => {
-        const authError = checkAuth(req, config.apiKey);
-        if (authError) return authError;
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
 
-        let body: unknown;
+        let formData: FormData
         try {
-          body = await req.json();
+          formData = await req.formData()
         } catch {
-          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
+          return Response.json({ ok: false, error: 'Invalid multipart data' }, { status: 400 })
         }
 
-        if (!body || typeof body !== 'object' || !Array.isArray((body as any).entries)) {
-          return Response.json({ ok: false, error: 'Expected { entries: [...] }' }, { status: 400 });
-        }
-
-        const rawEntries = (body as any).entries as unknown[];
-        if (rawEntries.length === 0 || rawEntries.length > 1000) {
-          return Response.json({ ok: false, error: 'Batch must contain 1 to 1000 entries' }, { status: 400 });
-        }
-
-        const ids: string[] = [];
-        for (const rawEntry of rawEntries) {
-          const processed = processEntry(rawEntry, deps);
-          if (!processed.ok) continue;
-
-          const entry = processed.entry;
-          if (!rateLimiter.tryConsume(entry.session_id)) continue;
-
-          ingestEntry(entry, deps);
-          ids.push(entry.id);
-        }
-
-        return Response.json({ ok: true, count: ids.length, ids });
-      },
-    },
-
-    '/api/v1/upload': {
-      POST: async (req: Request) => {
-        const authError = checkAuth(req, config.apiKey);
-        if (authError) return authError;
-
-        let formData: FormData;
-        try {
-          formData = await req.formData();
-        } catch {
-          return Response.json({ ok: false, error: 'Invalid multipart data' }, { status: 400 });
-        }
-
-        const file = formData.get('file');
+        const file = formData.get('file')
         if (!file || !(file instanceof File)) {
-          return Response.json({ ok: false, error: 'Missing file field' }, { status: 400 });
+          return Response.json({ ok: false, error: 'Missing file field' }, { status: 400 })
         }
 
         if (file.size > MAX_UPLOAD_SIZE) {
-          return Response.json({ ok: false, error: 'File too large' }, { status: 413 });
+          return Response.json({ ok: false, error: 'File too large' }, { status: 413 })
         }
 
-        const sessionId = formData.get('session_id');
+        const sessionId = formData.get('session_id')
         if (!sessionId || typeof sessionId !== 'string') {
-          return Response.json({ ok: false, error: 'Missing session_id' }, { status: 400 });
+          return Response.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
         }
 
-        const label = formData.get('label');
+        const label = formData.get('label')
 
         try {
-          const bytes = new Uint8Array(await file.arrayBuffer());
+          const bytes = new Uint8Array(await file.arrayBuffer())
           const ref = await fileStore.store(
             sessionId,
             bytes,
             file.type || 'application/octet-stream',
             typeof label === 'string' ? label : undefined,
-          );
-          return Response.json({ ok: true, ref });
+          )
+          return Response.json({ ok: true, ref })
         } catch (err) {
-          console.error('[HTTP] File upload error:', err);
-          return Response.json({ ok: false, error: 'Internal server error' }, { status: 500 });
+          console.error('[HTTP] File upload error:', err)
+          return Response.json({ ok: false, error: 'Internal server error' }, { status: 500 })
         }
       },
     },
 
-    '/api/v1/sessions': {
-      GET: (req: Request) => {
-        const authError = checkAuth(req, config.apiKey);
-        if (authError) return authError;
+    // ─── Session Management ──────────────────────────────────────────
 
-        return Response.json(sessionManager.getSessions());
-      },
-    },
-
-    '/log': {
+    '/api/v2/session': {
       POST: async (req: Request) => {
-        let body: unknown;
-        try {
-          body = await req.json();
-        } catch {
-          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        let body: unknown
+        try { body = await req.json() } catch {
+          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
         }
 
-        const processed = processEntry(body, deps);
-        if (!processed.ok) {
-          return Response.json({ ok: false, error: processed.error }, { status: 400 });
+        const parsed = SessionMessage.safeParse(body)
+        if (!parsed.success) {
+          const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+          return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
         }
 
-        const entry = processed.entry;
+        const entry = normalizeSession(parsed.data)
 
         if (!rateLimiter.tryConsume(entry.session_id)) {
-          return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 });
+          return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
         }
 
-        ingestEntry(entry, deps);
-        return Response.json({ ok: true, id: entry.id });
+        ingest(entry, deps)
+        return Response.json({ ok: true, session_id: entry.session_id })
       },
     },
-  };
+
+    // ─── Events ──────────────────────────────────────────────────────
+
+    '/api/v2/events': {
+      POST: async (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        let body: unknown
+        try { body = await req.json() } catch {
+          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
+        }
+
+        if (Array.isArray(body)) {
+          return handleEventBatch(body, deps)
+        }
+        return handleSingleEvent(body, deps)
+      },
+    },
+
+    // ─── Data ────────────────────────────────────────────────────────
+
+    '/api/v2/data': {
+      POST: async (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        let body: unknown
+        try { body = await req.json() } catch {
+          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
+        }
+
+        if (Array.isArray(body)) {
+          return handleDataBatch(body, deps)
+        }
+        return handleSingleData(body, deps)
+      },
+    },
+
+    // ─── Session State ───────────────────────────────────────────────
+
+    '/api/v2/sessions/:id/state': {
+      GET: (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        const url = new URL(req.url)
+        const segments = url.pathname.split('/')
+        const sessionId = segments[4] ?? ''
+        if (!sessionId) {
+          return Response.json({ ok: false, error: 'Missing session ID' }, { status: 400 })
+        }
+
+        const session = sessionManager.getSession(sessionId)
+        if (!session) {
+          return Response.json({ ok: false, error: 'Session not found' }, { status: 404 })
+        }
+
+        const dataEntries = ringBuffer.query({ sessionId, limit: 1000 })
+        const state: Record<string, unknown> = {}
+        for (const entry of dataEntries.entries) {
+          if (entry.kind === 'data' && entry.key) {
+            state[entry.key] = entry.value
+          }
+        }
+
+        return Response.json({ ok: true, session, state })
+      },
+    },
+
+    // ─── Query ───────────────────────────────────────────────────────
+
+    '/api/v2/query': {
+      POST: async (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        let body: Record<string, unknown>
+        try { body = await req.json() as Record<string, unknown> } catch {
+          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
+        }
+
+        const sessionId = (body.session_id ?? body.sessionId) as string | undefined
+        const severity = body.severity as string | undefined
+        const from = body.from as string | undefined
+        const to = body.to as string | undefined
+        const limit = (body.limit as number) ?? 100
+
+        const result = ringBuffer.query({ sessionId, severity, from, to, limit })
+
+        const text = (body.text ?? body.search) as string | undefined
+        if (text) {
+          const lower = text.toLowerCase()
+          result.entries = result.entries.filter((e) =>
+            e.message?.toLowerCase().includes(lower) || e.tag?.toLowerCase().includes(lower),
+          )
+        }
+
+        return Response.json({ ok: true, ...result })
+      },
+    },
+
+    // ─── RPC Proxy ───────────────────────────────────────────────────
+
+    '/api/v2/rpc': {
+      POST: async (req: Request) => {
+        const authError = checkAuth(req, config.apiKey)
+        if (authError) return authError
+
+        let body: Record<string, unknown>
+        try { body = await req.json() as Record<string, unknown> } catch {
+          return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
+        }
+
+        const sessionId = (body.session_id ?? body.sessionId) as string | undefined
+        const method = (body.tool ?? body.method) as string | undefined
+        const args = body.args
+
+        if (!sessionId || !method) {
+          return Response.json(
+            { ok: false, error: 'Missing session_id/sessionId and tool/method' },
+            { status: 400 },
+          )
+        }
+
+        const rpcId = crypto.randomUUID()
+
+        return new Promise<Response>((resolve) => {
+          const mockWs = {
+            send(data: string) {
+              const msg = JSON.parse(data)
+              if (msg.rpc_error) {
+                resolve(Response.json({ ok: false, rpc_id: rpcId, error: msg.rpc_error }, { status: 502 }))
+              } else {
+                resolve(Response.json({ ok: true, rpc_id: rpcId, data: msg.rpc_response }))
+              }
+            },
+          }
+          rpcBridge.handleRequest({ rpcId, targetSessionId: sessionId, method, args, viewerWs: mockWs })
+        })
+      },
+    },
+  }
+}
+
+// ─── Internal Handlers ───────────────────────────────────────────────
+
+function handleSingleEvent(body: unknown, deps: ServerDeps): Response {
+  const parsed = EventMessage.safeParse(body)
+  if (!parsed.success) {
+    const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+    return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
+  }
+
+  const entry = normalizeEvent(parsed.data)
+  if (!deps.rateLimiter.tryConsume(entry.session_id)) {
+    return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
+  }
+
+  ingest(entry, deps)
+  return Response.json({ ok: true, id: entry.id })
+}
+
+function handleEventBatch(items: unknown[], deps: ServerDeps): Response {
+  if (items.length === 0 || items.length > MAX_BATCH_SIZE) {
+    return Response.json({ ok: false, error: `Batch must contain 1 to ${MAX_BATCH_SIZE} items` }, { status: 400 })
+  }
+
+  const results = items.map((item) => {
+    const parsed = EventMessage.safeParse(item)
+    if (!parsed.success) {
+      const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+      return { ok: false as const, error: 'validation_error', message: msg }
+    }
+    const entry = normalizeEvent(parsed.data)
+    if (!deps.rateLimiter.tryConsume(entry.session_id)) {
+      return { ok: false as const, error: 'rate_limited', message: 'Rate limit exceeded' }
+    }
+    ingest(entry, deps)
+    return { ok: true as const, id: entry.id }
+  })
+
+  return Response.json({ ok: true, results })
+}
+
+function handleSingleData(body: unknown, deps: ServerDeps): Response {
+  const parsed = DataMessage.safeParse(body)
+  if (!parsed.success) {
+    const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+    return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
+  }
+
+  const entry = normalizeData(parsed.data)
+  if (!deps.rateLimiter.tryConsume(entry.session_id)) {
+    return Response.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
+  }
+
+  ingest(entry, deps)
+  return Response.json({ ok: true, id: entry.id })
+}
+
+function handleDataBatch(items: unknown[], deps: ServerDeps): Response {
+  if (items.length === 0 || items.length > MAX_BATCH_SIZE) {
+    return Response.json({ ok: false, error: `Batch must contain 1 to ${MAX_BATCH_SIZE} items` }, { status: 400 })
+  }
+
+  const results = items.map((item) => {
+    const parsed = DataMessage.safeParse(item)
+    if (!parsed.success) {
+      const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+      return { ok: false as const, error: 'validation_error', message: msg }
+    }
+    const entry = normalizeData(parsed.data)
+    if (!deps.rateLimiter.tryConsume(entry.session_id)) {
+      return { ok: false as const, error: 'rate_limited', message: 'Rate limit exceeded' }
+    }
+    ingest(entry, deps)
+    return { ok: true as const, id: entry.id }
+  })
+
+  return Response.json({ ok: true, results })
 }

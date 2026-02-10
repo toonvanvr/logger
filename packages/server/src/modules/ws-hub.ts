@@ -1,18 +1,25 @@
-import type { LogEntry, ServerMessage, Severity, ViewerMessage } from '@logger/shared';
-import type { ServerWebSocket } from 'bun';
+import type { StoredEntry } from '@logger/shared'
+import type { ServerWebSocket } from 'bun'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
+/** Outbound message to viewer WebSocket clients. */
+type ServerMessage = { type: string; entry?: StoredEntry;[key: string]: unknown }
+/** Inbound message from viewer WebSocket clients. */
+type ViewerMessage = { type: string;[key: string]: unknown }
+
+type Severity = string
+
 export interface ViewerSubscription {
-  sessionIds: string[];
-  minSeverity?: Severity;
-  sections?: string[];
-  textFilter?: string;
+  sessionIds: string[]
+  minSeverity?: Severity
+  sections?: string[]
+  textFilter?: string
 }
 
 interface ViewerEntry {
-  ws: ServerWebSocket<any>;
-  subscription: ViewerSubscription;
+  ws: ServerWebSocket<any>
+  subscription: ViewerSubscription
 }
 
 // ─── Severity ordering for filter comparison ─────────────────────────
@@ -23,7 +30,7 @@ const SEVERITY_ORDER: Record<string, number> = {
   warning: 2,
   error: 3,
   critical: 4,
-};
+}
 
 // ─── WebSocket Hub ───────────────────────────────────────────────────
 
@@ -35,39 +42,39 @@ export class WebSocketHub {
     this.viewers.set(ws, {
       ws,
       subscription: { sessionIds: [] },
-    });
+    })
   }
 
   /** Unregister a viewer WebSocket connection. */
   removeViewer(ws: ServerWebSocket<any>): void {
-    this.viewers.delete(ws);
+    this.viewers.delete(ws)
   }
 
   /** Get the number of connected viewers. */
   getViewerCount(): number {
-    return this.viewers.size;
+    return this.viewers.size
   }
 
   /** Update a viewer's subscription filter. */
   setSubscription(ws: ServerWebSocket<any>, sub: ViewerSubscription): void {
-    const entry = this.viewers.get(ws);
+    const entry = this.viewers.get(ws)
     if (entry) {
-      entry.subscription = sub;
+      entry.subscription = sub
     }
   }
 
   /** Get a viewer's current subscription. */
   getSubscription(ws: ServerWebSocket<any>): ViewerSubscription | undefined {
-    return this.viewers.get(ws)?.subscription;
+    return this.viewers.get(ws)?.subscription
   }
 
   /** Broadcast a server message to all viewers whose subscription matches. */
   broadcast(message: ServerMessage): void {
-    const data = JSON.stringify(message);
+    const data = JSON.stringify(message)
 
     for (const entry of this.viewers.values()) {
       if (this.matchesSubscription(message, entry.subscription)) {
-        entry.ws.send(data);
+        entry.ws.send(data)
       }
     }
   }
@@ -81,12 +88,12 @@ export class WebSocketHub {
           minSeverity: message.min_severity,
           sections: message.sections,
           textFilter: message.text_filter,
-        });
-        break;
+        })
+        break
       }
       case 'unsubscribe': {
-        this.setSubscription(ws, { sessionIds: [] });
-        break;
+        this.setSubscription(ws, { sessionIds: [] })
+        break
       }
       // Other message types (history_query, rpc_request, etc.) are handled
       // by other modules; this hub only processes subscription management.
@@ -99,56 +106,56 @@ export class WebSocketHub {
   private matchesSubscription(message: ServerMessage, sub: ViewerSubscription): boolean {
     // Non-log messages are broadcast to all
     if (message.type !== 'log' || !message.entry) {
-      return true;
+      return true
     }
 
-    const entry = message.entry as LogEntry;
+    const entry = message.entry as StoredEntry
 
     // Session filter: empty sessionIds means "all sessions"
     if (sub.sessionIds.length > 0 && !sub.sessionIds.includes(entry.session_id)) {
-      return false;
+      return false
     }
 
     // Severity filter
     if (sub.minSeverity) {
-      const entrySev = SEVERITY_ORDER[entry.severity] ?? 0;
-      const minSev = SEVERITY_ORDER[sub.minSeverity] ?? 0;
+      const entrySev = SEVERITY_ORDER[entry.severity] ?? 0
+      const minSev = SEVERITY_ORDER[sub.minSeverity] ?? 0
       if (entrySev < minSev) {
-        return false;
+        return false
       }
     }
 
-    // Section filter
+    // Section/tag filter
     if (sub.sections && sub.sections.length > 0) {
-      const entrySection = entry.section ?? 'events';
-      if (!sub.sections.includes(entrySection)) {
-        return false;
+      const entryTag = entry.tag ?? 'events'
+      if (!sub.sections.includes(entryTag)) {
+        return false
       }
     }
 
-    // Text filter: case-insensitive substring match against text and tag values
+    // Text filter: case-insensitive substring match against message and label values
     if (sub.textFilter) {
-      const filter = sub.textFilter.toLowerCase();
-      let matched = false;
+      const filter = sub.textFilter.toLowerCase()
+      let matched = false
 
-      if (entry.text && entry.text.toLowerCase().includes(filter)) {
-        matched = true;
+      if (entry.message && entry.message.toLowerCase().includes(filter)) {
+        matched = true
       }
 
-      if (!matched && entry.tags) {
-        for (const value of Object.values(entry.tags)) {
+      if (!matched && entry.labels) {
+        for (const value of Object.values(entry.labels)) {
           if (value.toLowerCase().includes(filter)) {
-            matched = true;
-            break;
+            matched = true
+            break
           }
         }
       }
 
       if (!matched) {
-        return false;
+        return false
       }
     }
 
-    return true;
+    return true
   }
 }
