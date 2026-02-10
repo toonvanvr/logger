@@ -8,6 +8,7 @@ import { runRpcTools } from './scenarios/rpc-tools'
 import { runSessionLifecycle } from './scenarios/session-lifecycle'
 import { runShowcase } from './scenarios/showcase'
 import { runStateTracking } from './scenarios/state-tracking'
+import { runSticky200 } from './scenarios/sticky-200'
 import { runStickyDemo } from './scenarios/sticky-demo'
 import { runStressTest } from './scenarios/stress-test'
 
@@ -27,6 +28,7 @@ const scenarios: Record<string, () => Promise<void>> = {
   session: runSessionLifecycle,
   rpc: runRpcTools,
   sticky: runStickyDemo,
+  'sticky-200': runSticky200,
 }
 
 if (scenario === 'all') {
