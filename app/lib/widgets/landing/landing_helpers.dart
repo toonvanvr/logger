@@ -51,10 +51,7 @@ class StepRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,
-            child: Text(
-              number,
-              style: LoggerTypography.stepNumber,
-            ),
+            child: Text(number, style: LoggerTypography.stepNumber),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -101,7 +98,12 @@ class LinkPill extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  const LinkPill({super.key, required this.icon, required this.label, this.onTap});
+  const LinkPill({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +151,11 @@ class ConnectButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cable, size: 16, color: LoggerColors.borderFocus),
+              const Icon(
+                Icons.cable,
+                size: 16,
+                color: LoggerColors.borderFocus,
+              ),
               const SizedBox(width: 8),
               Text('Connect to Server', style: _connectStyle),
             ],

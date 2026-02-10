@@ -58,10 +58,9 @@ class StateViewSection extends StatelessWidget {
         children: [
           // Header row
           GestureDetector(
-            onTap: () =>
-                context.read<SettingsService>().setStateViewCollapsed(
-                  !isCollapsed,
-                ),
+            onTap: () => context.read<SettingsService>().setStateViewCollapsed(
+              !isCollapsed,
+            ),
             child: Container(
               height: 24,
               padding: const EdgeInsets.symmetric(horizontal: 8),

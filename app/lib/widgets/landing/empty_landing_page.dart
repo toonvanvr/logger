@@ -33,10 +33,7 @@ class EmptyLandingPage extends StatelessWidget {
                   child: CustomPaint(painter: LogoPainter()),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Logger',
-                  style: LoggerTypography.landingTitle,
-                ),
+                Text('Logger', style: LoggerTypography.landingTitle),
                 const SizedBox(height: 4),
                 Text(
                   'Real-time structured log viewer',
@@ -56,8 +53,10 @@ class EmptyLandingPage extends StatelessWidget {
                     LinkPill(
                       icon: Icons.menu_book,
                       label: 'Docs',
-                      onTap: () => _openUrl(context,
-                          'https://github.com/toonvanvr/logger/blob/main/docs/README.md'),
+                      onTap: () => _openUrl(
+                        context,
+                        'https://github.com/toonvanvr/logger/blob/main/docs/README.md',
+                      ),
                     ),
                     LinkPill(
                       icon: Icons.settings,
@@ -67,8 +66,10 @@ class EmptyLandingPage extends StatelessWidget {
                     LinkPill(
                       icon: Icons.extension,
                       label: 'Plugins',
-                      onTap: () => _openUrl(context,
-                          'https://github.com/toonvanvr/logger/blob/main/docs/reference/plugin-api.md'),
+                      onTap: () => _openUrl(
+                        context,
+                        'https://github.com/toonvanvr/logger/blob/main/docs/reference/plugin-api.md',
+                      ),
                     ),
                   ],
                 ),
@@ -128,14 +129,13 @@ class EmptyLandingPage extends StatelessWidget {
               Text('Shortcuts', style: _sectionHeader),
               const Spacer(),
               GestureDetector(
-                onTap: () => _openUrl(context,
-                    'https://github.com/toonvanvr/logger/blob/main/docs/reference/keybindings.md'),
+                onTap: () => _openUrl(
+                  context,
+                  'https://github.com/toonvanvr/logger/blob/main/docs/reference/keybindings.md',
+                ),
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
-                  child: Text(
-                    'View All →',
-                    style: LoggerTypography.smallLabel,
-                  ),
+                  child: Text('View All →', style: LoggerTypography.smallLabel),
                 ),
               ),
             ],

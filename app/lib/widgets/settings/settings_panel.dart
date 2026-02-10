@@ -46,6 +46,7 @@ class _SettingsPanelState extends State<SettingsPanel>
       _controller.value = 1.0;
     }
   }
+
   @override
   void didUpdateWidget(covariant SettingsPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -56,11 +57,13 @@ class _SettingsPanelState extends State<SettingsPanel>
       _controller.reverse();
     }
   }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     if (!_isRendered) return const SizedBox.shrink();
@@ -248,5 +251,3 @@ class _PanelContentState extends State<_PanelContent> {
     );
   }
 }
-
-

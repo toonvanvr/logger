@@ -70,10 +70,7 @@ class ConnectionManager extends ChangeNotifier {
 
   void subscribe({List<String>? sessionIds, String? minSeverity}) {
     send(
-      ViewerSubscribeMessage(
-        sessionIds: sessionIds,
-        minSeverity: minSeverity,
-      ),
+      ViewerSubscribeMessage(sessionIds: sessionIds, minSeverity: minSeverity),
     );
   }
 
