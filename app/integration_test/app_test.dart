@@ -11,7 +11,7 @@ library;
 import 'package:app/models/log_entry.dart';
 import 'package:app/models/server_message.dart';
 import 'package:app/screens/log_viewer.dart';
-import 'package:app/services/log_connection.dart';
+import 'package:app/services/connection_manager.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/rpc_service.dart';
 import 'package:app/services/session_store.dart';
@@ -27,7 +27,7 @@ import 'package:provider/provider.dart';
 Widget buildTestApp({LogStore? logStore, SessionStore? sessionStore}) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider(create: (_) => LogConnection()),
+      ChangeNotifierProvider(create: (_) => ConnectionManager()),
       ChangeNotifierProvider(create: (_) => logStore ?? LogStore()),
       ChangeNotifierProvider(create: (_) => sessionStore ?? SessionStore()),
       ChangeNotifierProvider(create: (_) => RpcService()),
@@ -45,23 +45,17 @@ LogEntry sampleEntry({
   String? text,
   Severity severity = Severity.info,
   String sessionId = 'test-session',
-  String? section,
   String? groupId,
-  GroupAction? groupAction,
-  String? groupLabel,
 }) {
   return LogEntry(
     id: id ?? 'entry-${DateTime.now().microsecondsSinceEpoch}',
     timestamp: DateTime.now().toIso8601String(),
     sessionId: sessionId,
     severity: severity,
-    type: LogType.text,
+    kind: EntryKind.event,
     application: const ApplicationInfo(name: 'test-app', environment: 'test'),
-    text: text ?? 'Test log message',
-    section: section,
+    message: text ?? 'Test log message',
     groupId: groupId,
-    groupAction: groupAction,
-    groupLabel: groupLabel,
   );
 }
 
@@ -245,32 +239,22 @@ void main() {
     });
   });
 
-  group('Group collapse/expand', () {
-    testWidgets('group entries are shown with label', (tester) async {
+  // TODO(modernize): Group open/close semantics removed in v2 schema refactor.
+  // Update this test once new grouping UX is finalized.
+  group('Grouped entries', () {
+    testWidgets('entries with shared groupId are displayed', (tester) async {
       final logStore = LogStore();
-      final groupId = 'grp-1';
+      const groupId = 'grp-1';
       logStore.addEntries([
-        sampleEntry(
-          id: 'g-open',
-          groupId: groupId,
-          groupAction: GroupAction.open,
-          groupLabel: 'My Group',
-        ),
-        sampleEntry(id: 'g-child', text: 'Child entry', groupId: groupId),
-        sampleEntry(
-          id: 'g-close',
-          groupId: groupId,
-          groupAction: GroupAction.close,
-        ),
+        sampleEntry(id: 'g-1', text: 'First grouped', groupId: groupId),
+        sampleEntry(id: 'g-2', text: 'Second grouped', groupId: groupId),
       ]);
 
       await tester.pumpWidget(buildTestApp(logStore: logStore));
       await tester.pumpAndSettle();
 
-      // Group label should be visible
-      expect(find.text('My Group'), findsOneWidget);
-      // Child entry should be visible (groups default to expanded)
-      expect(find.text('Child entry'), findsOneWidget);
+      expect(find.text('First grouped'), findsOneWidget);
+      expect(find.text('Second grouped'), findsOneWidget);
     });
   });
 }
