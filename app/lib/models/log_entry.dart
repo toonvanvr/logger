@@ -124,4 +124,37 @@ class LogEntry {
       receivedAt: json['received_at'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'timestamp': timestamp,
+    'session_id': sessionId,
+    'kind': kind.name,
+    'severity': severity.name,
+    if (message != null) 'message': message,
+    if (tag != null) 'tag': tag,
+    if (exception != null) 'exception': exception!.toJson(),
+    if (parentId != null) 'parent_id': parentId,
+    if (groupId != null) 'group_id': groupId,
+    if (prevId != null) 'prev_id': prevId,
+    if (nextId != null) 'next_id': nextId,
+    if (widget != null) 'widget': widget!.toJson(),
+    'replace': replace,
+    if (icon != null) 'icon': icon!.toJson(),
+    if (labels != null) 'labels': labels,
+    if (generatedAt != null) 'generated_at': generatedAt,
+    if (sentAt != null) 'sent_at': sentAt,
+    if (key != null) 'key': key,
+    if (value != null) 'value': value,
+    'override': override_,
+    'display': switch (display) {
+      DisplayLocation.defaultLoc => 'default',
+      DisplayLocation.static_ => 'static',
+      DisplayLocation.shelf => 'shelf',
+    },
+    if (sessionAction != null) 'session_action': sessionAction!.name,
+    if (application != null) 'application': application!.toJson(),
+    if (metadata != null) 'metadata': metadata,
+    if (receivedAt != null) 'received_at': receivedAt,
+  };
 }

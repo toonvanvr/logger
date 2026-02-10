@@ -481,4 +481,74 @@ void main() {
       expect(ds.icon, isNull);
     });
   });
+
+  group('LogEntry.toJson round-trip', () {
+    // ── Test 28: full entry round-trip ──
+
+    test('round-trip with all fields populated', () {
+      final json = {
+        'id': 'rt-1',
+        'timestamp': '2026-02-07T12:00:00Z',
+        'session_id': 'sess-1',
+        'kind': 'event',
+        'severity': 'warning',
+        'message': 'test message',
+        'tag': 'network',
+        'exception': {
+          'type': 'TypeError',
+          'message': 'null is not an object',
+          'stack_trace': 'at main.dart:10',
+          'source': 'main.dart',
+          'handled': false,
+          'inner': {'message': 'root cause', 'handled': true},
+        },
+        'parent_id': 'p1',
+        'group_id': 'g1',
+        'prev_id': 'prev-1',
+        'next_id': 'next-1',
+        'widget': {
+          'type': 'table',
+          'columns': ['A', 'B'],
+        },
+        'replace': true,
+        'icon': {'icon': 'star', 'color': '#FFD700', 'size': 24.0},
+        'labels': {'env': 'prod'},
+        'generated_at': '2026-02-07T11:59:00Z',
+        'sent_at': '2026-02-07T11:59:30Z',
+        'key': 'theme',
+        'value': 'dark',
+        'override': false,
+        'display': 'shelf',
+        'session_action': 'start',
+        'application': {'name': 'App', 'version': '1.0', 'environment': 'dev'},
+        'metadata': {'os': 'linux'},
+        'received_at': '2026-02-07T12:00:01Z',
+      };
+
+      final entry = LogEntry.fromJson(json);
+      final output = entry.toJson();
+
+      expect(output, json);
+    });
+
+    // ── Test 29: minimal entry round-trip ──
+
+    test('round-trip with minimal fields', () {
+      final json = {
+        'id': 'rt-2',
+        'timestamp': '2026-02-07T12:00:00Z',
+        'session_id': 'sess-1',
+        'kind': 'event',
+        'severity': 'info',
+        'replace': false,
+        'override': true,
+        'display': 'default',
+      };
+
+      final entry = LogEntry.fromJson(json);
+      final output = entry.toJson();
+
+      expect(output, json);
+    });
+  });
 }
