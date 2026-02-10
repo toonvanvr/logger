@@ -179,4 +179,11 @@ export class FileStore {
       await this.delete(record.refId);
     }
   }
+
+  /**
+   * Lifecycle shutdown (no resources to release).
+   */
+  shutdown(): void {
+    /* no resources to release */
+  }
 }
