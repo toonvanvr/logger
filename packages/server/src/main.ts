@@ -53,14 +53,14 @@ sessionManager.on((event, session) => {
     wsHub.broadcast({
       type: 'session_update',
       session_id: session.sessionId,
-      session_action: 'start',
+      action: 'start',
       application: session.application,
     })
   } else if (event === 'session-end') {
     wsHub.broadcast({
       type: 'session_update',
       session_id: session.sessionId,
-      session_action: 'end',
+      action: 'end',
     })
   }
 })
