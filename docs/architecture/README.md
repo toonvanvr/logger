@@ -87,7 +87,7 @@ Lightweight TypeScript library for sending structured logs:
 
 ### Viewer (`app/lib/`)
 
-Flutter desktop application (Linux-first):
+Flutter desktop application (Linux, macOS):
 
 | Directory | Responsibility |
 |-----------|----------------|

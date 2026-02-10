@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-**Prerequisites:** Bun v1.3+, Flutter 3.x stable, Docker (optional). Linux is the primary platform.
+**Prerequisites:** Bun v1.3+, Flutter 3.x stable, Docker (optional). Linux and macOS are supported platforms.
 
 ## Development Setup
 
@@ -30,7 +30,8 @@ All tests must pass before submitting a PR.
 
 ```bash
 cd packages/server && bun run src/main.ts   # Start log server on :8080
-cd app && flutter run -d linux               # Launch the viewer app
+cd app && flutter run -d linux               # Launch the viewer app (Linux)
+cd app && flutter run -d macos               # Launch the viewer app (macOS)
 ```
 
 Or use Docker Compose for the full stack: `docker compose up -d`

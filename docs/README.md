@@ -38,7 +38,7 @@ graph LR
 |-----------|----------|-------------|
 | **Client SDK** | TypeScript | Lightweight logger that sends structured entries to the server |
 | **Server** | TypeScript (Bun) | Receives logs via HTTP/UDP, stores in Loki, streams to viewers |
-| **Viewer** | Dart (Flutter) | Desktop app for real-time log viewing with rich rendering |
+| **Viewer** | Dart (Flutter) | Desktop app (Linux, macOS) for real-time log viewing with rich rendering |
 | **Shared** | TypeScript | Common types, schemas, and constants |
 | **Demo** | TypeScript | Sample application generating realistic log traffic |
 
@@ -52,7 +52,8 @@ graph LR
 
 ```bash
 cd packages/server && bun install && bun run src/main.ts   # Start server
-cd app && flutter pub get && flutter run -d linux            # Run viewer
+cd app && flutter pub get && flutter run -d linux            # Run viewer (Linux)
+cd app && flutter pub get && flutter run -d macos            # Run viewer (macOS)
 cd packages/demo && bun install && bun run src/main.ts      # Send test logs
 ```
 
@@ -64,7 +65,8 @@ The viewer auto-connects to `ws://localhost:8080`. Loki warnings in the server c
 
 ```bash
 docker compose up -d
-cd app && flutter build linux && ./build/linux/x64/release/bundle/app
+cd app && flutter build linux && ./build/linux/x64/release/bundle/app   # Linux
+cd app && flutter build macos && open build/macos/Build/Products/Release/app.app  # macOS
 ```
 
 This launches Loki, Grafana (http://localhost:3000), Server (http://localhost:8080), and Demo.

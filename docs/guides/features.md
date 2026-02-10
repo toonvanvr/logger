@@ -176,6 +176,10 @@ Logger launches in mini mode by default — a compact window designed to sit alo
 
 Resize or double-click the title bar to expand into compact or full mode for detailed investigation, then shrink back to mini mode when done.
 
+### macOS Native Titlebar
+
+In normal (non-mini) mode on macOS, the viewer uses the native macOS titlebar with standard traffic light window controls. Mini mode continues to use an undecorated custom title bar for maximum compactness.
+
 ## Filter Stack
 
 Interactive elements throughout the UI act as filter shortcuts. Clicking a state tag, session badge, or severity indicator adds a filter — no typing required.

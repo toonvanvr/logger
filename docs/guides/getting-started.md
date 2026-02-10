@@ -20,7 +20,8 @@ cd packages/server && bun install && bun run src/main.ts
 ### Build and Run the Viewer
 
 ```bash
-cd app && flutter pub get && flutter run -d linux
+cd app && flutter pub get && flutter run -d linux   # Linux
+cd app && flutter pub get && flutter run -d macos   # macOS
 ```
 
 The viewer auto-connects to `ws://localhost:8080`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
@@ -65,11 +66,20 @@ You should see `loki`, `grafana`, `server`, and `demo` all running.
 
 ### Build and Launch the Viewer
 
+**Linux:**
 ```bash
 cd app
 flutter pub get
 flutter build linux
 ./build/linux/x64/release/bundle/app
+```
+
+**macOS:**
+```bash
+cd app
+flutter pub get
+flutter build macos
+open build/macos/Build/Products/Release/app.app
 ```
 
 The viewer connects to `ws://localhost:8080` and begins displaying log entries from the demo service.

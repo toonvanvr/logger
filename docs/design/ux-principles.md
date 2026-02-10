@@ -113,6 +113,15 @@ Reconnection must be silent and automatic. No toast spam during transient networ
 
 Log content text must be selectable with standard OS gestures: click-drag for range, double-click for word, triple-click for line. Interactive gestures (tap to expand, click to select row) must not interfere with text selection. Where selection and interaction conflict, wrap the interactive element with `SelectionContainer.disabled` to preserve selection on surrounding content.
 
+### 16. Render Performance
+
+Avoid expensive operations inside `build()` methods. Decode, parse, and compute outside the render path:
+
+- **No base64 decode in build** — cache decoded bytes in state (e.g., image data). Re-decoding on every frame causes jank.
+- **Avoid `IntrinsicHeight`** — for variable-height content like log rows, use `CrossAxisAlignment.start` instead. `IntrinsicHeight` forces a two-pass layout that compounds across long lists.
+- **Gapless image playback** — use `gaplessPlayback: true` and `frameBuilder` placeholders to avoid flicker during image reloads.
+- **Guard auto-scroll** — only trigger live-mode auto-scroll when the viewport is already near the bottom, preventing forced jumps during user browsing.
+
 ## Interaction Patterns
 
 - **Click session** → filter log view to that session
