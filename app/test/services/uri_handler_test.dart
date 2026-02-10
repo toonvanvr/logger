@@ -73,7 +73,15 @@ void main() {
     });
 
     test('handles logger://connect with defaults', () {
-      final result = handle('logger://connect');
+      late bool result;
+      runZonedGuarded(
+        () {
+          result = handle('logger://connect');
+        },
+        (error, stack) {
+          // Expected: connection error for localhost in test environment
+        },
+      );
       expect(result, isTrue);
       expect(connectionManager.connections.length, 1);
       final conn = connectionManager.connections.values.first;

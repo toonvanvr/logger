@@ -115,6 +115,7 @@ class ConnectionManager extends ChangeNotifier {
 
     try {
       final channel = WebSocketChannel.connect(Uri.parse(conn.config.url));
+      channel.ready.catchError((_) {}); // Errors handled via stream onError
       final sub = channel.stream.listen(
         (data) => _onData(id, data),
         onError: (error) => _onError(id, error),
