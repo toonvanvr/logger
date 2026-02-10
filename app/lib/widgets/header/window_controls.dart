@@ -21,8 +21,8 @@ class ConnectionIndicator extends StatelessWidget {
         height: 8,
         decoration: BoxDecoration(
           color: isConnected
-              ? const Color(0xFFA8CC7E)
-              : const Color(0xFFE06C60),
+              ? LoggerColors.syntaxString
+              : LoggerColors.severityErrorBar,
           shape: BoxShape.circle,
         ),
       ),

@@ -245,7 +245,7 @@ class _FilterBarState extends State<FilterBar> {
             widget.flatMode ? Icons.view_list : Icons.account_tree,
             size: 16,
             color: widget.flatMode
-                ? const Color(0xFFE6B455) : LoggerColors.fgMuted,
+                ? LoggerColors.borderFocus : LoggerColors.fgMuted,
           ),
         ),
       ),

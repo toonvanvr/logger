@@ -112,9 +112,7 @@ class _LogRowContentState extends State<LogRowContent> {
             ),
             const SizedBox(width: 4),
           ],
-          Expanded(
-            child: Text(label, style: LoggerTypography.groupTitle),
-          ),
+          Expanded(child: Text(label, style: LoggerTypography.groupTitle)),
           if (durationMs != null) _DurationBadge(durationMs: durationMs),
         ],
       );
@@ -198,10 +196,10 @@ class _DurationBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ms = double.tryParse(durationMs) ?? 0;
     final color = ms < 100
-        ? const Color(0xFFA8CC7E)
+        ? LoggerColors.syntaxString
         : ms < 500
-            ? const Color(0xFFE6B455)
-            : const Color(0xFFE06C60);
+        ? LoggerColors.severityWarningBar
+        : LoggerColors.severityErrorBar;
 
     final text = ms < 1000
         ? '${ms.round()}ms'
