@@ -1,8 +1,7 @@
+import type { Severity } from '@logger/shared'
 import type { QueuedMessage } from './logger-types.js'
 
-// ─── Severity type ───────────────────────────────────────────────────
-
-export type Severity = 'debug' | 'info' | 'warning' | 'error' | 'critical'
+export type { Severity } from '@logger/shared'
 
 // ─── Base fields ─────────────────────────────────────────────────────
 
