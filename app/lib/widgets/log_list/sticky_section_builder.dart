@@ -124,19 +124,31 @@ List<StickySection> computeStickySections(
 }
 
 /// Process unpin control entries to remove sticky state.
+///
+/// Scroll-aware: only processes unpin entries the user has scrolled past
+/// (display index < [firstVisibleIndex]). In live mode all unpins are
+/// processed immediately so tailing behaviour is preserved.
 void processUnpinEntries({
   required LogStore logStore,
   required StickyStateService stickyState,
   required Set<String> processedUnpinIds,
+  required List<DisplayEntry> displayEntries,
+  required int firstVisibleIndex,
+  required bool isLiveMode,
 }) {
-  for (final entry in logStore.entries) {
+  for (int i = 0; i < displayEntries.length; i++) {
+    final entry = displayEntries[i].entry;
     if (processedUnpinIds.contains(entry.id)) continue;
     final action = entry.labels?['_sticky_action'];
     if (action == 'unpin') {
-      processedUnpinIds.add(entry.id);
-      final targetId = entry.groupId ?? entry.id;
-      if (targetId.isNotEmpty) {
-        stickyState.dismiss(targetId);
+      // In live mode, process all unpins immediately.
+      // Otherwise, only process unpins the user has scrolled past.
+      if (isLiveMode || i < firstVisibleIndex) {
+        processedUnpinIds.add(entry.id);
+        final targetId = entry.groupId ?? entry.id;
+        if (targetId.isNotEmpty) {
+          stickyState.dismiss(targetId);
+        }
       }
     }
   }

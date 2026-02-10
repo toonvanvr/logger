@@ -87,14 +87,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
     final stickyState = context.watch<StickyStateService>();
     final timeRange = context.watch<TimeRangeService>();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      processUnpinEntries(
-        logStore: logStore,
-        stickyState: stickyState,
-        processedUnpinIds: _processedUnpinIds,
-      );
-    });
-
     final filteredEntries = _filterCache.getFiltered(
       logStore: logStore,
       timeRange: timeRange,
@@ -111,6 +103,18 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       logStore: logStore,
     );
     _currentDisplayEntries = displayEntries;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      processUnpinEntries(
+        logStore: logStore,
+        stickyState: stickyState,
+        processedUnpinIds: _processedUnpinIds,
+        displayEntries: displayEntries,
+        firstVisibleIndex: _isLiveMode ? displayEntries.length : _firstVisibleIndex,
+        isLiveMode: _isLiveMode,
+      );
+    });
+
     final stickySections = computeStickySections(
       displayEntries,
       firstVisibleIndex: _isLiveMode
