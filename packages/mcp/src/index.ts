@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { Severity, type StoredEntry } from '@logger/shared'
 import { z } from 'zod'
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -51,8 +52,8 @@ server.tool(
       .describe('What to query: health (server status), sessions (active sessions), state (session state), logs (log entries). Defaults to logs.'),
     sessionId: z.string().optional()
       .describe('Session ID — required for scope=state, optional filter for scope=logs'),
-    severity: z.string().optional()
-      .describe('Filter by severity (scope=logs only): verbose, debug, info, warn, error, fatal'),
+    severity: Severity.optional()
+      .describe('Filter by severity (scope=logs only)'),
     from: z.string().optional()
       .describe('Start of time range, ISO 8601 (scope=logs only)'),
     to: z.string().optional()
@@ -88,11 +89,12 @@ server.tool(
         if (args.to) queryBody.to = args.to
         if (args.search) queryBody.search = args.search
 
-        return textResult(await fetchJson('/api/v2/query', {
+        const entries = await fetchJson('/api/v2/query', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(queryBody),
-        }))
+        }) as StoredEntry[]
+        return textResult(entries)
       }
     }
   },
@@ -104,7 +106,7 @@ server.tool(
   'logger.send',
   'Send a log entry to the Logger server',
   {
-    severity: z.string().describe('Log severity: verbose, debug, info, warn, error, fatal'),
+    severity: Severity.describe('Log severity'),
     text: z.string().describe('Log message text'),
     session: z.string().optional().describe('Session ID (optional, server may assign default)'),
   },

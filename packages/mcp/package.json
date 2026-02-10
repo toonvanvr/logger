@@ -9,6 +9,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@logger/shared": "file:../shared",
     "@modelcontextprotocol/sdk": "^1.26.0"
   },
   "devDependencies": {
