@@ -279,7 +279,7 @@ describe('Integration: RPC round-trip', () => {
 
       expect(rpcResult.type).toBe('rpc_response')
       expect(rpcResult.rpc_id).toBe(rpcId)
-      expect(rpcResult.rpc_response).toEqual({ status: 'healthy', uptime: 12345 })
+      expect(rpcResult.result).toEqual({ status: 'healthy', uptime: 12345 })
     } finally {
       clientWs.close()
     }

@@ -70,8 +70,8 @@ describe('RpcBridge', () => {
     expect(sentToClient[0].sessionId).toBe('sess-1');
     expect(sentToClient[0].message.type).toBe('rpc_request');
     expect(sentToClient[0].message.rpc_id).toBe('r1');
-    expect(sentToClient[0].message.rpc_method).toBe('getCurrentUser');
-    expect(sentToClient[0].message.rpc_args).toEqual({ includeEmail: true });
+    expect(sentToClient[0].message.method).toBe('getCurrentUser');
+    expect(sentToClient[0].message.args).toEqual({ includeEmail: true });
 
     // Respond from client
     bridge.handleResponse({ rpcId: 'r1', data: { name: 'John' } });
@@ -80,7 +80,7 @@ describe('RpcBridge', () => {
     expect(viewerWs.sent).toHaveLength(1);
     expect(viewerWs.sent[0].type).toBe('rpc_response');
     expect(viewerWs.sent[0].rpc_id).toBe('r1');
-    expect(viewerWs.sent[0].rpc_response).toEqual({ name: 'John' });
+    expect(viewerWs.sent[0].result).toEqual({ name: 'John' });
   });
 
   it('handles response with error and forwards to viewer', async () => {
@@ -103,7 +103,7 @@ describe('RpcBridge', () => {
 
     expect(viewerWs.sent).toHaveLength(1);
     expect(viewerWs.sent[0].type).toBe('rpc_response');
-    expect(viewerWs.sent[0].rpc_error).toBe('User not authenticated');
+    expect(viewerWs.sent[0].error).toBe('User not authenticated');
   });
 
   it('times out after configured duration', async () => {
@@ -123,7 +123,7 @@ describe('RpcBridge', () => {
 
     expect(viewerWs.sent).toHaveLength(1);
     expect(viewerWs.sent[0].type).toBe('rpc_response');
-    expect(viewerWs.sent[0].rpc_error).toBe('RPC timeout after 50ms');
+    expect(viewerWs.sent[0].error).toBe('RPC timeout after 50ms');
     expect(bridge.getPendingCount()).toBe(0);
   });
 
@@ -152,7 +152,7 @@ describe('RpcBridge', () => {
 
     expect(viewerWs.sent).toHaveLength(1);
     expect(viewerWs.sent[0].type).toBe('rpc_response');
-    expect(viewerWs.sent[0].rpc_error).toBe('Session "sess-unknown" not found');
+    expect(viewerWs.sent[0].error).toBe('Session "sess-unknown" not found');
   });
 
   it('returns error for unknown method', async () => {
@@ -171,7 +171,7 @@ describe('RpcBridge', () => {
 
     expect(viewerWs.sent).toHaveLength(1);
     expect(viewerWs.sent[0].type).toBe('rpc_response');
-    expect(viewerWs.sent[0].rpc_error).toBe('Unknown method "nonExistentMethod" on session "sess-1"');
+    expect(viewerWs.sent[0].error).toBe('Unknown method "nonExistentMethod" on session "sess-1"');
   });
 
   it('handles multiple concurrent requests', async () => {
@@ -211,10 +211,10 @@ describe('RpcBridge', () => {
     await Promise.all([p1, p2]);
 
     expect(viewerWs1.sent).toHaveLength(1);
-    expect(viewerWs1.sent[0].rpc_response).toEqual({ name: 'Alice' });
+    expect(viewerWs1.sent[0].result).toEqual({ name: 'Alice' });
 
     expect(viewerWs2.sent).toHaveLength(1);
-    expect(viewerWs2.sent[0].rpc_response).toEqual({ status: 'ok' });
+    expect(viewerWs2.sent[0].result).toEqual({ status: 'ok' });
 
     expect(bridge.getPendingCount()).toBe(0);
   });

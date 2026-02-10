@@ -15,6 +15,19 @@ export interface WsData {
   sessionId?: string
 }
 
+/** Map a session object to the wire format matching the Zod SessionInfo schema. */
+function sessionToWire(s: { sessionId: string; application: unknown; startedAt: string; lastHeartbeat: string; isActive: boolean; logCount: number; colorIndex: number }) {
+  return {
+    session_id: s.sessionId,
+    application: s.application,
+    started_at: s.startedAt,
+    last_heartbeat: s.lastHeartbeat,
+    is_active: s.isActive,
+    log_count: s.logCount,
+    color_index: s.colorIndex,
+  }
+}
+
 // ─── WebSocket Setup ─────────────────────────────────────────────────
 
 export function setupWebSocket(deps: ServerDeps) {
@@ -52,15 +65,7 @@ export function setupWebSocket(deps: ServerDeps) {
           const sessions = deps.sessionManager.getSessions()
           ws.send(JSON.stringify({
             type: 'session_list',
-            sessions: sessions.map(s => ({
-              session_id: s.sessionId,
-              application: s.application,
-              started_at: s.startedAt,
-              last_heartbeat: s.lastHeartbeat,
-              is_active: s.isActive,
-              log_count: s.logCount,
-              color_index: s.colorIndex,
-            })),
+            sessions: sessions.map(sessionToWire),
           }))
         } else if (ws.data.role === 'client' && ws.data.sessionId) {
           clientSockets.set(ws.data.sessionId, ws)
@@ -151,15 +156,7 @@ export function setupWebSocket(deps: ServerDeps) {
       const sessions = deps.sessionManager.getSessions()
       ws.send(JSON.stringify({
         type: 'session_list',
-        sessions: sessions.map(s => ({
-          session_id: s.sessionId,
-          application: s.application,
-          started_at: s.startedAt,
-          last_heartbeat: s.lastHeartbeat,
-          is_active: s.isActive,
-          log_count: s.logCount,
-          color_index: s.colorIndex,
-        })),
+        sessions: sessions.map(sessionToWire),
       }))
       return
     }

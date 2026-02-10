@@ -97,8 +97,8 @@ export class RpcBridge {
       this.clientSender!(targetSessionId, {
         type: 'rpc_request',
         rpc_id: rpcId,
-        rpc_method: method,
-        rpc_args: args,
+        method,
+        args,
       })
     })
   }
@@ -117,7 +117,7 @@ export class RpcBridge {
       const msg: ServerMessage = {
         type: 'rpc_response',
         rpc_id: response.rpcId,
-        rpc_response: response.data,
+        result: response.data,
       }
       entry.viewerWs.send(JSON.stringify(msg))
     }
@@ -149,7 +149,7 @@ export class RpcBridge {
     const msg: ServerMessage = {
       type: 'rpc_response',
       rpc_id: rpcId,
-      rpc_error: error,
+      error,
     }
     ws.send(JSON.stringify(msg))
   }
