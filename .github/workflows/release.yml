@@ -58,14 +58,41 @@ jobs:
           name: logger-linux-x64
           path: logger-linux-x64-*.tar.gz
 
+  build-macos:
+    needs: [test-ts, test-flutter]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build
+        run: |
+          cd app
+          flutter build macos --release \
+            --dart-define=APP_VERSION=${{ inputs.version }} \
+            --dart-define=COMMIT_SHA=${{ github.sha }}
+      - name: Package
+        run: |
+          cd app/build/macos/Build/Products/Release
+          APP=$(ls -d *.app | head -1)
+          zip -r ${{ github.workspace }}/logger-macos-arm64-${{ inputs.version }}.zip "$APP"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: logger-macos-arm64
+          path: logger-macos-arm64-*.zip
+
   create-release:
-    needs: build-linux
+    needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: logger-linux-x64
+      - uses: actions/download-artifact@v4
+        with:
+          name: logger-macos-arm64
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,4 +101,5 @@ jobs:
             --prerelease \
             --title "v${{ inputs.version }}" \
             --notes "Release v${{ inputs.version }}\nCommit: ${{ github.sha }}" \
-            logger-linux-x64-*.tar.gz
+            logger-linux-x64-*.tar.gz \
+            logger-macos-arm64-*.zip

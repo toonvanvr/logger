@@ -28,6 +28,17 @@ jobs:
       - run: cd app && flutter analyze
       - run: cd app && flutter test
 
+  test-flutter-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd app && flutter pub get
+      - run: cd app && flutter analyze
+      - run: cd app && flutter test
+
   type-check-ts:
     runs-on: ubuntu-latest
     steps:
