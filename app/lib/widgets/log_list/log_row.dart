@@ -193,63 +193,60 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              if (widget.selectionMode)
-                GestureDetector(
-                  onTap: widget.onSelect,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Icon(
-                      widget.isSelectionSelected
-                          ? Icons.check_box
-                          : Icons.check_box_outline_blank,
-                      size: 14,
-                      color: widget.isSelectionSelected
-                          ? LoggerColors.borderFocus
-                          : LoggerColors.fgMuted,
-                    ),
-                  ),
-                ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 24),
-                child: SeverityBar(severity: widget.entry.severity),
-              ),
-              Expanded(
+            if (widget.selectionMode)
+              GestureDetector(
+                onTap: widget.onSelect,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _hoverNotifier,
-                    builder: (context, isHovered, _) {
-                      return LogRowContent(
-                        entry: widget.entry,
-                        groupDepth: widget.groupDepth,
-                        isCollapsed: widget.isCollapsed,
-                        isHovered: isHovered,
-                        backgroundColor: _computeBackgroundColor(isHovered),
-                        stackDepth: widget.stackDepth,
-                        onStackToggle: widget.onStackToggle,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: SessionDot(sessionId: widget.entry.sessionId),
-              ),
-              if (widget.isBookmarked)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Icon(
-                    Icons.bookmark,
-                    size: 12,
-                    color: LoggerColors.borderFocus,
+                    widget.isSelectionSelected
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 14,
+                    color: widget.isSelectionSelected
+                        ? LoggerColors.borderFocus
+                        : LoggerColors.fgMuted,
                   ),
                 ),
-            ],
-          ),
+              ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 24),
+              child: SeverityBar(severity: widget.entry.severity),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _hoverNotifier,
+                  builder: (context, isHovered, _) {
+                    return LogRowContent(
+                      entry: widget.entry,
+                      groupDepth: widget.groupDepth,
+                      isCollapsed: widget.isCollapsed,
+                      isHovered: isHovered,
+                      backgroundColor: _computeBackgroundColor(isHovered),
+                      stackDepth: widget.stackDepth,
+                      onStackToggle: widget.onStackToggle,
+                    );
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: SessionDot(sessionId: widget.entry.sessionId),
+            ),
+            if (widget.isBookmarked)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Icon(
+                  Icons.bookmark,
+                  size: 12,
+                  color: LoggerColors.borderFocus,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
