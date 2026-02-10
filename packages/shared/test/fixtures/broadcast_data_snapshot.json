@@ -1,0 +1,12 @@
+{
+  "type": "data_snapshot",
+  "session_id": "s1",
+  "data": {
+    "key1": {
+      "value": "v1",
+      "history": [],
+      "display": "default",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    }
+  }
+}

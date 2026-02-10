@@ -1,0 +1,5 @@
+{
+  "type": "rpc_response",
+  "rpc_id": "rpc1",
+  "result": { "data": "ok" }
+}

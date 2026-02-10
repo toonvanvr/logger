@@ -1,0 +1,6 @@
+{
+  "type": "data_update",
+  "session_id": "s1",
+  "key": "db_pool",
+  "value": { "connections": 5 }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "session_update",
+  "session_id": "s1",
+  "action": "start",
+  "application": {
+    "name": "demo",
+    "version": "1.0.0",
+    "environment": "test"
+  }
+}

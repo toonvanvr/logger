@@ -1,0 +1,17 @@
+{
+  "type": "history",
+  "query_id": "q1",
+  "entries": [
+    {
+      "id": "fix-hist-001",
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "session_id": "s-test",
+      "kind": "event",
+      "severity": "debug",
+      "message": "History entry",
+      "received_at": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "has_more": false,
+  "source": "buffer"
+}

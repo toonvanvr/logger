@@ -1,0 +1,6 @@
+{
+  "type": "rpc_request",
+  "rpc_id": "rpc1",
+  "method": "getState",
+  "args": { "key": "val" }
+}

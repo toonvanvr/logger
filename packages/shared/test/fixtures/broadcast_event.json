@@ -1,0 +1,36 @@
+{
+  "type": "event",
+  "entry": {
+    "id": "fix-001",
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "session_id": "s-test",
+    "kind": "event",
+    "severity": "info",
+    "message": "Test fixture event",
+    "tag": "test",
+    "exception": {
+      "type": "Error",
+      "message": "Test exception",
+      "stack_trace": "at main (main.ts:10:5)\nat run (run.ts:20:3)",
+      "source": "test-suite",
+      "handled": true
+    },
+    "parent_id": null,
+    "group_id": null,
+    "prev_id": null,
+    "next_id": null,
+    "widget": null,
+    "replace": false,
+    "icon": null,
+    "labels": { "env": "test" },
+    "generated_at": "2026-01-01T00:00:00.000Z",
+    "sent_at": "2026-01-01T00:00:00.000Z",
+    "key": null,
+    "override": true,
+    "display": "default",
+    "session_action": null,
+    "application": null,
+    "metadata": null,
+    "received_at": "2026-01-01T00:00:00.000Z"
+  }
+}

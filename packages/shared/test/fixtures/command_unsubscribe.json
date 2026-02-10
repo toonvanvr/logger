@@ -1,0 +1,4 @@
+{
+  "type": "unsubscribe",
+  "session_ids": ["s1", "s2"]
+}

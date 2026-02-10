@@ -1,0 +1,14 @@
+{
+  "type": "session_list",
+  "sessions": [
+    {
+      "session_id": "s1",
+      "application": { "name": "demo" },
+      "started_at": "2026-01-01T00:00:00.000Z",
+      "last_heartbeat": "2026-01-01T00:01:00.000Z",
+      "is_active": true,
+      "log_count": 42,
+      "color_index": 0
+    }
+  ]
+}
