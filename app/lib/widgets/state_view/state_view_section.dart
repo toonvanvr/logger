@@ -5,7 +5,7 @@ import '../../services/log_store.dart';
 import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
-import 'shelf_card.dart';
+import 'secondary_shelf.dart';
 import 'state_card.dart';
 import 'state_chart_strip.dart';
 
@@ -177,7 +177,7 @@ class StateViewSection extends StatelessWidget {
                       ),
                     ],
                     if (shelfEntries.isNotEmpty)
-                      _SecondaryShelf(
+                      SecondaryShelf(
                         entries: shelfEntries,
                         onStateFilter: onStateFilter,
                       ),
@@ -187,95 +187,6 @@ class StateViewSection extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-/// Collapsible secondary shelf for `_shelf.*` state entries.
-class _SecondaryShelf extends StatelessWidget {
-  final Map<String, dynamic> entries;
-  final ValueChanged<String>? onStateFilter;
-
-  const _SecondaryShelf({required this.entries, this.onStateFilter});
-
-  @override
-  Widget build(BuildContext context) {
-    final isCollapsed = context.select<SettingsService, bool>(
-      (s) => s.shelfCollapsed,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 4),
-        GestureDetector(
-          onTap: () =>
-              context.read<SettingsService>().setShelfCollapsed(!isCollapsed),
-          child: SizedBox(
-            height: 20,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isCollapsed ? Icons.chevron_right : Icons.expand_more,
-                    size: 12,
-                    color: LoggerColors.fgMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Secondary',
-                    style: LoggerTypography.badge.copyWith(
-                      color: LoggerColors.fgMuted,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: LoggerColors.bgSurface,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Text(
-                      '${entries.length}',
-                      style: LoggerTypography.badge.copyWith(
-                        color: LoggerColors.fgMuted,
-                        fontSize: 8,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (!isCollapsed)
-          Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 3,
-              children: entries.entries
-                  .map(
-                    (e) => ShelfCard(
-                      stateKey: e.key,
-                      stateValue: e.value,
-                      onTap: onStateFilter != null
-                          ? () => onStateFilter!('state:${e.key}')
-                          : null,
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-      ],
     );
   }
 }
