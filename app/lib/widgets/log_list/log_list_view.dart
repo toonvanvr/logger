@@ -213,7 +213,8 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       },
       isBookmarked: widget.bookmarkedEntryIds.contains(entry.id),
       groupDepth: display.depth,
-      showGroupChevron: entry.groupId != null &&
+      showGroupChevron:
+          entry.groupId != null &&
           entry.id == entry.groupId &&
           !display.isStandalone,
       stackDepth: display.stackDepth,
