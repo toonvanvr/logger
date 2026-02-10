@@ -104,23 +104,30 @@ class KbdChip extends StatelessWidget {
 class LinkPill extends StatelessWidget {
   final IconData icon;
   final String label;
-  const LinkPill({super.key, required this.icon, required this.label});
+  final VoidCallback? onTap;
+  const LinkPill({super.key, required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: LoggerColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: LoggerColors.fgMuted),
-          const SizedBox(width: 6),
-          Text(label, style: _linkStyle),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: LoggerColors.bgSurface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: LoggerColors.fgMuted),
+              const SizedBox(width: 6),
+              Text(label, style: _linkStyle),
+            ],
+          ),
+        ),
       ),
     );
   }

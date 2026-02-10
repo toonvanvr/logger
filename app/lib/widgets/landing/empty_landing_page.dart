@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
 import 'landing_helpers.dart';
 
@@ -50,15 +54,29 @@ class EmptyLandingPage extends StatelessWidget {
                 const SizedBox(height: 32),
                 _buildQuickStart(),
                 const SizedBox(height: 20),
-                _buildShortcuts(),
+                _buildShortcuts(context),
                 const SizedBox(height: 20),
-                const Wrap(
+                Wrap(
                   spacing: 12,
                   alignment: WrapAlignment.center,
                   children: [
-                    LinkPill(icon: Icons.menu_book, label: 'Docs'),
-                    LinkPill(icon: Icons.settings, label: 'Config'),
-                    LinkPill(icon: Icons.extension, label: 'Plugins'),
+                    LinkPill(
+                      icon: Icons.menu_book,
+                      label: 'Docs',
+                      onTap: () => _openUrl(context,
+                          'https://github.com/toonvanvr/logger/blob/main/docs/README.md'),
+                    ),
+                    LinkPill(
+                      icon: Icons.settings,
+                      label: 'Config',
+                      onTap: onConnect,
+                    ),
+                    LinkPill(
+                      icon: Icons.extension,
+                      label: 'Plugins',
+                      onTap: () => _openUrl(context,
+                          'https://github.com/toonvanvr/logger/blob/main/docs/reference/plugin-api.md'),
+                    ),
                   ],
                 ),
               ],
@@ -84,12 +102,12 @@ class EmptyLandingPage extends StatelessWidget {
           const StepRow(
             number: '1',
             title: 'Start server',
-            code: 'bun run server/src/main.ts',
+            code: 'bun run packages/server/src/main.ts',
           ),
           const StepRow(
             number: '2',
             title: 'Install SDK',
-            code: 'bun add @toon/logger',
+            code: 'bun add @toonvanvr/logger',
           ),
           const StepRow(
             number: '3',
@@ -101,7 +119,7 @@ class EmptyLandingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildShortcuts() {
+  Widget _buildShortcuts(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -116,11 +134,18 @@ class EmptyLandingPage extends StatelessWidget {
             children: [
               Text('Shortcuts', style: _sectionHeader),
               const Spacer(),
-              Text(
-                'View All →',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: LoggerColors.fgSecondary,
+              GestureDetector(
+                onTap: () => _openUrl(context,
+                    'https://github.com/toonvanvr/logger/blob/main/docs/reference/keybindings.md'),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Text(
+                    'View All →',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: LoggerColors.fgSecondary,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -141,6 +166,15 @@ class EmptyLandingPage extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+void _openUrl(BuildContext context, String url) {
+  final settings = context.read<SettingsService>();
+  final cmd = settings.urlOpenCommand.replaceAll('{url}', url);
+  final parts = cmd.split(' ');
+  if (parts.isNotEmpty) {
+    Process.run(parts.first, parts.skip(1).toList());
   }
 }
 
