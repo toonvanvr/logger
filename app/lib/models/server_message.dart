@@ -61,13 +61,6 @@ sealed class ServerMessage {
                 entry: LogEntry.fromJson(json['entry'] as Map<String, dynamic>),
               )
             : ErrorMessage(errorMessage: 'event missing entry'),
-      'event_batch' => EventBatchMessage(
-        entries:
-            (json['entries'] as List<dynamic>?)
-                ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      ),
       'rpc_request' =>
         json['rpc_id'] != null && json['method'] != null
             ? RpcRequestMessage(
@@ -160,11 +153,6 @@ class ErrorMessage extends ServerMessage {
 class EventMessage extends ServerMessage {
   final LogEntry entry;
   const EventMessage({required this.entry});
-}
-
-class EventBatchMessage extends ServerMessage {
-  final List<LogEntry> entries;
-  const EventBatchMessage({this.entries = const []});
 }
 
 class RpcRequestMessage extends ServerMessage {

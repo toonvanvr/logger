@@ -55,34 +55,11 @@ void main() {
       expect(event.entry.message, 'hello');
     });
 
-    // ── Test 4: event_batch (multiple entries) ──
+    // ── Test 4: event_batch removed (no server equivalent) ──
 
-    test('type event_batch parses nested entries list', () {
-      final msg = ServerMessage.fromJson({
-        'type': 'event_batch',
-        'entries': [
-          {
-            'id': 'e1',
-            'timestamp': '2026-02-07T12:00:00Z',
-            'session_id': 'sess-1',
-            'kind': 'event',
-            'severity': 'info',
-          },
-          {
-            'id': 'e2',
-            'timestamp': '2026-02-07T12:01:00Z',
-            'session_id': 'sess-1',
-            'kind': 'event',
-            'severity': 'warning',
-          },
-        ],
-      });
-
-      expect(msg, isA<EventBatchMessage>());
-      final batch = msg as EventBatchMessage;
-      expect(batch.entries, hasLength(2));
-      expect(batch.entries[0].id, 'e1');
-      expect(batch.entries[1].id, 'e2');
+    test('type event_batch falls through to unknown', () {
+      final msg = ServerMessage.fromJson({'type': 'event_batch'});
+      expect(msg, isA<ErrorMessage>());
     });
 
     // ── Test 5: rpc_request ──

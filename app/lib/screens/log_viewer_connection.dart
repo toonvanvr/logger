@@ -42,9 +42,6 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
       case EventMessage(:final entry):
         logStore.addEntry(entry);
         _markEntriesReceived();
-      case EventBatchMessage(:final entries):
-        logStore.addEntries(entries);
-        if (entries.isNotEmpty) _markEntriesReceived();
       case HistoryMessage(:final entries):
         logStore.addEntries(entries);
         if (entries.isNotEmpty) _markEntriesReceived();
