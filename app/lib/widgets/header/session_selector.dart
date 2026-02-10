@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +74,7 @@ class _SessionSelectorState extends State<SessionSelector> {
         onPanStart: (_) => WindowService.startDrag(),
         child: Row(
           children: [
-            SizedBox(width: Platform.isMacOS ? 70 : 8),
+            const SizedBox(width: 8),
             SizedBox(
               width: 16,
               height: 16,

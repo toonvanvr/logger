@@ -70,12 +70,18 @@ class MainFlutterWindow: NSWindow {
           return
         }
         if value {
+          // Normal mode: show native titlebar with traffic light buttons
           window.styleMask.insert(.titled)
+          window.titleVisibility = .visible
+          window.titlebarAppearsTransparent = false
+          window.styleMask.remove(.fullSizeContentView)
+          window.title = "Logger"
+        } else {
+          // Mini mode: hide titlebar, Flutter owns the full window
+          window.styleMask.remove(.titled)
           window.titleVisibility = .hidden
           window.titlebarAppearsTransparent = true
           window.styleMask.insert(.fullSizeContentView)
-        } else {
-          window.styleMask.remove(.titled)
         }
         window.isMovableByWindowBackground = true
         result(nil)
