@@ -1,4 +1,5 @@
 import 'package:app/models/log_entry.dart';
+import 'package:app/plugins/plugin_types.dart';
 import 'package:app/theme/colors.dart';
 import 'package:app/theme/theme.dart';
 import 'package:app/widgets/log_list/hover_action_bar.dart';

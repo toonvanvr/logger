@@ -149,7 +149,7 @@ class ConnectButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cable, size: 16, color: Color(0xFFE6B455)),
+              const Icon(Icons.cable, size: 16, color: LoggerColors.borderFocus),
               const SizedBox(width: 8),
               Text('Connect to Server', style: _connectStyle),
             ],
