@@ -1,4 +1,8 @@
-import type { StackFrame } from '@logger/shared';
+export interface StackFrame {
+  location: { uri: string; line: number; column: number; symbol?: string }
+  isVendor: boolean
+  raw: string
+}
 
 /**
  * Parse a V8 / Bun stack trace string into structured StackFrame[].
