@@ -172,6 +172,7 @@ void main() {
     test('type data_snapshot parses data map with DataState values', () {
       final msg = ServerMessage.fromJson({
         'type': 'data_snapshot',
+        'session_id': 's1',
         'data': {
           'theme': {'value': 'dark', 'display': 'shelf'},
           'locale': {'value': 'en'},
@@ -180,6 +181,7 @@ void main() {
 
       expect(msg, isA<DataSnapshotMessage>());
       final snapshot = msg as DataSnapshotMessage;
+      expect(snapshot.sessionId, 's1');
       expect(snapshot.data['theme']!.value, 'dark');
       expect(snapshot.data['theme']!.display, DisplayLocation.shelf);
       expect(snapshot.data['locale']!.value, 'en');
@@ -188,9 +190,10 @@ void main() {
 
     // ── Test 10: data_update ──
 
-    test('type data_update parses dataKey, dataValue, dataDisplay', () {
+    test('type data_update parses dataKey, dataValue, dataDisplay, sessionId', () {
       final msg = ServerMessage.fromJson({
         'type': 'data_update',
+        'session_id': 's1',
         'key': 'theme',
         'value': 'dark',
         'display': 'shelf',
@@ -198,6 +201,7 @@ void main() {
 
       expect(msg, isA<DataUpdateMessage>());
       final update = msg as DataUpdateMessage;
+      expect(update.sessionId, 's1');
       expect(update.dataKey, 'theme');
       expect(update.dataValue, 'dark');
       expect(update.dataDisplay, DisplayLocation.shelf);

@@ -103,6 +103,7 @@ sealed class ServerMessage {
             : null,
       ),
       'data_snapshot' => DataSnapshotMessage(
+        sessionId: json['session_id'] as String?,
         data:
             (json['data'] as Map<String, dynamic>?)?.map(
               (k, v) =>
@@ -113,6 +114,7 @@ sealed class ServerMessage {
       'data_update' =>
         json['key'] != null
             ? DataUpdateMessage(
+                sessionId: json['session_id'] as String?,
                 dataKey: json['key'] as String,
                 dataValue: json['value'],
                 dataDisplay: json['display'] != null
@@ -204,16 +206,19 @@ class SessionUpdateMessage extends ServerMessage {
 }
 
 class DataSnapshotMessage extends ServerMessage {
+  final String? sessionId;
   final Map<String, DataState> data;
-  const DataSnapshotMessage({this.data = const {}});
+  const DataSnapshotMessage({this.sessionId, this.data = const {}});
 }
 
 class DataUpdateMessage extends ServerMessage {
+  final String? sessionId;
   final String dataKey;
   final dynamic dataValue;
   final DisplayLocation? dataDisplay;
   final WidgetPayload? dataWidget;
   const DataUpdateMessage({
+    this.sessionId,
     required this.dataKey,
     this.dataValue,
     this.dataDisplay,
