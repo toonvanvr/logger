@@ -1,10 +1,8 @@
-import type { StoredEntry } from '@logger/shared'
+import type { ServerBroadcast, StoredEntry } from '@logger/shared'
 import type { ServerWebSocket } from 'bun'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-/** Outbound message to viewer WebSocket clients. */
-type ServerMessage = { type: string; entry?: StoredEntry;[key: string]: unknown }
 /** Inbound message from viewer WebSocket clients. */
 type ViewerMessage = { type: string;[key: string]: unknown }
 
@@ -69,7 +67,7 @@ export class WebSocketHub {
   }
 
   /** Broadcast a server message to all viewers whose subscription matches. */
-  broadcast(message: ServerMessage): void {
+  broadcast(message: ServerBroadcast): void {
     const data = JSON.stringify(message)
 
     for (const entry of this.viewers.values()) {
@@ -103,13 +101,13 @@ export class WebSocketHub {
   // ─── Internals ───────────────────────────────────────────────────
 
   /** Check if a server message matches a viewer's subscription. */
-  private matchesSubscription(message: ServerMessage, sub: ViewerSubscription): boolean {
+  private matchesSubscription(message: ServerBroadcast, sub: ViewerSubscription): boolean {
     // Non-log messages are broadcast to all
-    if (message.type !== 'event' || !message.entry) {
+    if (message.type !== 'event') {
       return true
     }
 
-    const entry = message.entry as StoredEntry
+    const entry = message.entry
 
     // Session filter: empty sessionIds means "all sessions"
     if (sub.sessionIds.length > 0 && !sub.sessionIds.includes(entry.session_id)) {
