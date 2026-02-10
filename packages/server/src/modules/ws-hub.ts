@@ -105,7 +105,7 @@ export class WebSocketHub {
   /** Check if a server message matches a viewer's subscription. */
   private matchesSubscription(message: ServerMessage, sub: ViewerSubscription): boolean {
     // Non-log messages are broadcast to all
-    if (message.type !== 'log' || !message.entry) {
+    if (message.type !== 'event' || !message.entry) {
       return true
     }
 

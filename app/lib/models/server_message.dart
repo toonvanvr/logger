@@ -25,6 +25,7 @@ ServerMessageType parseServerMessageType(String value) {
     'ack' => ServerMessageType.ack,
     'error' => ServerMessageType.error,
     'event' => ServerMessageType.event,
+    'log' => ServerMessageType.event,
     'event_batch' => ServerMessageType.eventBatch,
     'rpc_request' => ServerMessageType.rpcRequest,
     'rpc_response' => ServerMessageType.rpcResponse,

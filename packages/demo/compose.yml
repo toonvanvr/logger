@@ -1,5 +1,7 @@
 services:
   demo:
+    profiles:
+      - demo
     build:
       context: ../..
       dockerfile: packages/demo/Dockerfile

@@ -169,7 +169,23 @@ export function setupWebSocket(deps: ServerDeps) {
       return
     }
 
-    // subscribe/unsubscribe/history handled by ws-hub
+    if (parsed.type === 'history') {
+      const result = deps.ringBuffer.query({
+        sessionId: parsed.session_id,
+        limit: parsed.limit ?? 5000,
+        cursor: parsed.cursor,
+      })
+      ws.send(JSON.stringify({
+        type: 'history',
+        query_id: parsed.query_id ?? '',
+        entries: result.entries,
+        has_more: result.cursor !== null,
+        source: 'buffer',
+      }))
+      return
+    }
+
+    // subscribe/unsubscribe handled by ws-hub
     wsHub.handleViewerMessage(ws, parsed)
   }
 

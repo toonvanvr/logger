@@ -18,7 +18,7 @@ String _viewerMessageTypeToJson(ViewerMessageType type) {
   return switch (type) {
     ViewerMessageType.subscribe => 'subscribe',
     ViewerMessageType.unsubscribe => 'unsubscribe',
-    ViewerMessageType.historyQuery => 'history_query',
+    ViewerMessageType.historyQuery => 'history',
     ViewerMessageType.rpcRequest => 'rpc_request',
     ViewerMessageType.sessionList => 'session_list',
     ViewerMessageType.dataQuery => 'data_query',

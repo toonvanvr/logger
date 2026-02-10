@@ -57,7 +57,7 @@ export class SelfLogger {
     }
 
     this.ringBuffer.push(entry)
-    this.wsHub.broadcast({ type: 'log', entry })
+    this.wsHub.broadcast({ type: 'event', entry })
     this.sessionManager.incrementLogCount(SYSTEM_SESSION_ID)
   }
 

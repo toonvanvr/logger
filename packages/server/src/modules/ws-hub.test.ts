@@ -18,7 +18,7 @@ class MockWebSocket {
 
 function makeLogMessage(overrides: Partial<StoredEntry> & { id: string }): Record<string, unknown> {
   return {
-    type: 'log',
+    type: 'event',
     entry: {
       timestamp: new Date().toISOString(),
       session_id: 'sess-1',
@@ -62,7 +62,7 @@ describe('WebSocketHub', () => {
     hub.broadcast(msg)
 
     expect(mock1.sent).toHaveLength(1)
-    expect(mock1.sent[0].type).toBe('log')
+    expect(mock1.sent[0].type).toBe('event')
     expect(mock2.sent).toHaveLength(1)
   })
 

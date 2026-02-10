@@ -30,5 +30,5 @@ export function ingest(entry: StoredEntry, deps: ServerDeps): void {
     }
   }
 
-  wsHub.broadcast({ type: 'log', entry })
+  wsHub.broadcast({ type: 'event', entry })
 }
