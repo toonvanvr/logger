@@ -12,8 +12,9 @@ void main() {
         'ack_ids': ['id-1', 'id-2'],
       });
 
-      expect(msg.type, ServerMessageType.ack);
-      expect(msg.ackIds, ['id-1', 'id-2']);
+      expect(msg, isA<AckMessage>());
+      final ack = msg as AckMessage;
+      expect(ack.ackIds, ['id-1', 'id-2']);
     });
 
     // ── Test 2: error ──
@@ -26,10 +27,11 @@ void main() {
         'error_entry_id': 'e-bad',
       });
 
-      expect(msg.type, ServerMessageType.error);
-      expect(msg.errorCode, 'INVALID_FORMAT');
-      expect(msg.errorMessage, 'bad payload');
-      expect(msg.errorEntryId, 'e-bad');
+      expect(msg, isA<ErrorMessage>());
+      final error = msg as ErrorMessage;
+      expect(error.errorCode, 'INVALID_FORMAT');
+      expect(error.errorMessage, 'bad payload');
+      expect(error.errorEntryId, 'e-bad');
     });
 
     // ── Test 3: event (single entry) ──
@@ -47,10 +49,10 @@ void main() {
         },
       });
 
-      expect(msg.type, ServerMessageType.event);
-      expect(msg.entry, isNotNull);
-      expect(msg.entry!.id, 'e1');
-      expect(msg.entry!.message, 'hello');
+      expect(msg, isA<EventMessage>());
+      final event = msg as EventMessage;
+      expect(event.entry.id, 'e1');
+      expect(event.entry.message, 'hello');
     });
 
     // ── Test 4: event_batch (multiple entries) ──
@@ -76,10 +78,11 @@ void main() {
         ],
       });
 
-      expect(msg.type, ServerMessageType.eventBatch);
-      expect(msg.entries, hasLength(2));
-      expect(msg.entries![0].id, 'e1');
-      expect(msg.entries![1].id, 'e2');
+      expect(msg, isA<EventBatchMessage>());
+      final batch = msg as EventBatchMessage;
+      expect(batch.entries, hasLength(2));
+      expect(batch.entries[0].id, 'e1');
+      expect(batch.entries[1].id, 'e2');
     });
 
     // ── Test 5: rpc_request ──
@@ -92,10 +95,11 @@ void main() {
         'rpc_args': {'key': 'theme'},
       });
 
-      expect(msg.type, ServerMessageType.rpcRequest);
-      expect(msg.rpcId, 'rpc-1');
-      expect(msg.rpcMethod, 'getState');
-      expect(msg.rpcArgs, {'key': 'theme'});
+      expect(msg, isA<RpcRequestMessage>());
+      final rpc = msg as RpcRequestMessage;
+      expect(rpc.rpcId, 'rpc-1');
+      expect(rpc.rpcMethod, 'getState');
+      expect(rpc.rpcArgs, {'key': 'theme'});
     });
 
     // ── Test 6: rpc_response ──
@@ -108,10 +112,11 @@ void main() {
         'rpc_error': null,
       });
 
-      expect(msg.type, ServerMessageType.rpcResponse);
-      expect(msg.rpcId, 'rpc-1');
-      expect(msg.rpcResponse, {'value': 'dark'});
-      expect(msg.rpcError, isNull);
+      expect(msg, isA<RpcResponseMessage>());
+      final rpc = msg as RpcResponseMessage;
+      expect(rpc.rpcId, 'rpc-1');
+      expect(rpc.rpcResponse, {'value': 'dark'});
+      expect(rpc.rpcError, isNull);
     });
 
     // ── Test 7: session_list ──
@@ -132,11 +137,12 @@ void main() {
         ],
       });
 
-      expect(msg.type, ServerMessageType.sessionList);
-      expect(msg.sessions, hasLength(1));
-      expect(msg.sessions![0].sessionId, 'sess-1');
-      expect(msg.sessions![0].application.name, 'App1');
-      expect(msg.sessions![0].logCount, 42);
+      expect(msg, isA<SessionListMessage>());
+      final list = msg as SessionListMessage;
+      expect(list.sessions, hasLength(1));
+      expect(list.sessions[0].sessionId, 'sess-1');
+      expect(list.sessions[0].application.name, 'App1');
+      expect(list.sessions[0].logCount, 42);
     });
 
     // ── Test 8: session_update ──
@@ -151,12 +157,13 @@ void main() {
           'application': {'name': 'MyApp', 'version': '1.0.0'},
         });
 
-        expect(msg.type, ServerMessageType.sessionUpdate);
-        expect(msg.sessionId, 'sess-1');
-        expect(msg.sessionAction, SessionAction.start);
-        expect(msg.application, isNotNull);
-        expect(msg.application!.name, 'MyApp');
-        expect(msg.application!.version, '1.0.0');
+        expect(msg, isA<SessionUpdateMessage>());
+        final update = msg as SessionUpdateMessage;
+        expect(update.sessionId, 'sess-1');
+        expect(update.sessionAction, SessionAction.start);
+        expect(update.application, isNotNull);
+        expect(update.application!.name, 'MyApp');
+        expect(update.application!.version, '1.0.0');
       },
     );
 
@@ -171,12 +178,12 @@ void main() {
         },
       });
 
-      expect(msg.type, ServerMessageType.dataSnapshot);
-      expect(msg.data, isNotNull);
-      expect(msg.data!['theme']!.value, 'dark');
-      expect(msg.data!['theme']!.display, DisplayLocation.shelf);
-      expect(msg.data!['locale']!.value, 'en');
-      expect(msg.data!['locale']!.display, DisplayLocation.defaultLoc);
+      expect(msg, isA<DataSnapshotMessage>());
+      final snapshot = msg as DataSnapshotMessage;
+      expect(snapshot.data['theme']!.value, 'dark');
+      expect(snapshot.data['theme']!.display, DisplayLocation.shelf);
+      expect(snapshot.data['locale']!.value, 'en');
+      expect(snapshot.data['locale']!.display, DisplayLocation.defaultLoc);
     });
 
     // ── Test 10: data_update ──
@@ -189,10 +196,11 @@ void main() {
         'data_display': 'shelf',
       });
 
-      expect(msg.type, ServerMessageType.dataUpdate);
-      expect(msg.dataKey, 'theme');
-      expect(msg.dataValue, 'dark');
-      expect(msg.dataDisplay, DisplayLocation.shelf);
+      expect(msg, isA<DataUpdateMessage>());
+      final update = msg as DataUpdateMessage;
+      expect(update.dataKey, 'theme');
+      expect(update.dataValue, 'dark');
+      expect(update.dataDisplay, DisplayLocation.shelf);
     });
 
     // ── Test 11: data_update with widget ──
@@ -205,14 +213,16 @@ void main() {
         'data_widget': {'type': 'gauge', 'max': 100},
       });
 
-      expect(msg.dataWidget, isNotNull);
-      expect(msg.dataWidget!.type, 'gauge');
-      expect(msg.dataWidget!.data['max'], 100);
+      expect(msg, isA<DataUpdateMessage>());
+      final update = msg as DataUpdateMessage;
+      expect(update.dataWidget, isNotNull);
+      expect(update.dataWidget!.type, 'gauge');
+      expect(update.dataWidget!.data['max'], 100);
     });
 
     // ── Test 12: history ──
 
-    test('type history parses historyEntries, hasMore, cursor, queryId', () {
+    test('type history parses entries, hasMore, cursor, queryId', () {
       final msg = ServerMessage.fromJson({
         'type': 'history',
         'query_id': 'q1',
@@ -229,11 +239,12 @@ void main() {
         'cursor': 'next-page',
       });
 
-      expect(msg.type, ServerMessageType.history);
-      expect(msg.queryId, 'q1');
-      expect(msg.historyEntries, hasLength(1));
-      expect(msg.hasMore, isTrue);
-      expect(msg.cursor, 'next-page');
+      expect(msg, isA<HistoryMessage>());
+      final history = msg as HistoryMessage;
+      expect(history.queryId, 'q1');
+      expect(history.entries, hasLength(1));
+      expect(history.hasMore, isTrue);
+      expect(history.cursor, 'next-page');
     });
 
     // ── Test 13: subscribe_ack ──
@@ -241,13 +252,19 @@ void main() {
     test('type subscribe_ack parses', () {
       final msg = ServerMessage.fromJson({'type': 'subscribe_ack'});
 
-      expect(msg.type, ServerMessageType.subscribeAck);
+      expect(msg, isA<SubscribeAckMessage>());
     });
-  });
 
-  group('parseServerMessageType', () {
-    test('unknown type defaults to error', () {
-      expect(parseServerMessageType('unknown'), ServerMessageType.error);
+    // ── Test 14: malformed JSON ──
+
+    test('event with missing entry returns ErrorMessage', () {
+      final msg = ServerMessage.fromJson({'type': 'event'});
+      expect(msg, isA<ErrorMessage>());
+    });
+
+    test('unknown type returns ErrorMessage', () {
+      final msg = ServerMessage.fromJson({'type': 'unknown_stuff'});
+      expect(msg, isA<ErrorMessage>());
     });
   });
 

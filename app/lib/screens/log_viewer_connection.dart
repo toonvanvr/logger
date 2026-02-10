@@ -38,42 +38,37 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
     final logStore = context.read<LogStore>();
     final sessionStore = context.read<SessionStore>();
 
-    switch (msg.type) {
-      case ServerMessageType.event:
-        if (msg.entry != null) {
-          logStore.addEntry(msg.entry!);
-          _markEntriesReceived();
-        }
-      case ServerMessageType.eventBatch:
-        if (msg.entries != null) {
-          logStore.addEntries(msg.entries!);
-          if (msg.entries!.isNotEmpty) _markEntriesReceived();
-        }
-      case ServerMessageType.history:
-        if (msg.historyEntries != null) {
-          logStore.addEntries(msg.historyEntries!);
-          if (msg.historyEntries!.isNotEmpty) _markEntriesReceived();
-        }
-      case ServerMessageType.sessionList:
-        if (msg.sessions != null) sessionStore.updateSessions(msg.sessions!);
-      case ServerMessageType.sessionUpdate:
+    switch (msg) {
+      case EventMessage(:final entry):
+        logStore.addEntry(entry);
+        _markEntriesReceived();
+      case EventBatchMessage(:final entries):
+        logStore.addEntries(entries);
+        if (entries.isNotEmpty) _markEntriesReceived();
+      case HistoryMessage(:final entries):
+        logStore.addEntries(entries);
+        if (entries.isNotEmpty) _markEntriesReceived();
+      case SessionListMessage(:final sessions):
+        sessionStore.updateSessions(sessions);
+      case SessionUpdateMessage():
         // Re-fetch full session list to pick up new/ended sessions
         context.read<ConnectionManager>().send(
           const ViewerMessage(type: ViewerMessageType.sessionList),
         );
-        break;
-      case ServerMessageType.dataSnapshot:
+      case DataSnapshotMessage():
         // Data snapshots are handled via LogStore state tracking
         break;
-      case ServerMessageType.rpcResponse:
-        if (msg.rpcId != null) {
-          context.read<RpcService>().handleResponse(
-            msg.rpcId!,
-            msg.rpcResponse,
-            msg.rpcError,
-          );
-        }
-      default:
+      case RpcResponseMessage(
+        :final rpcId,
+        :final rpcResponse,
+        :final rpcError,
+      ):
+        context.read<RpcService>().handleResponse(rpcId, rpcResponse, rpcError);
+      case AckMessage() ||
+          ErrorMessage() ||
+          RpcRequestMessage() ||
+          DataUpdateMessage() ||
+          SubscribeAckMessage():
         break;
     }
   }

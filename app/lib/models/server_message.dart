@@ -3,42 +3,6 @@ library;
 
 import 'log_entry.dart';
 
-// ─── Server Message Types ────────────────────────────────────────────
-
-enum ServerMessageType {
-  ack,
-  error,
-  event,
-  eventBatch,
-  rpcRequest,
-  rpcResponse,
-  sessionList,
-  sessionUpdate,
-  dataSnapshot,
-  dataUpdate,
-  history,
-  subscribeAck,
-}
-
-ServerMessageType parseServerMessageType(String value) {
-  return switch (value) {
-    'ack' => ServerMessageType.ack,
-    'error' => ServerMessageType.error,
-    'event' => ServerMessageType.event,
-    'log' => ServerMessageType.event,
-    'event_batch' => ServerMessageType.eventBatch,
-    'rpc_request' => ServerMessageType.rpcRequest,
-    'rpc_response' => ServerMessageType.rpcResponse,
-    'session_list' => ServerMessageType.sessionList,
-    'session_update' => ServerMessageType.sessionUpdate,
-    'data_snapshot' => ServerMessageType.dataSnapshot,
-    'data_update' => ServerMessageType.dataUpdate,
-    'history' => ServerMessageType.history,
-    'subscribe_ack' => ServerMessageType.subscribeAck,
-    _ => ServerMessageType.error,
-  };
-}
-
 // ─── Session Info ────────────────────────────────────────────────────
 
 class SessionInfo {
@@ -75,53 +39,192 @@ class SessionInfo {
   }
 }
 
-// ─── Server Message ──────────────────────────────────────────────────
+// ─── Server Message (sealed hierarchy) ───────────────────────────────
 
-class ServerMessage {
-  final ServerMessageType type;
+sealed class ServerMessage {
+  const ServerMessage();
 
-  // ack
-  final List<String>? ackIds;
+  factory ServerMessage.fromJson(Map<String, dynamic> json) {
+    final typeStr = json['type'] as String? ?? 'error';
+    return switch (typeStr) {
+      'ack' => AckMessage(
+        ackIds: (json['ack_ids'] as List<dynamic>?)?.cast<String>() ?? [],
+      ),
+      'error' => ErrorMessage(
+        errorCode: json['error_code'] as String?,
+        errorMessage: json['error_message'] as String?,
+        errorEntryId: json['error_entry_id'] as String?,
+      ),
+      'event' || 'log' =>
+        json['entry'] != null
+            ? EventMessage(
+                entry: LogEntry.fromJson(json['entry'] as Map<String, dynamic>),
+              )
+            : ErrorMessage(errorMessage: 'event missing entry'),
+      'event_batch' => EventBatchMessage(
+        entries:
+            (json['entries'] as List<dynamic>?)
+                ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      ),
+      'rpc_request' =>
+        json['rpc_id'] != null && json['rpc_method'] != null
+            ? RpcRequestMessage(
+                rpcId: json['rpc_id'] as String,
+                rpcMethod: json['rpc_method'] as String,
+                rpcArgs: json['rpc_args'],
+              )
+            : ErrorMessage(
+                errorMessage: 'rpc_request missing rpc_id or rpc_method',
+              ),
+      'rpc_response' =>
+        json['rpc_id'] != null
+            ? RpcResponseMessage(
+                rpcId: json['rpc_id'] as String,
+                rpcResponse: json['rpc_response'],
+                rpcError: json['rpc_error'] as String?,
+              )
+            : ErrorMessage(errorMessage: 'rpc_response missing rpc_id'),
+      'session_list' => SessionListMessage(
+        sessions:
+            (json['sessions'] as List<dynamic>?)
+                ?.map((e) => SessionInfo.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      ),
+      'session_update' => SessionUpdateMessage(
+        sessionId: json['session_id'] as String?,
+        sessionAction: parseSessionAction(json['session_action'] as String?),
+        application: json['application'] != null
+            ? ApplicationInfo.fromJson(
+                json['application'] as Map<String, dynamic>,
+              )
+            : null,
+      ),
+      'data_snapshot' => DataSnapshotMessage(
+        data:
+            (json['data'] as Map<String, dynamic>?)?.map(
+              (k, v) =>
+                  MapEntry(k, DataState.fromJson(v as Map<String, dynamic>)),
+            ) ??
+            {},
+      ),
+      'data_update' =>
+        json['data_key'] != null
+            ? DataUpdateMessage(
+                dataKey: json['data_key'] as String,
+                dataValue: json['data_value'],
+                dataDisplay: json['data_display'] != null
+                    ? parseDisplayLocation(json['data_display'] as String)
+                    : null,
+                dataWidget: json['data_widget'] != null
+                    ? WidgetPayload.fromJson(
+                        json['data_widget'] as Map<String, dynamic>,
+                      )
+                    : null,
+              )
+            : ErrorMessage(errorMessage: 'data_update missing data_key'),
+      'history' => HistoryMessage(
+        queryId: json['query_id'] as String?,
+        entries:
+            (json['history_entries'] as List<dynamic>?)
+                ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+        hasMore: json['has_more'] as bool? ?? false,
+        cursor: json['cursor'] as String?,
+        source: json['source'] as String?,
+        fenceTs: json['fence_ts'] as String?,
+      ),
+      'subscribe_ack' => const SubscribeAckMessage(),
+      _ => ErrorMessage(errorMessage: 'unknown type: $typeStr'),
+    };
+  }
+}
 
-  // error
+class AckMessage extends ServerMessage {
+  final List<String> ackIds;
+  const AckMessage({this.ackIds = const []});
+}
+
+class ErrorMessage extends ServerMessage {
   final String? errorCode;
   final String? errorMessage;
   final String? errorEntryId;
+  const ErrorMessage({this.errorCode, this.errorMessage, this.errorEntryId});
+}
 
-  // event (single entry)
-  final LogEntry? entry;
+class EventMessage extends ServerMessage {
+  final LogEntry entry;
+  const EventMessage({required this.entry});
+}
 
-  // event_batch (multiple entries)
-  final List<LogEntry>? entries;
+class EventBatchMessage extends ServerMessage {
+  final List<LogEntry> entries;
+  const EventBatchMessage({this.entries = const []});
+}
 
-  // rpc
-  final String? rpcId;
-  final String? rpcMethod;
+class RpcRequestMessage extends ServerMessage {
+  final String rpcId;
+  final String rpcMethod;
   final dynamic rpcArgs;
+  const RpcRequestMessage({
+    required this.rpcId,
+    required this.rpcMethod,
+    this.rpcArgs,
+  });
+}
+
+class RpcResponseMessage extends ServerMessage {
+  final String rpcId;
   final dynamic rpcResponse;
   final String? rpcError;
+  const RpcResponseMessage({
+    required this.rpcId,
+    this.rpcResponse,
+    this.rpcError,
+  });
+}
 
-  // session_list
-  final List<SessionInfo>? sessions;
+class SessionListMessage extends ServerMessage {
+  final List<SessionInfo> sessions;
+  const SessionListMessage({this.sessions = const []});
+}
 
-  // session_update
+class SessionUpdateMessage extends ServerMessage {
   final String? sessionId;
   final SessionAction? sessionAction;
   final ApplicationInfo? application;
+  const SessionUpdateMessage({
+    this.sessionId,
+    this.sessionAction,
+    this.application,
+  });
+}
 
-  // data_snapshot
-  final Map<String, DataState>? data;
+class DataSnapshotMessage extends ServerMessage {
+  final Map<String, DataState> data;
+  const DataSnapshotMessage({this.data = const {}});
+}
 
-  // data_update
-  final String? dataKey;
+class DataUpdateMessage extends ServerMessage {
+  final String dataKey;
   final dynamic dataValue;
   final DisplayLocation? dataDisplay;
   final WidgetPayload? dataWidget;
+  const DataUpdateMessage({
+    required this.dataKey,
+    this.dataValue,
+    this.dataDisplay,
+    this.dataWidget,
+  });
+}
 
-  // history
+class HistoryMessage extends ServerMessage {
   final String? queryId;
-  final List<LogEntry>? historyEntries;
-  final bool? hasMore;
+  final List<LogEntry> entries;
+  final bool hasMore;
   final String? cursor;
 
   /// Which backend served this response: 'buffer' or 'store'.
@@ -130,83 +233,16 @@ class ServerMessage {
   /// ISO 8601 server timestamp when query was executed (for dedup).
   final String? fenceTs;
 
-  const ServerMessage({
-    required this.type,
-    this.ackIds,
-    this.errorCode,
-    this.errorMessage,
-    this.errorEntryId,
-    this.entry,
-    this.entries,
-    this.rpcId,
-    this.rpcMethod,
-    this.rpcArgs,
-    this.rpcResponse,
-    this.rpcError,
-    this.sessions,
-    this.sessionId,
-    this.sessionAction,
-    this.application,
-    this.data,
-    this.dataKey,
-    this.dataValue,
-    this.dataDisplay,
-    this.dataWidget,
+  const HistoryMessage({
     this.queryId,
-    this.historyEntries,
-    this.hasMore,
+    this.entries = const [],
+    this.hasMore = false,
     this.cursor,
     this.source,
     this.fenceTs,
   });
+}
 
-  factory ServerMessage.fromJson(Map<String, dynamic> json) {
-    return ServerMessage(
-      type: parseServerMessageType(json['type'] as String),
-      ackIds: (json['ack_ids'] as List<dynamic>?)?.cast<String>(),
-      errorCode: json['error_code'] as String?,
-      errorMessage: json['error_message'] as String?,
-      errorEntryId: json['error_entry_id'] as String?,
-      entry: json['entry'] != null
-          ? LogEntry.fromJson(json['entry'] as Map<String, dynamic>)
-          : null,
-      entries: (json['entries'] as List<dynamic>?)
-          ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      rpcId: json['rpc_id'] as String?,
-      rpcMethod: json['rpc_method'] as String?,
-      rpcArgs: json['rpc_args'],
-      rpcResponse: json['rpc_response'],
-      rpcError: json['rpc_error'] as String?,
-      sessions: (json['sessions'] as List<dynamic>?)
-          ?.map((e) => SessionInfo.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      sessionId: json['session_id'] as String?,
-      sessionAction: parseSessionAction(json['session_action'] as String?),
-      application: json['application'] != null
-          ? ApplicationInfo.fromJson(
-              json['application'] as Map<String, dynamic>,
-            )
-          : null,
-      data: (json['data'] as Map<String, dynamic>?)?.map(
-        (k, v) => MapEntry(k, DataState.fromJson(v as Map<String, dynamic>)),
-      ),
-      dataKey: json['data_key'] as String?,
-      dataValue: json['data_value'],
-      dataDisplay: json['data_display'] != null
-          ? parseDisplayLocation(json['data_display'] as String)
-          : null,
-      dataWidget: json['data_widget'] != null
-          ? WidgetPayload.fromJson(json['data_widget'] as Map<String, dynamic>)
-          : null,
-      queryId: json['query_id'] as String?,
-      historyEntries: (json['history_entries'] as List<dynamic>?)
-          ?.map((e) => LogEntry.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      hasMore: json['has_more'] as bool?,
-      cursor: json['cursor'] as String?,
-      source: json['source'] as String?,
-      fenceTs: json['fence_ts'] as String?,
-    );
-  }
+class SubscribeAckMessage extends ServerMessage {
+  const SubscribeAckMessage();
 }
