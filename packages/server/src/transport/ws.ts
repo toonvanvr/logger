@@ -2,6 +2,7 @@ import {
   DataMessage,
   EventMessage,
   SessionMessage,
+  type StoredEntry,
 } from '@logger/shared'
 import type { ServerWebSocket } from 'bun'
 import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
@@ -73,7 +74,7 @@ export function setupWebSocket(deps: ServerDeps) {
       },
 
       message(ws: ServerWebSocket<WsData>, message: string | Buffer) {
-        let parsed: any
+        let parsed: Record<string, unknown>
         try {
           parsed = JSON.parse(typeof message === 'string' ? message : message.toString())
         } catch { return }
@@ -100,7 +101,7 @@ export function setupWebSocket(deps: ServerDeps) {
 
   // ─── Client Messages ─────────────────────────────────────────────
 
-  function handleClientMessage(ws: ServerWebSocket<WsData>, parsed: any): void {
+  function handleClientMessage(ws: ServerWebSocket<WsData>, parsed: Record<string, unknown>): void {
     const msgType = parsed.type
 
     if (msgType === 'rpc_response' && parsed.rpc_id) {
@@ -140,7 +141,7 @@ export function setupWebSocket(deps: ServerDeps) {
 
   // ─── Viewer Messages ─────────────────────────────────────────────
 
-  async function handleViewerMessage(ws: ServerWebSocket<WsData>, parsed: any): Promise<void> {
+  async function handleViewerMessage(ws: ServerWebSocket<WsData>, parsed: Record<string, unknown>): Promise<void> {
     if (parsed.type === 'rpc_request' && parsed.rpc_id) {
       rpcBridge.handleRequest({
         rpcId: parsed.rpc_id,
@@ -188,7 +189,7 @@ export function setupWebSocket(deps: ServerDeps) {
 
   // ─── Helpers ─────────────────────────────────────────────────────
 
-  function ingestAndAck(ws: ServerWebSocket<WsData>, entry: any): void {
+  function ingestAndAck(ws: ServerWebSocket<WsData>, entry: StoredEntry): void {
     if (!rateLimiter.tryConsume(entry.session_id)) {
       sendError(ws, 'RATE_LIMITED', 'Rate limit exceeded')
       return
