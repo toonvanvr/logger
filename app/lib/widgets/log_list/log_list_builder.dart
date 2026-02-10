@@ -100,7 +100,6 @@ List<DisplayEntry> processGrouping({
     return false;
   }
 
-  final hasTextFilter = textFilter != null && textFilter.isNotEmpty;
   final result = <DisplayEntry>[];
 
   for (final entry in entries) {
@@ -149,7 +148,7 @@ List<DisplayEntry> processGrouping({
           stackDepth: logStore?.stackDepth(entry.id) ?? 1,
           isSticky: isSticky,
           parentGroupId: groupParents[entry.groupId],
-          isStandalone: !hasChildren && hasTextFilter,
+          isStandalone: !hasChildren,
         ),
       );
     } else {

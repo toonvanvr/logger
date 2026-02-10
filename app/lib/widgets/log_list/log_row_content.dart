@@ -21,6 +21,7 @@ class LogRowContent extends StatefulWidget {
   final LogEntry entry;
   final int groupDepth;
   final bool isCollapsed;
+  final bool showGroupChevron;
   final bool isHovered;
   final Color backgroundColor;
   final int stackDepth;
@@ -33,6 +34,7 @@ class LogRowContent extends StatefulWidget {
     required this.entry,
     this.groupDepth = 0,
     this.isCollapsed = false,
+    this.showGroupChevron = true,
     this.isHovered = false,
     this.backgroundColor = LoggerColors.bgSurface,
     this.stackDepth = 1,
@@ -109,12 +111,14 @@ class _LogRowContentState extends State<LogRowContent> {
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            widget.isCollapsed ? Icons.chevron_right : Icons.expand_more,
-            size: 14,
-            color: LoggerColors.fgSecondary,
-          ),
-          const SizedBox(width: 4),
+          if (widget.showGroupChevron) ...[
+            Icon(
+              widget.isCollapsed ? Icons.chevron_right : Icons.expand_more,
+              size: 14,
+              color: LoggerColors.fgSecondary,
+            ),
+            const SizedBox(width: 4),
+          ],
           Text(label, style: LoggerTypography.groupTitle),
         ],
       );

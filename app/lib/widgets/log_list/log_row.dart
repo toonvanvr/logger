@@ -23,6 +23,7 @@ class LogRow extends StatefulWidget {
   final bool isBookmarked;
   final int stackDepth;
   final VoidCallback? onStackToggle;
+  final bool showGroupChevron;
 
   const LogRow({
     super.key,
@@ -40,6 +41,7 @@ class LogRow extends StatefulWidget {
     this.isBookmarked = false,
     this.stackDepth = 1,
     this.onStackToggle,
+    this.showGroupChevron = true,
   });
 
   @override
@@ -223,6 +225,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
                       entry: widget.entry,
                       groupDepth: widget.groupDepth,
                       isCollapsed: widget.isCollapsed,
+                      showGroupChevron: widget.showGroupChevron,
                       isHovered: isHovered,
                       backgroundColor: _computeBackgroundColor(isHovered),
                       stackDepth: widget.stackDepth,
