@@ -76,12 +76,7 @@ server.tool(
         if (!args.sessionId) {
           return textResult({ error: 'sessionId is required for scope=state' })
         }
-        // TODO: /api/v2/sessions/${id}/state does not exist on server yet — will 404
-        try {
-          return textResult(await fetchJson(`/api/v2/sessions/${args.sessionId}/state`))
-        } catch (err) {
-          return textResult({ error: 'Session state endpoint not available (v2 not yet implemented on server)', detail: err instanceof Error ? err.message : String(err) })
-        }
+        return textResult(await fetchJson(`/api/v2/sessions/${args.sessionId}/state`))
       }
 
       case 'logs':
@@ -93,17 +88,11 @@ server.tool(
         if (args.to) queryBody.to = args.to
         if (args.search) queryBody.search = args.search
 
-        // TODO: /api/v2/query does not exist on server yet — falls back to health
-        try {
-          return textResult(await fetchJson('/api/v2/query', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(queryBody),
-          }))
-        } catch {
-          const health = await fetchJson('/api/v2/health')
-          return textResult({ note: 'Query endpoint not available. Showing health.', health, query: queryBody })
-        }
+        return textResult(await fetchJson('/api/v2/query', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(queryBody),
+        }))
       }
     }
   },
@@ -145,24 +134,16 @@ server.tool(
     args: z.unknown().optional().describe('Arguments to pass to the RPC method'),
   },
   async (args) => {
-    try {
-      // TODO: /api/v2/rpc does not exist on server yet — will 404
-      const data = await fetchJson('/api/v2/rpc', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: args.sessionId,
-          method: args.method,
-          args: args.args,
-        }),
-      })
-      return textResult(data)
-    } catch (err) {
-      return textResult({
-        error: 'RPC invocation failed. The v2 RPC endpoint is not yet available on the server.',
-        detail: err instanceof Error ? err.message : String(err),
-      })
-    }
+    const data = await fetchJson('/api/v2/rpc', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: args.sessionId,
+        method: args.method,
+        args: args.args,
+      }),
+    })
+    return textResult(data)
   },
 )
 
