@@ -1,4 +1,5 @@
-import type { StoredEntry } from '@logger/shared'
+import type { EventMessage } from '@logger/shared'
+import { normalizeEvent } from '../core/normalizer'
 import type { RingBuffer } from './ring-buffer'
 import type { SessionManager } from './session-manager'
 import type { WebSocketHub } from './ws-hub'
@@ -26,35 +27,16 @@ export class SelfLogger {
   }
 
   log(severity: 'debug' | 'info' | 'warning' | 'error' | 'critical', text: string): void {
-    const ts = new Date().toISOString()
-    const entry: StoredEntry = {
-      id: `sys-${Date.now()}-${this.counter++}`,
-      timestamp: ts,
+    const entry = normalizeEvent({
       session_id: SYSTEM_SESSION_ID,
-      kind: 'event',
       severity,
       message: text,
       tag: 'system',
-      exception: null,
-      parent_id: null,
-      group_id: null,
-      prev_id: null,
-      next_id: null,
-      widget: null,
-      replace: false,
-      icon: null,
       labels: { source: 'self-logger' },
-      generated_at: null,
-      sent_at: null,
-      key: null,
-      value: undefined,
-      override: true,
-      display: 'default',
-      session_action: null,
-      application: { name: 'logger-server' },
-      metadata: null,
-      received_at: ts,
-    }
+    } as EventMessage)
+    // Override id with deterministic system prefix
+    entry.id = `sys-${Date.now()}-${this.counter++}`
+    entry.application = { name: 'logger-server' }
 
     this.ringBuffer.push(entry)
     this.wsHub.broadcast({ type: 'event', entry })
