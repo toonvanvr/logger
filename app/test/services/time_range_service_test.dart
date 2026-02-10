@@ -293,11 +293,13 @@ void main() {
       });
     });
 
-    test('notifyListeners fires on setRange', () {
+    test('notifyListeners fires on setRange', () async {
       service.updateSessionBounds(t0, t2);
       int count = 0;
       service.addListener(() => count++);
       service.setRange(t0, t1);
+      // Flush microtask-batched notification.
+      await Future.microtask(() {});
       expect(count, 1);
     });
 

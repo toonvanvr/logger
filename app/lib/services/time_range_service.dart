@@ -20,6 +20,19 @@ class TimeRangeService extends ChangeNotifier {
   /// Minimum allowed range width.
   static const _minRange = Duration(seconds: 1);
 
+  bool _dirty = false;
+
+  /// Batches multiple mutations in the same frame into a single notification.
+  void _scheduleNotify() {
+    if (!_dirty) {
+      _dirty = true;
+      Future.microtask(() {
+        _dirty = false;
+        notifyListeners();
+      });
+    }
+  }
+
   DateTime? get sessionStart => _sessionStart;
   DateTime? get sessionEnd => _sessionEnd;
   DateTime? get rangeStart => _rangeStart ?? _sessionStart;
@@ -57,7 +70,7 @@ class TimeRangeService extends ChangeNotifier {
   void updateSessionBounds(DateTime start, DateTime end) {
     _sessionStart = start;
     _sessionEnd = end;
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Sets a custom time range, transitioning to ZOOMED state.
@@ -90,7 +103,7 @@ class TimeRangeService extends ChangeNotifier {
     _rangeStart = start;
     _rangeEnd = end;
     _state = TimeRangeState.zoomed;
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Resets to full range (FULL state).
@@ -150,7 +163,7 @@ class TimeRangeService extends ChangeNotifier {
     _rangeStart = newStart;
     _rangeEnd = newEnd;
     _state = TimeRangeState.zoomed;
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Pan (shift) range by a duration offset. Positive = right, negative = left.
@@ -179,7 +192,7 @@ class TimeRangeService extends ChangeNotifier {
 
     _rangeStart = newStart;
     _rangeEnd = newEnd;
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Enter live tracking mode (right edge follows sessionEnd).
@@ -187,7 +200,7 @@ class TimeRangeService extends ChangeNotifier {
     if (!isActive) return;
     _state = TimeRangeState.liveTracking;
     _rangeEnd = _sessionEnd;
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Check if a timestamp falls within the current range.
@@ -203,7 +216,7 @@ class TimeRangeService extends ChangeNotifier {
   void updateBuckets(List<LogEntry> entries) {
     if (_sessionStart == null || _sessionEnd == null || entries.isEmpty) {
       _buckets = [];
-      notifyListeners();
+      _scheduleNotify();
       return;
     }
 
@@ -216,7 +229,7 @@ class TimeRangeService extends ChangeNotifier {
       for (final entry in entries) {
         _buckets[0].increment(entry.severity);
       }
-      notifyListeners();
+      _scheduleNotify();
       return;
     }
 
@@ -242,7 +255,7 @@ class TimeRangeService extends ChangeNotifier {
       _buckets[idx].increment(entry.severity);
     }
 
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Incremental update: add a single entry to the appropriate bucket.
@@ -268,21 +281,21 @@ class TimeRangeService extends ChangeNotifier {
     final sessionDur = _sessionEnd!.difference(_sessionStart!);
     if (sessionDur <= Duration.zero) {
       _buckets[0].increment(entry.severity);
-      notifyListeners();
+      _scheduleNotify();
       return;
     }
 
     final bucketWidthUs = sessionDur.inMicroseconds ~/ _buckets.length;
     if (bucketWidthUs <= 0) {
       _buckets.last.increment(entry.severity);
-      notifyListeners();
+      _scheduleNotify();
       return;
     }
 
     final offsetUs = ts.difference(_sessionStart!).inMicroseconds;
     final idx = (offsetUs ~/ bucketWidthUs).clamp(0, _buckets.length - 1);
     _buckets[idx].increment(entry.severity);
-    notifyListeners();
+    _scheduleNotify();
   }
 
   DateTime _clampToSession(DateTime dt) {
