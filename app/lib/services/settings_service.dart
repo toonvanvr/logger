@@ -1,11 +1,20 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
+
+/// Returns the platform-appropriate default command for opening URLs.
+String _defaultUrlOpenCommand() {
+  if (Platform.isMacOS) return 'open {url}';
+  if (Platform.isWindows) return 'start {url}';
+  return 'xdg-open {url}';
+}
 
 /// Application-wide settings for editor integration and URL handling.
 ///
 /// Settings are session-scoped (not persisted to disk).
 class SettingsService extends ChangeNotifier {
   String _fileOpenCommand = 'code -g {file}:{line}';
-  String _urlOpenCommand = 'xdg-open {url}';
+  String _urlOpenCommand = _defaultUrlOpenCommand();
 
   /// Command template for opening files in an editor.
   /// Placeholders: `{file}` and `{line}`.

@@ -63,10 +63,8 @@ void main() {
       await tester.pumpWidget(_wrap(isVisible: false));
       await tester.pumpAndSettle();
 
-      final animated = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
-      );
-      expect(animated.constraints?.maxWidth ?? 0, 0);
+      final size = tester.getSize(find.byType(SettingsPanel));
+      expect(size.width, 0);
     });
 
     // ── Test 2: 300-width when visible ──
