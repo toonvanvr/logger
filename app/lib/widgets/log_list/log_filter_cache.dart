@@ -134,6 +134,57 @@ class LogFilterCache {
       results = results.where((e) => selectedSessionIds.contains(e.sessionId));
     }
 
-    return results.toList();
+    final resultList = results.toList();
+
+    // Group-aware: include ancestor group headers for matched children.
+    // When text search matches child entries, their group headers would be
+    // dropped. This pass walks ancestor chains and re-inserts them.
+    if (textFilter != null && textFilter.isNotEmpty && stateKeys.isEmpty) {
+      final resultIds = <String>{for (final e in resultList) e.id};
+      final neededGroupIds = <String>{};
+
+      for (final e in resultList) {
+        if (e.groupId != null && !resultIds.contains(e.groupId)) {
+          neededGroupIds.add(e.groupId!);
+        }
+      }
+
+      if (neededGroupIds.isNotEmpty) {
+        // Build lookup from the full tag-filtered entry list.
+        final allEntries = logStore
+            .filter(tag: tagFilter)
+            .where((e) => activeSeverities.contains(e.severity.name))
+            .where((e) => e.kind != EntryKind.data)
+            .toList();
+        final idToEntry = <String, LogEntry>{
+          for (final e in allEntries) e.id: e,
+        };
+
+        // Walk ancestor chains to collect all missing headers.
+        final toAdd = <String>{};
+        for (final gid in neededGroupIds) {
+          var current = gid;
+          while (idToEntry.containsKey(current) &&
+              !resultIds.contains(current)) {
+            toAdd.add(current);
+            final parent = idToEntry[current]!;
+            current = (parent.groupId != null && parent.groupId != parent.id)
+                ? parent.groupId!
+                : '';
+          }
+        }
+
+        // Insert group headers preserving original order, then deduplicate.
+        if (toAdd.isNotEmpty) {
+          final extras =
+              allEntries.where((e) => toAdd.contains(e.id)).toList();
+          resultList.insertAll(0, extras);
+          final seen = <String>{};
+          resultList.retainWhere((e) => seen.add(e.id));
+        }
+      }
+    }
+
+    return resultList;
   }
 }
