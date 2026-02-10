@@ -24,5 +24,4 @@ export const DataMessage = z.object({
 
 export type DataMessage = z.infer<typeof DataMessage>
 export type DisplayLocation = z.infer<typeof DisplayLocation>
-export { DisplayLocation as DisplayLocationSchema, WidgetConfig as WidgetConfigSchema }
 

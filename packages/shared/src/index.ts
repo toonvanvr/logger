@@ -1,7 +1,6 @@
 // ─── Session ─────────────────────────────────────────────────────────
 export {
     ApplicationInfo,
-    ApplicationInfoSchema,
     SessionMessage,
     type ApplicationInfo as ApplicationInfoType
 } from './session-message.js'
@@ -10,20 +9,15 @@ export {
 export {
     EventMessage,
     ExceptionData,
-    ExceptionDataSchema,
     IconRef,
-    IconRefSchema,
     Severity,
-    SeveritySchema
 } from './event-message.js'
 
 // ─── Data ────────────────────────────────────────────────────────────
 export {
     DataMessage,
     DisplayLocation,
-    DisplayLocationSchema,
     WidgetConfig,
-    WidgetConfigSchema
 } from './data-message.js'
 
 // ─── Widgets ─────────────────────────────────────────────────────────

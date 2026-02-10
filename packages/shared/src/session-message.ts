@@ -22,5 +22,4 @@ export const SessionMessage = z.object({
 
 export type SessionMessage = z.infer<typeof SessionMessage>
 export type ApplicationInfo = z.infer<typeof ApplicationInfo>
-export { ApplicationInfo as ApplicationInfoSchema }
 
