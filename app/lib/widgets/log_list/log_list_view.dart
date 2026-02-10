@@ -33,6 +33,7 @@ class LogListView extends StatefulWidget {
   final Set<String> bookmarkedEntryIds;
   final Set<String> stickyOverrideIds;
   final VoidCallback? onFilterClear;
+  final bool flatMode;
 
   const LogListView({
     super.key,
@@ -53,6 +54,7 @@ class LogListView extends StatefulWidget {
     this.bookmarkedEntryIds = const {},
     this.stickyOverrideIds = const {},
     this.onFilterClear,
+    this.flatMode = false,
   });
 
   @override
@@ -109,6 +111,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       collapsedGroups: _collapsedGroups,
       stickyOverrideIds: widget.stickyOverrideIds,
       logStore: logStore,
+      flatMode: widget.flatMode,
     );
     _currentDisplayEntries = displayEntries;
 
@@ -226,6 +229,7 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       isBookmarked: widget.bookmarkedEntryIds.contains(entry.id),
       groupDepth: display.depth,
       showGroupChevron:
+          !widget.flatMode &&
           entry.groupId != null &&
           entry.id == entry.groupId &&
           !display.isStandalone,
@@ -248,7 +252,8 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
         });
       },
       onGroupToggle:
-          entry.groupId != null &&
+          !widget.flatMode &&
+              entry.groupId != null &&
               entry.id == entry.groupId &&
               !display.isStandalone
           ? () => setState(() {

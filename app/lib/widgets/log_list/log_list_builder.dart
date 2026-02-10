@@ -35,7 +35,31 @@ List<DisplayEntry> processGrouping({
   required Set<String> collapsedGroups,
   Set<String>? stickyOverrideIds,
   LogStore? logStore,
+  bool flatMode = false,
 }) {
+  if (flatMode) {
+    return entries
+        .where((e) => !(
+            e.groupId != null &&
+            e.id != e.groupId &&
+            (e.message == null || e.message == '')))
+        .where((e) => !(
+            e.labels != null &&
+            e.labels!['_sticky_action'] == 'unpin'))
+        .map((e) {
+          final isGroupHeader =
+              e.groupId != null && e.id == e.groupId;
+          return DisplayEntry(
+            entry: e,
+            depth: 0,
+            stackDepth: logStore?.stackDepth(e.id) ?? 1,
+            isSticky: (stickyOverrideIds?.contains(e.id) ?? false) ||
+                (e.labels != null && e.labels!['_sticky'] == 'true'),
+            parentGroupId: isGroupHeader ? null : e.groupId,
+          );
+        })
+        .toList();
+  }
   // Pre-scan: build group hierarchy using entry-order stack approach.
   final groupStack = <String>[];
   final groupParents = <String, String?>{};

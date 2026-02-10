@@ -17,6 +17,7 @@ mixin _KeyboardMixin on State<LogViewerScreen>, _SelectionMixin {
   List<String> _stateFilterStack = [];
   String? _selectedSection;
   bool _settingsPanelVisible = false;
+  bool _flatMode = false;
   bool _landingDelayActive = true;
   Timer? _landingDelayTimer;
 

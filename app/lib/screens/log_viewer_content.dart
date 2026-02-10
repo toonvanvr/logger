@@ -44,6 +44,8 @@ mixin _ContentMixin on _KeyboardMixin, _SelectionMixin, _ConnectionMixin {
               onStateFilterRemove: (key) {
                 _toggleStateFilter(key);
               },
+              flatMode: _flatMode,
+              onFlatModeToggle: (v) => setState(() => _flatMode = v),
             )
           : const SizedBox.shrink(),
     );
@@ -167,6 +169,7 @@ mixin _ContentMixin on _KeyboardMixin, _SelectionMixin, _ConnectionMixin {
                 onEntryRangeSelected: _onEntryRangeSelected,
                 bookmarkedEntryIds: _bookmarkedEntryIds,
                 stickyOverrideIds: _stickyOverrideIds,
+                flatMode: _flatMode,
                 onFilterClear: () {
                   setState(() {
                     _activeSeverities = _defaultSeverities;

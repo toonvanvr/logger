@@ -342,6 +342,170 @@ void main() {
     });
   });
 
+  group('processGrouping flat mode', () {
+    test('flat mode returns all entries at depth 0', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child 1'),
+        _makeEntry(id: 'b', groupId: 'grp1', message: 'child 2'),
+        _makeEntry(id: 'close1', groupId: 'grp1', message: ''),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: true,
+      );
+
+      // Close sentinel excluded → 3 entries
+      expect(result.length, 3);
+      expect(result[0].entry.id, 'grp1');
+      expect(result[1].entry.id, 'a');
+      expect(result[2].entry.id, 'b');
+      for (final d in result) {
+        expect(d.depth, 0);
+      }
+    });
+
+    test('flat mode excludes close sentinels', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+        // Close sentinel: groupId set, message empty, id != groupId
+        _makeEntry(id: 'close1', groupId: 'grp1', message: ''),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: true,
+      );
+
+      expect(result.length, 2);
+      expect(result.any((d) => d.entry.id == 'close1'), false);
+    });
+
+    test('flat mode excludes unpin control messages', () {
+      final entries = [
+        _makeEntry(id: 'a', message: 'normal'),
+        _makeEntry(
+          id: 'unpin1',
+          message: '',
+          labels: {'_sticky_action': 'unpin'},
+        ),
+        _makeEntry(id: 'b', message: 'also normal'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: true,
+      );
+
+      expect(result.length, 2);
+      expect(result[0].entry.id, 'a');
+      expect(result[1].entry.id, 'b');
+    });
+
+    test('flat mode preserves sticky entries', () {
+      final entries = [
+        _makeEntry(
+          id: 'a',
+          message: 'server pinned',
+          labels: {'_sticky': 'true'},
+        ),
+        _makeEntry(id: 'b', message: 'normal'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: true,
+      );
+
+      expect(result.length, 2);
+      expect(result[0].isSticky, true);
+      expect(result[1].isSticky, false);
+    });
+
+    test('flat mode preserves stickyOverrideIds', () {
+      final entries = [
+        _makeEntry(id: 'a', message: 'first'),
+        _makeEntry(id: 'b', message: 'second'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        stickyOverrideIds: {'b'},
+        flatMode: true,
+      );
+
+      expect(result[0].isSticky, false);
+      expect(result[1].isSticky, true);
+    });
+
+    test('flat mode sets parentGroupId for children but not headers', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: true,
+      );
+
+      expect(result[0].parentGroupId, isNull); // header
+      expect(result[1].parentGroupId, 'grp1'); // child
+    });
+
+    test('non-flat mode is unchanged (regression)', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+        _makeEntry(id: 'close1', groupId: 'grp1', message: ''),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {},
+        flatMode: false,
+      );
+
+      expect(result.length, 2);
+      expect(result[0].depth, 0);
+      expect(result[1].depth, 1);
+    });
+
+    test('flat mode ignores collapsedGroups', () {
+      final entries = [
+        _makeEntry(id: 'grp1', groupId: 'grp1', message: 'Group'),
+        _makeEntry(id: 'a', groupId: 'grp1', message: 'child'),
+      ];
+
+      final result = processGrouping(
+        entries: entries,
+        textFilter: null,
+        collapsedGroups: {'grp1'},
+        flatMode: true,
+      );
+
+      // In flat mode, collapsed state is irrelevant
+      expect(result.length, 2);
+      expect(result[0].depth, 0);
+      expect(result[1].depth, 0);
+    });
+  });
+
   group('autoCollapseGroups', () {
     test('adds group with _collapsed label to collapsedGroups', () {
       final entries = [

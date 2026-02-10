@@ -24,6 +24,8 @@ class FilterBar extends StatefulWidget {
   final VoidCallback? onClear;
   final Set<String> activeStateFilters;
   final ValueChanged<String>? onStateFilterRemove;
+  final bool flatMode;
+  final ValueChanged<bool>? onFlatModeToggle;
 
   const FilterBar({
     super.key,
@@ -39,6 +41,8 @@ class FilterBar extends StatefulWidget {
     this.onClear,
     this.activeStateFilters = const {},
     this.onStateFilterRemove,
+    this.flatMode = false,
+    this.onFlatModeToggle,
   });
 
   @override
@@ -179,46 +183,29 @@ class _FilterBarState extends State<FilterBar> {
                 child: GestureDetector(
                   onTap: () => widget.onStateFilterRemove?.call(key),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: LoggerColors.severityInfoBar.withValues(
-                        alpha: 0.15,
-                      ),
+                      color: LoggerColors.severityInfoBar.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(3),
                       border: Border.all(
-                        color: LoggerColors.severityInfoBar.withValues(
-                          alpha: 0.4,
-                        ),
+                        color: LoggerColors.severityInfoBar.withValues(alpha: 0.4),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'state:$key',
-                          style: LoggerTypography.logMeta.copyWith(
-                            color: LoggerColors.fgPrimary,
-                            fontSize: 10,
-                          ),
-                        ),
-                        const SizedBox(width: 3),
-                        const Icon(
-                          Icons.close,
-                          size: 10,
-                          color: LoggerColors.fgMuted,
-                        ),
-                      ],
-                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text('state:$key', style: LoggerTypography.logMeta
+                          .copyWith(color: LoggerColors.fgPrimary, fontSize: 10)),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.close, size: 10, color: LoggerColors.fgMuted),
+                    ]),
                   ),
                 ),
               ),
             const SizedBox(width: 4),
           ],
           Expanded(child: _buildSearchField()),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
+          _buildFlatModeToggle(),
+          const SizedBox(width: 4),
           BookmarkButton(
             activeSeverities: widget.activeSeverities,
             textFilter: _textController.text,
@@ -245,6 +232,25 @@ class _FilterBarState extends State<FilterBar> {
       ),
     );
   }
+
+  Widget _buildFlatModeToggle() => MouseRegion(
+    cursor: SystemMouseCursors.click,
+    child: GestureDetector(
+      onTap: () => widget.onFlatModeToggle?.call(!widget.flatMode),
+      child: Tooltip(
+        message: widget.flatMode ? 'Grouped view' : 'Flat view',
+        child: SizedBox(
+          width: 28, height: 28,
+          child: Icon(
+            widget.flatMode ? Icons.view_list : Icons.account_tree,
+            size: 16,
+            color: widget.flatMode
+                ? const Color(0xFFE6B455) : LoggerColors.fgMuted,
+          ),
+        ),
+      ),
+    ),
+  );
 
   Widget _buildSearchField() {
     final br = BorderRadius.circular(3);
