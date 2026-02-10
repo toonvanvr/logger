@@ -7,79 +7,21 @@
  */
 
 import { Logger } from '@logger/client'
-
-// ─── Configuration ───────────────────────────────────────────────────
-
-const DOCKER_SOCKET = process.env.DOCKER_SOCKET ?? '/var/run/docker.sock'
-const LOGGER_SERVER_URL = process.env.LOGGER_SERVER_URL ?? 'http://localhost:8080'
-const CONTAINER_FILTER = process.env.CONTAINER_FILTER ?? ''
-const POLL_INTERVAL_MS = 2_000
-
-// ─── Types ───────────────────────────────────────────────────────────
-
-interface ContainerEvent {
-  Action: string
-  id: string
-  Actor?: { Attributes?: Record<string, string> }
-}
-
-interface ContainerInfo {
-  Id: string
-  Names: string[]
-  Labels: Record<string, string>
-  State: string
-}
-
-interface TrackedContainer {
-  logger: Logger
-  abort: AbortController
-}
-
-// ─── State ───────────────────────────────────────────────────────────
+import { config } from './config.ts'
+import type { ContainerEvent, ContainerInfo, TrackedContainer } from './types.ts'
+import { dockerGet, dockerStream } from './docker-client.ts'
+import { processLogChunk } from './log-parser.ts'
 
 const tracked = new Map<string, TrackedContainer>()
 
-// ─── Docker Socket HTTP Helper ───────────────────────────────────────
-
-async function dockerGet<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(`http://localhost${path}`, {
-    unix: DOCKER_SOCKET,
-    signal,
-  } as RequestInit)
-
-  if (!res.ok) {
-    throw new Error(`Docker API ${path}: ${res.status} ${res.statusText}`)
-  }
-  return res.json() as Promise<T>
-}
-
-async function dockerStream(path: string, signal?: AbortSignal): Promise<ReadableStream<Uint8Array>> {
-  const res = await fetch(`http://localhost${path}`, {
-    unix: DOCKER_SOCKET,
-    signal,
-  } as RequestInit)
-
-  if (!res.ok) {
-    throw new Error(`Docker API ${path}: ${res.status} ${res.statusText}`)
-  }
-  if (!res.body) {
-    throw new Error(`Docker API ${path}: no body`)
-  }
-  return res.body
-}
-
-// ─── Container Label Filter ─────────────────────────────────────────
-
 function matchesFilter(labels: Record<string, string>): boolean {
-  if (!CONTAINER_FILTER) return true
+  if (!config.CONTAINER_FILTER) return true
   // Format: "label=key=value"
-  const match = CONTAINER_FILTER.match(/^label=(.+?)=(.+)$/)
+  const match = config.CONTAINER_FILTER.match(/^label=(.+?)=(.+)$/)
   if (!match) return true
   const [, key, value] = match
   return labels[key!] === value
 }
-
-// ─── Attach to Container Logs ────────────────────────────────────────
 
 async function attachContainer(containerId: string): Promise<void> {
   if (tracked.has(containerId)) return
@@ -97,7 +39,7 @@ async function attachContainer(containerId: string): Promise<void> {
   const shortId = containerId.slice(0, 12)
 
   const logger = new Logger({
-    url: LOGGER_SERVER_URL,
+    url: config.LOGGER_SERVER_URL,
     app: name,
     transport: 'http',
     sessionId: `docker-${shortId}`,
@@ -130,48 +72,6 @@ async function attachContainer(containerId: string): Promise<void> {
   }
 }
 
-function emitLog(
-  logger: Logger,
-  severity: 'debug' | 'info' | 'warning' | 'error',
-  message: string,
-  meta: Record<string, unknown>,
-): void {
-  switch (severity) {
-    case 'error': logger.error(message, meta); break
-    case 'warning': logger.warn(message, meta); break
-    case 'debug': logger.debug(message, meta); break
-    default: logger.info(message, meta); break
-  }
-}
-
-function processLogChunk(raw: string, logger: Logger, shortId: string): void {
-  // Docker multiplexed stream: each frame has an 8-byte header
-  // [stream_type(1) padding(3) size(4-byte big-endian)] + payload
-  // When fetched via the API with follow=true, Bun delivers decoded text lines.
-  const lines = raw.split('\n')
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-
-    // Determine severity heuristic: lines with ERROR/WARN/FATAL → error/warning
-    const severity = detectSeverity(trimmed)
-    emitLog(logger, severity, trimmed, { source: 'docker', container: shortId })
-  }
-}
-
-function detectSeverity(line: string): 'debug' | 'info' | 'warning' | 'error' {
-  const upper = line.toUpperCase()
-  if (upper.includes('ERROR') || upper.includes('FATAL') || upper.includes('PANIC'))
-    return 'error'
-  if (upper.includes('WARN'))
-    return 'warning'
-  if (upper.includes('DEBUG') || upper.includes('TRACE'))
-    return 'debug'
-  return 'info'
-}
-
-// ─── Detach ──────────────────────────────────────────────────────────
-
 async function detachContainer(containerId: string): Promise<void> {
   const entry = tracked.get(containerId)
   if (!entry) return
@@ -184,8 +84,6 @@ async function detachContainer(containerId: string): Promise<void> {
   const shortId = containerId.slice(0, 12)
   console.log(`[sidecar] detached: ${shortId}`)
 }
-
-// ─── Event Listener ──────────────────────────────────────────────────
 
 async function watchEvents(): Promise<void> {
   console.log('[sidecar] watching Docker events...')
@@ -225,11 +123,9 @@ async function watchEvents(): Promise<void> {
     }
 
     // Reconnect after a short delay
-    await Bun.sleep(POLL_INTERVAL_MS)
+    await Bun.sleep(config.POLL_INTERVAL_MS)
   }
 }
-
-// ─── Bootstrap: attach to already-running containers ─────────────────
 
 async function attachExisting(): Promise<void> {
   const containers = await dockerGet<ContainerInfo[]>(
@@ -244,12 +140,10 @@ async function attachExisting(): Promise<void> {
   }
 }
 
-// ─── Main ────────────────────────────────────────────────────────────
-
 console.log(`[sidecar] Logger Docker Sidecar starting`)
-console.log(`[sidecar] socket: ${DOCKER_SOCKET}`)
-console.log(`[sidecar] server: ${LOGGER_SERVER_URL}`)
-console.log(`[sidecar] filter: ${CONTAINER_FILTER || '(none)'}`)
+console.log(`[sidecar] socket: ${config.DOCKER_SOCKET}`)
+console.log(`[sidecar] server: ${config.LOGGER_SERVER_URL}`)
+console.log(`[sidecar] filter: ${config.CONTAINER_FILTER || '(none)'}`)
 
 await attachExisting()
 await watchEvents()
