@@ -16,10 +16,8 @@ class TimeRangeService extends ChangeNotifier {
   DateTime? _rangeEnd;
   TimeRangeState _state = TimeRangeState.full;
   List<BucketData> _buckets = [];
-
   /// Minimum allowed range width.
   static const _minRange = Duration(seconds: 1);
-
   bool _dirty = false;
 
   /// Batches multiple mutations in the same frame into a single notification.
@@ -118,14 +116,11 @@ class TimeRangeService extends ChangeNotifier {
   void zoomBy(double factor, {double? anchor}) {
     if (_sessionStart == null || _sessionEnd == null) return;
     factor = factor.clamp(0.01, 100.0);
-
     final sessionDur = _sessionEnd!.difference(_sessionStart!);
     if (sessionDur <= Duration.zero) return;
-
     final currentStart = rangeStart!;
     final currentEnd = rangeEnd!;
     final currentDur = currentEnd.difference(currentStart);
-
     final newDurUs = (currentDur.inMicroseconds * factor).round();
     final newDur = Duration(microseconds: newDurUs);
 
@@ -169,11 +164,9 @@ class TimeRangeService extends ChangeNotifier {
   /// Pan (shift) range by a duration offset. Positive = right, negative = left.
   void panBy(Duration offset) {
     if (_sessionStart == null || _sessionEnd == null || !isActive) return;
-
     final currentStart = rangeStart!;
     final currentEnd = rangeEnd!;
     final rangeDur = currentEnd.difference(currentStart);
-
     var newStart = currentStart.add(offset);
     var newEnd = currentEnd.add(offset);
 
