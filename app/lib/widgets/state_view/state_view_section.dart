@@ -24,7 +24,9 @@ class StateViewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logStore = context.watch<LogStore>();
-    final settings = context.watch<SettingsService>();
+    final isCollapsed = context.select<SettingsService, bool>(
+      (s) => s.stateViewCollapsed,
+    );
     final state = logStore.mergedState;
 
     if (state.isEmpty) return const SizedBox.shrink();
@@ -43,8 +45,6 @@ class StateViewSection extends StatelessWidget {
       }
     }
 
-    final isCollapsed = settings.stateViewCollapsed;
-
     return Container(
       decoration: BoxDecoration(
         color: LoggerColors.bgRaised,
@@ -58,7 +58,10 @@ class StateViewSection extends StatelessWidget {
         children: [
           // Header row
           GestureDetector(
-            onTap: () => settings.setStateViewCollapsed(!isCollapsed),
+            onTap: () =>
+                context.read<SettingsService>().setStateViewCollapsed(
+                  !isCollapsed,
+                ),
             child: Container(
               height: 24,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -198,8 +201,9 @@ class _SecondaryShelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsService>();
-    final isCollapsed = settings.shelfCollapsed;
+    final isCollapsed = context.select<SettingsService, bool>(
+      (s) => s.shelfCollapsed,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +211,8 @@ class _SecondaryShelf extends StatelessWidget {
       children: [
         const SizedBox(height: 4),
         GestureDetector(
-          onTap: () => settings.setShelfCollapsed(!isCollapsed),
+          onTap: () =>
+              context.read<SettingsService>().setShelfCollapsed(!isCollapsed),
           child: SizedBox(
             height: 20,
             child: Padding(

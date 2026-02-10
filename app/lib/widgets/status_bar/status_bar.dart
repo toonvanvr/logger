@@ -21,10 +21,12 @@ class StatusBar extends StatelessWidget {
     final memoryBytes = context.select<LogStore, int>(
       (s) => s.estimatedMemoryBytes,
     );
-    final stickyState = context.watch<StickyStateService>();
-
-    final dismissed = stickyState.dismissedCount;
-    final ignored = stickyState.ignoredGroupCount;
+    final dismissed = context.select<StickyStateService, int>(
+      (s) => s.dismissedCount,
+    );
+    final ignored = context.select<StickyStateService, int>(
+      (s) => s.ignoredGroupCount,
+    );
     final hasStickyInfo = dismissed > 0 || ignored > 0;
 
     return Container(
@@ -54,7 +56,7 @@ class StatusBar extends StatelessWidget {
                 _StickyStatusSection(
                   dismissed: dismissed,
                   ignored: ignored,
-                  onRestoreAll: stickyState.restoreAll,
+                  onRestoreAll: context.read<StickyStateService>().restoreAll,
                 ),
               ],
               const Spacer(),
