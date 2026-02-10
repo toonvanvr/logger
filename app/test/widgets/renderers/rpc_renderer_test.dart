@@ -20,9 +20,9 @@ LogEntry _makeRpcEntry({
       data: {
         'direction': direction,
         'method': method,
-        if (args != null) 'args': args,
-        if (response != null) 'response': response,
-        if (error != null) 'error': error,
+        'args': ?args,
+        'response': ?response,
+        'error': ?error,
       },
     ),
   );
