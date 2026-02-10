@@ -28,7 +28,7 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
     });
 
     // Request current session list
-    connection.send(const ViewerMessage(type: ViewerMessageType.sessionList));
+    connection.send(const ViewerSessionListMessage());
 
     // Load existing entries from the server's ring buffer
     connection.queryHistory(limit: 5000);
@@ -53,7 +53,7 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
       case SessionUpdateMessage():
         // Re-fetch full session list to pick up new/ended sessions
         context.read<ConnectionManager>().send(
-          const ViewerMessage(type: ViewerMessageType.sessionList),
+          const ViewerSessionListMessage(),
         );
       case DataSnapshotMessage():
         // Data snapshots are handled via LogStore state tracking

@@ -70,8 +70,7 @@ class ConnectionManager extends ChangeNotifier {
 
   void subscribe({List<String>? sessionIds, String? minSeverity}) {
     send(
-      ViewerMessage(
-        type: ViewerMessageType.subscribe,
+      ViewerSubscribeMessage(
         sessionIds: sessionIds,
         minSeverity: minSeverity,
       ),
@@ -87,8 +86,7 @@ class ConnectionManager extends ChangeNotifier {
     String? cursor,
   }) {
     send(
-      ViewerMessage(
-        type: ViewerMessageType.historyQuery,
+      ViewerHistoryQueryMessage(
         queryId: queryId,
         from: from,
         to: to,

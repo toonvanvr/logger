@@ -10,8 +10,7 @@ void main() {
     test(
       'subscribe toJson includes sessionIds, minSeverity, tags, textFilter',
       () {
-        const msg = ViewerMessage(
-          type: ViewerMessageType.subscribe,
+        const msg = ViewerSubscribeMessage(
           sessionIds: ['sess-1', 'sess-2'],
           minSeverity: 'warning',
           tags: ['network', 'ui'],
@@ -30,7 +29,7 @@ void main() {
     // ── Test 2: unsubscribe toJson ──
 
     test('unsubscribe toJson', () {
-      const msg = ViewerMessage(type: ViewerMessageType.unsubscribe);
+      const msg = ViewerUnsubscribeMessage();
       final json = msg.toJson();
 
       expect(json['type'], 'unsubscribe');
@@ -39,8 +38,7 @@ void main() {
     // ── Test 3: history_query with all fields ──
 
     test('history_query toJson with all fields', () {
-      const msg = ViewerMessage(
-        type: ViewerMessageType.historyQuery,
+      const msg = ViewerHistoryQueryMessage(
         queryId: 'q1',
         from: '2026-01-01T00:00:00Z',
         to: '2026-02-07T00:00:00Z',
@@ -66,8 +64,7 @@ void main() {
     test(
       'rpc_request toJson with targetSessionId, rpcId, rpcMethod, rpcArgs',
       () {
-        const msg = ViewerMessage(
-          type: ViewerMessageType.rpcRequest,
+        const msg = ViewerRpcRequestMessage(
           targetSessionId: 'sess-1',
           rpcId: 'rpc-1',
           rpcMethod: 'getState',
@@ -86,7 +83,7 @@ void main() {
     // ── Test 5: session_list toJson ──
 
     test('session_list toJson minimal', () {
-      const msg = ViewerMessage(type: ViewerMessageType.sessionList);
+      const msg = ViewerSessionListMessage();
       final json = msg.toJson();
 
       expect(json['type'], 'session_list');
@@ -95,10 +92,7 @@ void main() {
     // ── Test 6: data_query toJson ──
 
     test('data_query toJson with dataSessionId', () {
-      const msg = ViewerMessage(
-        type: ViewerMessageType.dataQuery,
-        dataSessionId: 'sess-1',
-      );
+      const msg = ViewerDataQueryMessage(dataSessionId: 'sess-1');
       final json = msg.toJson();
 
       expect(json['type'], 'data_query');
@@ -107,14 +101,20 @@ void main() {
 
     // ── Test 7: excludes null optional fields ──
 
-    test('toJson excludes null optional fields', () {
-      const msg = ViewerMessage(type: ViewerMessageType.subscribe);
+    test('subscribe toJson excludes null optional fields', () {
+      const msg = ViewerSubscribeMessage();
       final json = msg.toJson();
 
       expect(json.containsKey('session_ids'), isFalse);
       expect(json.containsKey('min_severity'), isFalse);
       expect(json.containsKey('tags'), isFalse);
       expect(json.containsKey('text_filter'), isFalse);
+    });
+
+    test('history toJson excludes null optional fields', () {
+      const msg = ViewerHistoryQueryMessage();
+      final json = msg.toJson();
+
       expect(json.containsKey('query_id'), isFalse);
       expect(json.containsKey('from'), isFalse);
       expect(json.containsKey('to'), isFalse);
@@ -122,10 +122,22 @@ void main() {
       expect(json.containsKey('search'), isFalse);
       expect(json.containsKey('limit'), isFalse);
       expect(json.containsKey('cursor'), isFalse);
+    });
+
+    test('rpc_request toJson excludes null optional fields', () {
+      const msg = ViewerRpcRequestMessage();
+      final json = msg.toJson();
+
       expect(json.containsKey('rpc_id'), isFalse);
       expect(json.containsKey('target_session_id'), isFalse);
       expect(json.containsKey('rpc_method'), isFalse);
       expect(json.containsKey('rpc_args'), isFalse);
+    });
+
+    test('data_query toJson excludes null optional fields', () {
+      const msg = ViewerDataQueryMessage();
+      final json = msg.toJson();
+
       expect(json.containsKey('data_session_id'), isFalse);
     });
   });
@@ -133,10 +145,7 @@ void main() {
   // ── Test 8: toJsonString ──
 
   test('toJsonString produces valid JSON string', () {
-    const msg = ViewerMessage(
-      type: ViewerMessageType.subscribe,
-      sessionIds: ['sess-1'],
-    );
+    const msg = ViewerSubscribeMessage(sessionIds: ['sess-1']);
     final jsonStr = msg.toJsonString();
     final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
 

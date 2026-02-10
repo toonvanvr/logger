@@ -71,8 +71,7 @@ class RpcService extends ChangeNotifier {
     _pending[rpcId] = completer;
 
     connection.send(
-      ViewerMessage(
-        type: ViewerMessageType.rpcRequest,
+      ViewerRpcRequestMessage(
         rpcId: rpcId,
         targetSessionId: sessionId,
         rpcMethod: method,
