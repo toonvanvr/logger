@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../plugins/plugin_registry.dart';
 import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
-import '../../theme/typography.dart';
 import '../../version.dart';
 import 'connection_settings.dart';
+import 'settings_panel_header.dart';
 import 'settings_sub_panels.dart';
 import 'tool_group.dart';
 import 'tool_row.dart';
@@ -122,7 +122,7 @@ class _PanelContentState extends State<_PanelContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _PanelHeader(
+        SettingsPanelHeader(
           title: _subPanelTitle ?? 'Settings',
           showBack: _subPanel != null,
           onBack: _closeSubPanel,
@@ -249,52 +249,4 @@ class _PanelContentState extends State<_PanelContent> {
   }
 }
 
-// ─── Panel header with optional back button ──────────────────────────
 
-class _PanelHeader extends StatelessWidget {
-  final String title;
-  final bool showBack;
-  final VoidCallback onBack;
-  final VoidCallback onClose;
-
-  const _PanelHeader({
-    required this.title,
-    required this.showBack,
-    required this.onBack,
-    required this.onClose,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          if (showBack)
-            InkWell(
-              onTap: onBack,
-              child: const Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: Icon(
-                  Icons.arrow_back,
-                  size: 16,
-                  color: LoggerColors.fgSecondary,
-                ),
-              ),
-            ),
-          Text(title, style: LoggerTypography.sectionH),
-          const Spacer(),
-          InkWell(
-            onTap: onClose,
-            child: const Icon(
-              Icons.close,
-              size: 16,
-              color: LoggerColors.fgSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
