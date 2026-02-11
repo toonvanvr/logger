@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/connection_manager.dart';
 import '../services/filter_service.dart';
+import '../theme/constants.dart';
 import '../services/log_store.dart';
 import '../services/selection_service.dart';
 import '../services/session_store.dart';
@@ -140,7 +141,7 @@ class LogViewerBody extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             child: GestureDetector(
               onTap: onSettingsClose,
-              child: const ColoredBox(color: Color(0x40000000)),
+              child: const ColoredBox(color: kScrimColor),
             ),
           ),
         ),

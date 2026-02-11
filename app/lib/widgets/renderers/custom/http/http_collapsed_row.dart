@@ -51,7 +51,7 @@ class HttpCollapsedRow extends StatelessWidget {
       child: Container(
         decoration: showErrorHint
             ? const BoxDecoration(
-                color: Color(0x15E06C60), // severityErrorBg
+                color: kErrorHintBg,
               )
             : null,
         child: Column(

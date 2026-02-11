@@ -35,7 +35,7 @@ class _OverflowButtonState extends State<OverflowButton> {
             child: GestureDetector(
               onTap: _removeOverlay,
               behavior: HitTestBehavior.opaque,
-              child: const ColoredBox(color: Color(0x00000000)),
+              child: const ColoredBox(color: Colors.transparent),
             ),
           ),
           Positioned(

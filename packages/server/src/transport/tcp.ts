@@ -85,5 +85,5 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
     },
   })
 
-  console.log(`TCP server listening on ${config.host}:${config.tcpPort}`)
+  try { deps.selfLogger.info(`TCP server listening on ${config.host}:${config.tcpPort}`) } catch { console.log(`TCP server listening on ${config.host}:${config.tcpPort}`) }
 }
