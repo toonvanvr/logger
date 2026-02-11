@@ -104,7 +104,7 @@ void main() {
       await tester.tap(find.text('GET'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Request Headers'), findsOneWidget);
+      expect(find.text('Request Headers (1)'), findsOneWidget);
       expect(find.text('Response Body'), findsOneWidget);
     });
 
