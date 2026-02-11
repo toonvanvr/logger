@@ -1,5 +1,5 @@
-/deploy/loki
-/deploy/grafana
+/infra/loki
+/infra/grafana
 
 .git
 .gitignore

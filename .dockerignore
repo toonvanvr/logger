@@ -16,8 +16,8 @@ app/build
 app/
 
 # Grafana/Loki configs are mounted, not COPYed
-deploy/grafana/
-deploy/loki/
+infra/grafana/
+infra/loki/
 
 # MCP tool
 packages/mcp/
