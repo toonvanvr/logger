@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../models/server_broadcast.dart';
 import '../models/viewer_message.dart';
 import '../services/connection_manager.dart';
+import '../services/filter_service.dart';
 import '../services/log_store.dart';
 import '../services/query_store.dart';
 import '../services/rpc_service.dart';

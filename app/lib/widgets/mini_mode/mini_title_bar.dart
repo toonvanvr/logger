@@ -10,15 +10,11 @@ import '../landing/landing_helpers.dart';
 ///
 /// Layout: App name (left) | Drag area (center) | Window control buttons (right).
 class MiniTitleBar extends StatelessWidget {
-  final VoidCallback? onFilterToggle;
   final VoidCallback? onSettingsToggle;
-  final bool isFilterExpanded;
 
   const MiniTitleBar({
     super.key,
-    this.onFilterToggle,
     this.onSettingsToggle,
-    this.isFilterExpanded = false,
   });
 
   @override
@@ -36,12 +32,6 @@ class MiniTitleBar extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           const Expanded(child: _DragArea()),
-          _MiniButton(
-            icon: Icons.filter_list,
-            tooltip: 'Toggle filters',
-            isActive: isFilterExpanded,
-            onTap: onFilterToggle,
-          ),
           _MiniButton(
             icon: Icons.settings,
             tooltip: 'Settings',

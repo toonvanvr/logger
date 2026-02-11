@@ -1,35 +1,20 @@
 part of 'log_viewer.dart';
 
-/// Default severity set used when clearing filters.
-const Set<String> _defaultSeverities = {
-  'debug',
-  'info',
-  'warning',
-  'error',
-  'critical',
-};
-
 /// UI/filter state and build helpers for the log viewer layout.
 mixin _ContentMixin
     on State<LogViewerScreen>, _SelectionMixin, _ConnectionMixin {
-  bool _isFilterExpanded = false;
-  Set<String> _activeSeverities = _defaultSeverities;
-  String _textFilter = '';
-  List<String> _stateFilterStack = [];
   String? _selectedSection;
   bool _settingsPanelVisible = false;
-  bool _flatMode = false;
   bool _landingDelayActive = true;
   Timer? _landingDelayTimer;
 
   void _setupQueryStore() {
     final queryStore = context.read<QueryStore>();
     queryStore.onQueryLoaded = (query) {
-      setState(() {
-        _activeSeverities = Set.from(query.severities);
-        _textFilter = query.textFilter;
-        _stateFilterStack = [];
-      });
+      context.read<FilterService>().loadQuery(
+        severities: Set.from(query.severities),
+        textFilter: query.textFilter,
+      );
     };
   }
 
@@ -37,86 +22,50 @@ mixin _ContentMixin
   void _handleLaunchUri() {
     final uri = widget.launchUri;
     if (uri == null) return;
+    final filterService = context.read<FilterService>();
     UriHandler.handleUri(
       uri,
       connectionManager: context.read<ConnectionManager>(),
-      onFilter: (query) => setState(() => _textFilter = query),
+      onFilter: (query) => filterService.setTextFilter(query),
       onTab: (name) => setState(() => _selectedSection = name),
-      onClear: () => setState(() {
-        _activeSeverities = _defaultSeverities;
-        _textFilter = '';
-        _stateFilterStack = [];
-      }),
+      onClear: () => filterService.clear(),
     );
-  }
-
-  /// Composes the effective filter from user text and state filter stack.
-  String get _effectiveFilter {
-    final parts = [
-      _textFilter,
-      ..._stateFilterStack.map((k) => 'state:$k'),
-    ].where((s) => s.isNotEmpty);
-    return parts.join(' ');
   }
 
   /// Toggles a state key in/out of the filter stack.
   void _toggleStateFilter(String stateKey) {
-    setState(() {
-      if (_stateFilterStack.contains(stateKey)) {
-        _stateFilterStack.remove(stateKey);
-      } else {
-        _stateFilterStack.add(stateKey);
-      }
-      _isFilterExpanded = true;
-    });
+    context.read<FilterService>().toggleStateFilter(stateKey);
   }
 
   /// Header bar: mini title bar or session selector.
   Widget _buildHeader(SettingsService settings) {
-    void toggleFilter() =>
-        setState(() => _isFilterExpanded = !_isFilterExpanded);
     void toggleSettings() =>
         setState(() => _settingsPanelVisible = !_settingsPanelVisible);
     if (settings.miniMode) {
       return MiniTitleBar(
-        isFilterExpanded: _isFilterExpanded,
-        onFilterToggle: toggleFilter,
         onSettingsToggle: toggleSettings,
       );
     }
     return SessionSelector(
-      isFilterExpanded: _isFilterExpanded,
-      onFilterToggle: toggleFilter,
       onRpcToggle: toggleSettings,
     );
   }
 
-  /// Animated filter bar.
+  /// Always-visible filter bar (hidden only in mini mode).
   Widget _buildFilterBar() {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 50),
-      curve: Curves.easeInOut,
-      alignment: Alignment.topCenter,
-      child: _isFilterExpanded
-          ? FilterBar(
-              activeSeverities: _activeSeverities,
-              onSeverityChange: (s) => setState(() => _activeSeverities = s),
-              onTextFilterChange: (t) => setState(() => _textFilter = t),
-              onClear: () {
-                setState(() {
-                  _activeSeverities = _defaultSeverities;
-                  _textFilter = '';
-                  _stateFilterStack = [];
-                });
-              },
-              activeStateFilters: _stateFilterStack.toSet(),
-              onStateFilterRemove: (key) {
-                _toggleStateFilter(key);
-              },
-              flatMode: _flatMode,
-              onFlatModeToggle: (v) => setState(() => _flatMode = v),
-            )
-          : const SizedBox.shrink(),
+    final settings = context.watch<SettingsService>();
+    if (settings.miniMode) return const SizedBox.shrink();
+
+    final filterService = context.watch<FilterService>();
+    return FilterBar(
+      activeSeverities: filterService.activeSeverities,
+      onSeverityChange: (s) => filterService.setSeverities(s),
+      onTextFilterChange: (t) => filterService.setTextFilter(t),
+      onClear: () => filterService.clear(),
+      activeStateFilters: filterService.activeStateFilters,
+      onStateFilterRemove: (key) => filterService.removeStateFilter(key),
+      flatMode: filterService.flatMode,
+      onFlatModeToggle: (v) => filterService.setFlatMode(v),
     );
   }
 
@@ -194,6 +143,7 @@ mixin _ContentMixin
   }
 
   Widget _buildMainContent(BuildContext context) {
+    final filterService = context.watch<FilterService>();
     return Column(
       key: const ValueKey('content'),
       children: [
@@ -219,7 +169,7 @@ mixin _ContentMixin
                 : filter;
             _toggleStateFilter(key);
           },
-          activeStateFilters: _stateFilterStack.toSet(),
+          activeStateFilters: filterService.activeStateFilters,
         ),
         Expanded(
           child: Builder(
@@ -229,8 +179,8 @@ mixin _ContentMixin
                   .selectedSessionIds;
               final logListView = LogListView(
                 tagFilter: _selectedSection,
-                activeSeverities: _activeSeverities,
-                textFilter: _effectiveFilter,
+                activeSeverities: filterService.activeSeverities,
+                textFilter: filterService.effectiveFilter,
                 selectedSessionIds: selectedSessions,
                 selectionMode: _selectionMode,
                 selectedEntryIds: _selectedEntryIds,
@@ -238,14 +188,8 @@ mixin _ContentMixin
                 onEntryRangeSelected: _onEntryRangeSelected,
                 bookmarkedEntryIds: _bookmarkedEntryIds,
                 stickyOverrideIds: _stickyOverrideIds,
-                flatMode: _flatMode,
-                onFilterClear: () {
-                  setState(() {
-                    _activeSeverities = _defaultSeverities;
-                    _textFilter = '';
-                    _stateFilterStack = [];
-                  });
-                },
+                flatMode: filterService.flatMode,
+                onFilterClear: () => filterService.clear(),
               );
               return Stack(
                 children: [

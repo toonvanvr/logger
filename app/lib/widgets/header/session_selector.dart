@@ -17,19 +17,11 @@ const _buttonMinWidth = 48.0;
 
 /// Compact header bar with session buttons and controls.
 class SessionSelector extends StatefulWidget {
-  /// Whether the filter bar below is expanded.
-  final bool isFilterExpanded;
-
-  /// Called when the filter toggle button is pressed.
-  final VoidCallback? onFilterToggle;
-
   /// Called when the RPC panel toggle button is pressed.
   final VoidCallback? onRpcToggle;
 
   const SessionSelector({
     super.key,
-    this.isFilterExpanded = false,
-    this.onFilterToggle,
     this.onRpcToggle,
   });
 
@@ -146,12 +138,6 @@ class _SessionSelectorState extends State<SessionSelector> {
                   );
                 },
               ),
-            ),
-            HeaderIconButton(
-              icon: Icons.filter_list,
-              tooltip: 'Toggle filters',
-              isActive: widget.isFilterExpanded,
-              onTap: widget.onFilterToggle,
             ),
             HeaderIconButton(
               icon: Icons.picture_in_picture_alt,
