@@ -5,6 +5,7 @@ import { WidgetPayload } from './widget.js'
 // ─── Enums & Sub-schemas ─────────────────────────────────────────────
 
 export const Severity = z.enum(['debug', 'info', 'warning', 'error', 'critical'])
+export type SeverityLevel = z.infer<typeof Severity>
 
 export const IconRef = z.object({
   icon: z.string(),

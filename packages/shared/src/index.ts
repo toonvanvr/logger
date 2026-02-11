@@ -15,7 +15,8 @@ export {
     IconRef,
     Severity,
     SourceLocation,
-    StackFrame
+    StackFrame,
+    type SeverityLevel
 } from './event-message.js'
 
 export {
