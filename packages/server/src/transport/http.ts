@@ -1,6 +1,7 @@
 import {
     SessionMessage,
 } from '@logger/shared'
+import { z } from 'zod'
 import { normalizeSession } from '../core/normalizer'
 import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-routes'
 import { ingest } from './ingest'
@@ -10,6 +11,27 @@ import type { ServerDeps } from './types'
 
 const MAX_UPLOAD_SIZE = 16 * 1024 * 1024 // 16 MB
 const startTime = Date.now()
+
+// ─── Zod Schemas ─────────────────────────────────────────────────────
+
+const QueryParams = z.object({
+  session_id: z.string().optional(),
+  sessionId: z.string().optional(),
+  severity: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  limit: z.coerce.number().int().positive().default(100),
+  text: z.string().optional(),
+  search: z.string().optional(),
+})
+
+const RpcParams = z.object({
+  session_id: z.string().optional(),
+  sessionId: z.string().optional(),
+  tool: z.string().optional(),
+  method: z.string().optional(),
+  args: z.unknown().optional(),
+})
 
 // ─── Auth Helper ─────────────────────────────────────────────────────
 
@@ -213,22 +235,25 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
 
-        let body: Record<string, unknown>
-        try { body = await req.json() as Record<string, unknown> } catch {
+        let body: unknown
+        try { body = await req.json() } catch {
           return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
         }
 
-        const sessionId = (body.session_id ?? body.sessionId) as string | undefined
-        const severity = body.severity as string | undefined
-        const from = body.from as string | undefined
-        const to = body.to as string | undefined
-        const limit = (body.limit as number) ?? 100
+        const parsed = QueryParams.safeParse(body)
+        if (!parsed.success) {
+          const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+          return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
+        }
 
-        const result = ringBuffer.query({ sessionId, severity, from, to, limit })
+        const { session_id, sessionId, severity, from, to, limit, text, search } = parsed.data
+        const effectiveSessionId = session_id ?? sessionId
 
-        const text = (body.text ?? body.search) as string | undefined
-        if (text) {
-          const lower = text.toLowerCase()
+        const result = ringBuffer.query({ sessionId: effectiveSessionId, severity, from, to, limit })
+
+        const textFilter = text ?? search
+        if (textFilter) {
+          const lower = textFilter.toLowerCase()
           result.entries = result.entries.filter((e) =>
             e.message?.toLowerCase().includes(lower) || e.tag?.toLowerCase().includes(lower),
           )
@@ -245,14 +270,20 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
 
-        let body: Record<string, unknown>
-        try { body = await req.json() as Record<string, unknown> } catch {
+        let body: unknown
+        try { body = await req.json() } catch {
           return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
         }
 
-        const sessionId = (body.session_id ?? body.sessionId) as string | undefined
-        const method = (body.tool ?? body.method) as string | undefined
-        const args = body.args
+        const parsed = RpcParams.safeParse(body)
+        if (!parsed.success) {
+          const msg = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+          return Response.json({ ok: false, error: 'validation_error', message: msg }, { status: 400 })
+        }
+
+        const sessionId = parsed.data.session_id ?? parsed.data.sessionId
+        const method = parsed.data.tool ?? parsed.data.method
+        const args = parsed.data.args
 
         if (!sessionId || !method) {
           return Response.json(
@@ -262,10 +293,16 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
         }
 
         const rpcId = crypto.randomUUID()
+        const RPC_TIMEOUT_MS = 30_000
 
         return new Promise<Response>((resolve) => {
+          const timer = setTimeout(() => {
+            resolve(Response.json({ ok: false, error: 'RPC timeout' }, { status: 504 }))
+          }, RPC_TIMEOUT_MS)
+
           const mockWs = {
             send(data: string) {
+              clearTimeout(timer)
               const msg = JSON.parse(data)
               if (msg.rpc_error) {
                 resolve(Response.json({ ok: false, rpc_id: rpcId, error: msg.rpc_error }, { status: 502 }))
