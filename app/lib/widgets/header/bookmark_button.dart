@@ -20,22 +20,23 @@ class BookmarkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final queryStore = context.watch<QueryStore>();
-    final hasSaved = queryStore.queries.isNotEmpty;
+    final hasQueries = context.select<QueryStore, bool>(
+      (s) => s.queries.isNotEmpty,
+    );
 
     return PopupMenuButton<BookmarkAction>(
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       tooltip: 'Saved queries',
       icon: Icon(
-        hasSaved ? Icons.bookmark : Icons.bookmark_border,
+        hasQueries ? Icons.bookmark : Icons.bookmark_border,
         size: 16,
         color: LoggerColors.fgMuted,
       ),
       iconSize: 16,
       color: LoggerColors.bgOverlay,
       onSelected: (action) => _handleAction(context, action),
-      itemBuilder: (context) => _buildMenuItems(queryStore),
+      itemBuilder: (_) => _buildMenuItems(context.read<QueryStore>()),
     );
   }
 

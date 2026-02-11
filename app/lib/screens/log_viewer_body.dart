@@ -47,34 +47,34 @@ class LogViewerBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsService>();
+    final miniMode = context.select<SettingsService, bool>((s) => s.miniMode);
     return Scaffold(
       body: Stack(
         children: [
           Column(
             children: [
-              _buildHeader(settings),
+              _buildHeader(miniMode),
               _buildFilterBar(context),
               _buildContentArea(context),
               const StatusBar(),
             ],
           ),
-          ..._buildSettingsOverlay(settings),
+          ..._buildSettingsOverlay(miniMode),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(SettingsService settings) {
-    if (settings.miniMode) {
+  Widget _buildHeader(bool miniMode) {
+    if (miniMode) {
       return MiniTitleBar(onSettingsToggle: onSettingsToggle);
     }
     return SessionSelector(onRpcToggle: onSettingsToggle);
   }
 
   Widget _buildFilterBar(BuildContext context) {
-    final settings = context.watch<SettingsService>();
-    if (settings.miniMode) return const SizedBox.shrink();
+    final miniMode = context.select<SettingsService, bool>((s) => s.miniMode);
+    if (miniMode) return const SizedBox.shrink();
 
     final filterService = context.watch<FilterService>();
     return FilterBar(
@@ -126,8 +126,8 @@ class LogViewerBody extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildSettingsOverlay(SettingsService settings) {
-    final top = settings.miniMode ? 28.0 : 40.0;
+  List<Widget> _buildSettingsOverlay(bool miniMode) {
+    final top = miniMode ? 28.0 : 40.0;
     return [
       Positioned(
         left: 0,

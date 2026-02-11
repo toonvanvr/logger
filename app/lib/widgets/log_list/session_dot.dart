@@ -12,9 +12,9 @@ class SessionDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionStore = context.watch<SessionStore>();
-    final session = sessionStore.getSession(sessionId);
-    final colorIndex = session?.colorIndex ?? 0;
+    final colorIndex = context.select<SessionStore, int>(
+      (s) => s.getSession(sessionId)?.colorIndex ?? 0,
+    );
     final color =
         LoggerColors.sessionPool[colorIndex % LoggerColors.sessionPool.length];
 
