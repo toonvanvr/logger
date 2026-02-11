@@ -151,7 +151,7 @@ describe('WebSocketHub', () => {
       type: 'subscribe',
       session_ids: ['sess-x', 'sess-y'],
       min_severity: 'error',
-      sections: ['network'],
+      tags: ['network'],
       text_filter: 'timeout',
     }
 

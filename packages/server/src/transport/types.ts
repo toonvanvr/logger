@@ -10,6 +10,13 @@ import type { WebSocketHub } from '../modules/ws-hub'
 import type { LogStoreReader } from '../store/log-store-reader'
 import type { LogStoreWriter } from '../store/log-store-writer'
 
+// ─── Shared Types ────────────────────────────────────────────────────
+
+export interface WsData {
+  role: 'client' | 'viewer'
+  sessionId?: string
+}
+
 export interface ServerConfig {
   host: string
   port: number
@@ -30,6 +37,6 @@ export interface ServerDeps {
   fileStore: FileStore
   rpcBridge: RpcBridge
   selfLogger: SelfLogger
-  storeWriter?: LogStoreWriter
-  storeReader?: LogStoreReader
+  storeWriter: LogStoreWriter
+  storeReader: LogStoreReader
 }

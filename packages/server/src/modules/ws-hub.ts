@@ -1,17 +1,12 @@
-import type { ServerBroadcast } from '@logger/shared';
+import { ViewerCommand, type ServerBroadcast, type SeverityLevel } from '@logger/shared';
 import type { ServerWebSocket } from 'bun';
-import type { WsData } from '../transport/ws';
+import type { WsData } from '../transport/types';
 
-// ─── Types ───────────────────────────────────────────────────────────
-
-/** Inbound message from viewer WebSocket clients. */
-type ViewerMessage = { type: string;[key: string]: unknown }
-
-type Severity = string
+// ─── Types ───────────────────────────────────────────────────────────────
 
 export interface ViewerSubscription {
   sessionIds: string[]
-  minSeverity?: Severity
+  minSeverity?: SeverityLevel
   sections?: string[]
   textFilter?: string
 }
@@ -107,13 +102,20 @@ export class WebSocketHub {
   }
 
   /** Process an incoming viewer message (subscribe/unsubscribe). */
-  handleViewerMessage(ws: ServerWebSocket<WsData>, message: ViewerMessage): void {
+  handleViewerMessage(ws: ServerWebSocket<WsData>, raw: unknown): void {
+    const parsed = ViewerCommand.safeParse(raw)
+    if (!parsed.success) {
+      console.warn('[WsHub] Invalid viewer message:', parsed.error.message)
+      return
+    }
+    const message = parsed.data
+
     switch (message.type) {
       case 'subscribe': {
         this.setSubscription(ws, {
           sessionIds: message.session_ids ?? [],
           minSeverity: message.min_severity,
-          sections: message.sections,
+          sections: message.tags,
           textFilter: message.text_filter,
         })
         break
@@ -122,7 +124,7 @@ export class WebSocketHub {
         this.setSubscription(ws, { sessionIds: [] })
         break
       }
-      // Other message types (history_query, rpc_request, etc.) are handled
+      // Other message types (history, rpc_request, etc.) are handled
       // by other modules; this hub only processes subscription management.
     }
   }

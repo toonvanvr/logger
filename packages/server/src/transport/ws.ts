@@ -7,14 +7,11 @@ import {
 import type { ServerWebSocket } from 'bun'
 import { normalizeData, normalizeEvent, normalizeSession } from '../core/normalizer'
 import { ingest } from './ingest'
-import type { ServerDeps } from './types'
+import type { ServerDeps, WsData } from './types'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-export interface WsData {
-  role: 'client' | 'viewer'
-  sessionId?: string
-}
+export { type WsData } from './types'
 
 /** Map a session object to the wire format matching the Zod SessionInfo schema. */
 function sessionToWire(s: { sessionId: string; application: unknown; startedAt: string; lastHeartbeat: string; isActive: boolean; logCount: number; colorIndex: number }) {
