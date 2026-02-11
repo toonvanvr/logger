@@ -1,53 +1,75 @@
-// TODO(zod-config): migrate to z.object() for validation — would give type-safe parsing and clear error messages on invalid env vars
-function safeInt(env: string | undefined, fallback: number): number {
-  if (!env) return fallback
-  const val = parseInt(env, 10)
-  return isNaN(val) ? fallback : val
-}
+import { z } from 'zod'
 
-function safeFloat(env: string | undefined, fallback: number): number {
-  if (!env) return fallback
-  const val = parseFloat(env)
-  return isNaN(val) ? fallback : val
-}
+const envInt = (fallback: number) =>
+  z.coerce.number().int().default(fallback)
 
-export const config = {
+const envFloat = (fallback: number) =>
+  z.coerce.number().default(fallback)
+
+export const ConfigSchema = z.object({
   // Server
-  host: process.env.LOGGER_BIND_ADDRESS ?? '127.0.0.1',
-  port: safeInt(process.env.LOGGER_PORT, 8080),
-  udpPort: safeInt(process.env.LOGGER_UDP_PORT, 8081),
-  tcpPort: safeInt(process.env.LOGGER_TCP_PORT, 8082),
+  host: z.string().default('127.0.0.1').describe('Bind address'),
+  port: envInt(8080).describe('HTTP API port'),
+  udpPort: envInt(8081).describe('UDP ingest port'),
+  tcpPort: envInt(8082).describe('TCP/WebSocket port'),
 
   // Ring Buffer
-  ringBufferMaxEntries: safeInt(process.env.LOGGER_BUFFER_MAX_ENTRIES, 1000000),
-  ringBufferMaxBytes: safeInt(process.env.LOGGER_BUFFER_MAX_BYTES, 256 * 1024 * 1024),
+  ringBufferMaxEntries: envInt(1000000).describe('Max entries in ring buffer'),
+  ringBufferMaxBytes: envInt(256 * 1024 * 1024).describe('Max bytes in ring buffer'),
 
   // Rate Limiting
-  rateLimitGlobal: safeInt(process.env.LOGGER_RATE_LIMIT_GLOBAL, 10000),
-  rateLimitPerSession: safeInt(process.env.LOGGER_RATE_LIMIT_SESSION, 1000),
-  rateLimitBurstMultiplier: safeFloat(process.env.LOGGER_RATE_LIMIT_BURST, 2),
+  rateLimitGlobal: envInt(10000).describe('Global rate limit (entries/sec)'),
+  rateLimitPerSession: envInt(1000).describe('Per-session rate limit (entries/sec)'),
+  rateLimitBurstMultiplier: envFloat(2).describe('Burst multiplier for rate limiting'),
 
   // Loki
-  lokiUrl: process.env.LOGGER_LOKI_URL ?? process.env.LOKI_URL /* deprecated */ ?? 'http://localhost:3100',
-  lokiBatchSize: safeInt(process.env.LOGGER_LOKI_BATCH_SIZE, 100),
-  lokiFlushInterval: safeInt(process.env.LOGGER_LOKI_FLUSH_MS, 1000),
-  lokiMaxBuffer: safeInt(process.env.LOGGER_LOKI_MAX_BUFFER, 10000),
-  lokiRetries: safeInt(process.env.LOGGER_LOKI_RETRIES, 3),
+  lokiUrl: z.string().default(process.env.LOKI_URL ?? 'http://localhost:3100').describe('Loki push API URL'),
+  lokiBatchSize: envInt(100).describe('Loki batch size'),
+  lokiFlushInterval: envInt(1000).describe('Loki flush interval (ms)'),
+  lokiMaxBuffer: envInt(10000).describe('Loki max buffer size'),
+  lokiRetries: envInt(3).describe('Loki retry count'),
 
   // Security
-  apiKey: process.env.LOGGER_API_KEY ?? null,
-  maxTimestampSkew: safeInt(process.env.LOGGER_MAX_TIMESTAMP_SKEW_MS, 24 * 60 * 60 * 1000),
+  apiKey: z.string().nullable().default(null).describe('API key for authentication'),
+  maxTimestampSkew: envInt(24 * 60 * 60 * 1000).describe('Max timestamp skew (ms)'),
 
   // Environment
-  environment: process.env.LOGGER_ENVIRONMENT ?? 'dev',
+  environment: z.string().default('dev').describe('Environment name'),
 
   // Images
-  imageStorePath: process.env.LOGGER_IMAGE_STORE_PATH ?? '/tmp/logger-images',
-  imageStoreMaxBytes: safeInt(process.env.LOGGER_IMAGE_STORE_MAX_BYTES, 2 * 1024 * 1024 * 1024),
+  imageStorePath: z.string().default('/tmp/logger-images').describe('Image store directory path'),
+  imageStoreMaxBytes: envInt(2 * 1024 * 1024 * 1024).describe('Image store max bytes'),
 
   // Store
-  storeBackend: (process.env.LOGGER_STORE_BACKEND ?? 'memory') as 'loki' | 'memory',
+  storeBackend: z.enum(['loki', 'memory']).default('memory').describe('Storage backend'),
 
   // Hooks
-  hookRedactPatterns: (process.env.LOGGER_HOOK_REDACT_PATTERNS ?? '').split(',').filter(Boolean),
-} as const;
+  hookRedactPatterns: z.string().default('').transform(s => s.split(',').filter(Boolean)).describe('Comma-separated redaction patterns'),
+})
+
+const envSource = {
+  host: process.env.LOGGER_BIND_ADDRESS,
+  port: process.env.LOGGER_PORT,
+  udpPort: process.env.LOGGER_UDP_PORT,
+  tcpPort: process.env.LOGGER_TCP_PORT,
+  ringBufferMaxEntries: process.env.LOGGER_BUFFER_MAX_ENTRIES,
+  ringBufferMaxBytes: process.env.LOGGER_BUFFER_MAX_BYTES,
+  rateLimitGlobal: process.env.LOGGER_RATE_LIMIT_GLOBAL,
+  rateLimitPerSession: process.env.LOGGER_RATE_LIMIT_SESSION,
+  rateLimitBurstMultiplier: process.env.LOGGER_RATE_LIMIT_BURST,
+  lokiUrl: process.env.LOGGER_LOKI_URL,
+  lokiBatchSize: process.env.LOGGER_LOKI_BATCH_SIZE,
+  lokiFlushInterval: process.env.LOGGER_LOKI_FLUSH_MS,
+  lokiMaxBuffer: process.env.LOGGER_LOKI_MAX_BUFFER,
+  lokiRetries: process.env.LOGGER_LOKI_RETRIES,
+  apiKey: process.env.LOGGER_API_KEY,
+  maxTimestampSkew: process.env.LOGGER_MAX_TIMESTAMP_SKEW_MS,
+  environment: process.env.LOGGER_ENVIRONMENT,
+  imageStorePath: process.env.LOGGER_IMAGE_STORE_PATH,
+  imageStoreMaxBytes: process.env.LOGGER_IMAGE_STORE_MAX_BYTES,
+  storeBackend: process.env.LOGGER_STORE_BACKEND,
+  hookRedactPatterns: process.env.LOGGER_HOOK_REDACT_PATTERNS,
+}
+
+export const config = ConfigSchema.parse(envSource)
+export type Config = z.infer<typeof ConfigSchema>
