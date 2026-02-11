@@ -1,11 +1,11 @@
 import 'package:app/models/log_entry.dart';
 import 'package:app/plugins/builtin/http_filter_plugin.dart';
 import 'package:app/plugins/builtin/http_request_plugin.dart';
+import 'package:app/theme/theme.dart';
 import 'package:app/widgets/renderers/custom/http/http_collapsed_row.dart';
 import 'package:app/widgets/renderers/custom/http/http_timing_bar.dart';
 import 'package:app/widgets/renderers/custom/http/http_utils.dart';
 import 'package:app/widgets/renderers/custom/http_request_renderer.dart';
-import 'package:app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -145,10 +145,7 @@ void main() {
     });
 
     testWidgets('preview includes PENDING for null status', (tester) async {
-      final data = {
-        'method': 'POST',
-        'url': '/api/orders',
-      };
+      final data = {'method': 'POST', 'url': '/api/orders'};
       final preview = plugin.buildPreview(data);
       expect(preview, isA<Text>());
     });
@@ -464,9 +461,7 @@ void main() {
     testWidgets('renders error state for invalid data', (tester) async {
       final entry = makeTestEntry(kind: EntryKind.event);
 
-      await tester.pumpWidget(
-        _wrap(HttpRequestRenderer(entry: entry)),
-      );
+      await tester.pumpWidget(_wrap(HttpRequestRenderer(entry: entry)));
 
       expect(find.text('[http_request: invalid data]'), findsOneWidget);
     });
@@ -527,8 +522,7 @@ void main() {
       expect(find.text('Request Headers (1)'), findsNothing);
     });
 
-    testWidgets('renders timing bar when duration_ms present',
-        (tester) async {
+    testWidgets('renders timing bar when duration_ms present', (tester) async {
       await tester.pumpWidget(
         _wrap(
           HttpRequestRenderer(
@@ -572,9 +566,7 @@ void main() {
     testWidgets('renders 500 status', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          HttpRequestRenderer(
-            entry: _httpEntry(status: 500, durationMs: 1200),
-          ),
+          HttpRequestRenderer(entry: _httpEntry(status: 500, durationMs: 1200)),
         ),
       );
 
@@ -625,10 +617,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           HttpCollapsedRow(
-            data: const {
-              'method': 'GET',
-              'url': '/api/health',
-            },
+            data: const {'method': 'GET', 'url': '/api/health'},
             expanded: false,
             onToggle: () {},
           ),
@@ -664,9 +653,7 @@ void main() {
 
   group('HttpTimingBar', () {
     testWidgets('renders single bar without ttfb', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const HttpTimingBar(durationMs: 200)),
-      );
+      await tester.pumpWidget(_wrap(const HttpTimingBar(durationMs: 200)));
 
       expect(find.text('200ms'), findsOneWidget);
     });
@@ -684,9 +671,7 @@ void main() {
     });
 
     testWidgets('renders nothing for null duration', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const HttpTimingBar()),
-      );
+      await tester.pumpWidget(_wrap(const HttpTimingBar()));
 
       expect(find.byType(HttpTimingBar), findsOneWidget);
       // SizedBox.shrink renders but has no children
@@ -694,9 +679,7 @@ void main() {
     });
 
     testWidgets('renders nothing for zero duration', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const HttpTimingBar(durationMs: 0)),
-      );
+      await tester.pumpWidget(_wrap(const HttpTimingBar(durationMs: 0)));
 
       expect(find.text('0ms'), findsNothing);
     });

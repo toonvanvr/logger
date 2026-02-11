@@ -106,9 +106,7 @@ class HttpCollapsedRow extends StatelessWidget {
                     child: Text(
                       _formatDuration(durationMs),
                       textAlign: TextAlign.right,
-                      style: LoggerTypography.logMeta.copyWith(
-                        color: dColor,
-                      ),
+                      style: LoggerTypography.logMeta.copyWith(color: dColor),
                     ),
                   ),
                 ],
@@ -140,8 +138,9 @@ class HttpCollapsedRow extends StatelessWidget {
 
   Widget _buildErrorHint(String responseBody) {
     final firstLine = responseBody.split('\n').first;
-    final truncated =
-        firstLine.length > 120 ? '${firstLine.substring(0, 120)}…' : firstLine;
+    final truncated = firstLine.length > 120
+        ? '${firstLine.substring(0, 120)}…'
+        : firstLine;
 
     return Padding(
       padding: const EdgeInsets.only(left: 18, bottom: 2),
