@@ -153,7 +153,7 @@ class _LogRowContentState extends State<LogRowContent> {
         content,
         if (widget.isHovered)
           Positioned(
-            right: 0,
+            right: widget.stackDepth > 1 ? 40 : 0,
             top: 0,
             bottom: 0,
             child: SelectionContainer.disabled(
