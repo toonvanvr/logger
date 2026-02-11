@@ -1,13 +1,13 @@
 import { LoggerBase } from './logger-base.js'
 import type { Severity } from './logger-builders.js'
 import {
-  buildBinaryEntry,
-  buildCustomEntry,
-  buildHtmlEntry,
-  buildHttpEntry,
-  buildImageEntry,
-  buildJsonEntry,
-  buildStateEntry,
+    buildBinaryEntry,
+    buildCustomEntry,
+    buildHtmlEntry,
+    buildHttpEntry,
+    buildImageEntry,
+    buildJsonEntry,
+    buildStateEntry,
 } from './logger-builders.js'
 import type { LoggerOptions } from './logger-types.js'
 

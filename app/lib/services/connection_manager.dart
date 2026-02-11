@@ -5,8 +5,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../models/server_connection.dart';
 import '../models/server_broadcast.dart';
+import '../models/server_connection.dart';
 import '../models/viewer_message.dart';
 
 part 'connection_reconnect.dart';

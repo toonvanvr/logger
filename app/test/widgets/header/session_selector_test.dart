@@ -19,9 +19,7 @@ SessionInfo _makeSession(String id, String name, int colorIndex) {
   );
 }
 
-Widget _buildTestWidget({
-  SessionStore? sessionStore,
-}) {
+Widget _buildTestWidget({SessionStore? sessionStore}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<SessionStore>(

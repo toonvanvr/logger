@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// Loads a JSON fixture from packages/shared/test/fixtures/.
 Map<String, dynamic> loadFixture(String name) {
   // Flutter test cwd is app/
-  final file = File('${Directory.current.path}/../packages/shared/test/fixtures/$name');
+  final file = File(
+    '${Directory.current.path}/../packages/shared/test/fixtures/$name',
+  );
   return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
 }
 

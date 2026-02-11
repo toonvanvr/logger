@@ -68,9 +68,7 @@ sealed class ServerBroadcast {
                 method: json['method'] as String,
                 args: json['args'],
               )
-            : ErrorMessage(
-                message: 'rpc_request missing rpc_id or method',
-              ),
+            : ErrorMessage(message: 'rpc_request missing rpc_id or method'),
       'rpc_response' =>
         json['rpc_id'] != null
             ? RpcResponseMessage(
@@ -88,7 +86,7 @@ sealed class ServerBroadcast {
       ),
       'session_update' => SessionUpdateMessage(
         sessionId: json['session_id'] as String?,
-        sessionAction: parseSessionAction(json['action'] as String?),          
+        sessionAction: parseSessionAction(json['action'] as String?),
         application: json['application'] != null
             ? ApplicationInfo.fromJson(
                 json['application'] as Map<String, dynamic>,

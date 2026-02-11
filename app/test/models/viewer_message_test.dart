@@ -70,24 +70,21 @@ void main() {
 
     // ── Test 4: rpc_request with all fields ──
 
-    test(
-      'rpc_request toJson with targetSessionId, rpcId, method, args',
-      () {
-        const msg = ViewerRpcRequestMessage(
-          targetSessionId: 'sess-1',
-          rpcId: 'rpc-1',
-          method: 'getState',
-          args: {'key': 'theme'},
-        );
-        final json = msg.toJson();
+    test('rpc_request toJson with targetSessionId, rpcId, method, args', () {
+      const msg = ViewerRpcRequestMessage(
+        targetSessionId: 'sess-1',
+        rpcId: 'rpc-1',
+        method: 'getState',
+        args: {'key': 'theme'},
+      );
+      final json = msg.toJson();
 
-        expect(json['type'], 'rpc_request');
-        expect(json['target_session_id'], 'sess-1');
-        expect(json['rpc_id'], 'rpc-1');
-        expect(json['method'], 'getState');
-        expect(json['args'], {'key': 'theme'});
-      },
-    );
+      expect(json['type'], 'rpc_request');
+      expect(json['target_session_id'], 'sess-1');
+      expect(json['rpc_id'], 'rpc-1');
+      expect(json['method'], 'getState');
+      expect(json['args'], {'key': 'theme'});
+    });
 
     // ── Test 5: session_list toJson ──
 

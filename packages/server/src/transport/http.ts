@@ -1,5 +1,5 @@
 import {
-  SessionMessage,
+    SessionMessage,
 } from '@logger/shared'
 import { normalizeSession } from '../core/normalizer'
 import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-routes'

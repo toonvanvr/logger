@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import {
-  createTestServer,
-  makeSessionMessage,
-  makeValidEvent,
-  type TestServerInstance,
+    createTestServer,
+    makeSessionMessage,
+    makeValidEvent,
+    type TestServerInstance,
 } from '../test-utils'
 
 // ─── Test Server Setup ───────────────────────────────────────────────

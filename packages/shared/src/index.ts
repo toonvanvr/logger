@@ -15,13 +15,13 @@ export {
     IconRef,
     Severity,
     SourceLocation,
-    StackFrame,
+    StackFrame
 } from './event-message.js'
 
 export {
     DataMessage,
     DisplayLocation,
-    WidgetConfig,
+    WidgetConfig
 } from './data-message.js'
 
 export {
