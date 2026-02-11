@@ -89,6 +89,9 @@ export function createTestServer(overrides?: TestServerOverrides): TestServerIns
     lokiForwarder: new MockLokiForwarder() as any,
     fileStore: new MockFileStore() as any,
     rpcBridge: new RpcBridge(),
+    selfLogger: { info() {}, warn() {}, error() {} } as any,
+    storeWriter: { push() {}, flush() {}, shutdown() {} } as any,
+    storeReader: { query() { return { entries: [], cursor: null } } } as any,
   }
 
   const ws = setupWebSocket(deps)

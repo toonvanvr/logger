@@ -23,6 +23,10 @@ class MockFileStore {
   getUsage() { return { totalBytes: 0, fileCount: 0 } }
 }
 
+const mockSelfLogger = { info() {}, warn() {}, error() {} } as any
+const mockStoreWriter = { push() {}, flush() {}, shutdown() {} } as any
+const mockStoreReader = { query() { return { entries: [], cursor: null } } } as any
+
 function createTestDeps(): ServerDeps {
   return {
     config: { host: '127.0.0.1', port: 0, udpPort: 0, tcpPort: 0, apiKey: null, environment: 'test' },
@@ -34,6 +38,9 @@ function createTestDeps(): ServerDeps {
     lokiForwarder: new MockLokiForwarder() as any,
     fileStore: new MockFileStore() as any,
     rpcBridge: new RpcBridge(),
+    selfLogger: mockSelfLogger,
+    storeWriter: mockStoreWriter,
+    storeReader: mockStoreReader,
   }
 }
 
