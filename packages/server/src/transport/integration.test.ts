@@ -4,7 +4,7 @@ import {
   makeSessionMessage,
   makeValidEvent,
   type TestServerInstance,
-} from './test-utils'
+} from '../test-utils'
 
 // ─── Test Server Setup ───────────────────────────────────────────────
 

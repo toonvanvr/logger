@@ -170,7 +170,7 @@ Access at http://localhost:3000 (default credentials: admin/admin).
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `LOKI_URL` | `http://loki:3100` | Loki push endpoint |
+| `LOGGER_LOKI_URL` | `http://loki:3100` | Loki push endpoint (fallback: `LOKI_URL`) |
 | `LOGGER_BIND_ADDRESS` | `0.0.0.0` | Server bind address |
 | `LOGGER_ENVIRONMENT` | `dev` | Environment label |
 | `DEFAULT_SERVER_PORT` | `8080` | HTTP/API port |

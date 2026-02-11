@@ -2,7 +2,7 @@ import {
   SessionMessage,
 } from '@logger/shared'
 import { normalizeSession } from '../core/normalizer'
-import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-handlers'
+import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-routes'
 import { ingest } from './ingest'
 import type { ServerDeps } from './types'
 

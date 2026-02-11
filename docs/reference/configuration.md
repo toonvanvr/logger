@@ -37,7 +37,7 @@ Controls the async batch forwarding of logs to Grafana Loki.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOKI_URL` | `http://localhost:3100` | Loki push API endpoint. Use `http://loki:3100` in Docker. |
+| `LOGGER_LOKI_URL` | `http://localhost:3100` | Loki push API endpoint. Use `http://loki:3100` in Docker. Fallback: `LOKI_URL` (deprecated). |
 | `LOGGER_LOKI_BATCH_SIZE` | `100` | Number of entries per Loki push request. |
 | `LOGGER_LOKI_FLUSH_MS` | `1000` | Maximum time (ms) between Loki flushes. |
 | `LOGGER_LOKI_MAX_BUFFER` | `10000` | Maximum entries buffered before dropping. |
@@ -75,7 +75,7 @@ The `compose.yml` sets these for the containerized server:
 
 ```yaml
 environment:
-  - LOKI_URL=http://loki:3100
+  - LOGGER_LOKI_URL=http://loki:3100
   - LOGGER_BIND_ADDRESS=0.0.0.0
   - LOGGER_ENVIRONMENT=dev
 ```

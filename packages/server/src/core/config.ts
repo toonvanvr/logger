@@ -28,7 +28,7 @@ export const config = {
   rateLimitBurstMultiplier: safeFloat(process.env.LOGGER_RATE_LIMIT_BURST, 2),
 
   // Loki
-  lokiUrl: process.env.LOKI_URL ?? 'http://localhost:3100',
+  lokiUrl: process.env.LOGGER_LOKI_URL ?? process.env.LOKI_URL /* deprecated */ ?? 'http://localhost:3100',
   lokiBatchSize: safeInt(process.env.LOGGER_LOKI_BATCH_SIZE, 100),
   lokiFlushInterval: safeInt(process.env.LOGGER_LOKI_FLUSH_MS, 1000),
   lokiMaxBuffer: safeInt(process.env.LOGGER_LOKI_MAX_BUFFER, 10000),

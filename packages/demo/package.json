@@ -1,5 +1,5 @@
 {
-  "name": "demo",
+  "name": "@logger/demo",
   "private": true,
   "scripts": {
     "dev": "bun run --watch src/main.ts"

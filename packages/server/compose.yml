@@ -8,7 +8,7 @@ services:
       - "8081:8081/udp"
       - "8082:8082"
     environment:
-      - LOKI_URL=http://loki:3100
+      - LOGGER_LOKI_URL=http://loki:3100
       - LOGGER_BIND_ADDRESS=0.0.0.0
       - LOGGER_ENVIRONMENT=dev
     volumes:

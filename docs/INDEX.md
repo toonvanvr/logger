@@ -725,7 +725,7 @@ All server configuration via environment variables. Server reads from `packages/
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOKI_URL` | `http://localhost:3100` | Loki push API endpoint |
+| `LOGGER_LOKI_URL` | `http://localhost:3100` | Loki push API endpoint (fallback: `LOKI_URL`) |
 | `LOGGER_LOKI_BATCH_SIZE` | `100` | Entries per Loki push request |
 | `LOGGER_LOKI_FLUSH_MS` | `1000` | Max ms between flushes |
 | `LOGGER_LOKI_MAX_BUFFER` | `10000` | Max buffered entries before dropping |
@@ -755,7 +755,7 @@ All server configuration via environment variables. Server reads from `packages/
 
 ```yaml
 environment:
-  - LOKI_URL=http://loki:3100
+  - LOGGER_LOKI_URL=http://loki:3100
   - LOGGER_BIND_ADDRESS=0.0.0.0
   - LOGGER_ENVIRONMENT=dev
 ```
