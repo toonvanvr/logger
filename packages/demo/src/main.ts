@@ -10,6 +10,7 @@ import { runShowcase } from './scenarios/showcase'
 import { runStateTracking } from './scenarios/state-tracking'
 import { runSticky200 } from './scenarios/sticky-200'
 import { runStickyDemo } from './scenarios/sticky-demo'
+import { runHttpRequests } from './scenarios/http-requests'
 import { runStressTest } from './scenarios/stress-test'
 
 // HOW TO ADD A SCENARIO:
@@ -34,6 +35,7 @@ const scenarios: Record<string, () => Promise<void>> = {
   rpc: runRpcTools,
   sticky: runStickyDemo,
   'sticky-200': runSticky200,
+  http: runHttpRequests,
 }
 
 if (scenario === 'all') {

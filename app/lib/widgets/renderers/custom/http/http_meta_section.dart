@@ -64,9 +64,7 @@ class HttpMetaSection extends StatelessWidget {
   Widget _textItem(String text) {
     return Text(
       text,
-      style: LoggerTypography.logMeta.copyWith(
-        color: LoggerColors.fgSecondary,
-      ),
+      style: LoggerTypography.logMeta.copyWith(color: LoggerColors.fgSecondary),
     );
   }
 

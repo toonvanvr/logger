@@ -68,7 +68,7 @@ String _shellQuote(String s) => "'${s.replaceAll("'", "'\\''")}'";
 
 /// Parse a URL into decoded components.
 ({String? scheme, String? host, String path, Map<String, String> queryParams})
-    parseUrl(String url) {
+parseUrl(String url) {
   final uri = Uri.tryParse(url);
   if (uri == null) {
     return (scheme: null, host: null, path: url, queryParams: {});

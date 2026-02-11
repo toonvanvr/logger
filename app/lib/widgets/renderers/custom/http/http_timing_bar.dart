@@ -49,8 +49,9 @@ class HttpTimingBar extends StatelessWidget {
                           flex: ((1 - ttfbFraction) * 100).round(),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
-                            color: LoggerColors.syntaxKey
-                                .withValues(alpha: 0.30),
+                            color: LoggerColors.syntaxKey.withValues(
+                              alpha: 0.30,
+                            ),
                           ),
                         ),
                     ],

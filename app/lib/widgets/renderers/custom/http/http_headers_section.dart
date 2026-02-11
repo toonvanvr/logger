@@ -22,11 +22,7 @@ class HttpHeadersSection extends StatefulWidget {
   final String title;
   final Map<String, dynamic>? headers;
 
-  const HttpHeadersSection({
-    super.key,
-    required this.title,
-    this.headers,
-  });
+  const HttpHeadersSection({super.key, required this.title, this.headers});
 
   @override
   State<HttpHeadersSection> createState() => _HttpHeadersSectionState();
@@ -52,9 +48,7 @@ class _HttpHeadersSectionState extends State<HttpHeadersSection> {
       children: [
         Text(
           '${widget.title} ($count)',
-          style: LoggerTypography.logMeta.copyWith(
-            color: LoggerColors.fgMuted,
-          ),
+          style: LoggerTypography.logMeta.copyWith(color: LoggerColors.fgMuted),
         ),
         const SizedBox(height: 2),
         for (final entry in visible)
