@@ -144,7 +144,6 @@ export class FileStore {
       await this.delete(refId);
     }
 
-    // Remove the session directory
     const dir = join(this.storePath, sessionId);
     try {
       await rm(dir, { recursive: true });
@@ -169,7 +168,6 @@ export class FileStore {
   async enforceLimit(): Promise<void> {
     if (this.totalBytes <= this.maxBytes) return;
 
-    // Sort records by creation time ascending (oldest first)
     const sorted = Array.from(this.records.values()).sort(
       (a, b) => a.createdAt - b.createdAt,
     );

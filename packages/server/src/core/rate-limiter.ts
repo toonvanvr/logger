@@ -30,13 +30,11 @@ export class RateLimiter {
   tryConsume(sessionId: string): boolean {
     const now = Date.now();
 
-    // Refill and check global bucket
     this.refill(this.globalBucket, this.globalRate, now);
     if (this.globalBucket.tokens < 1) {
       return false;
     }
 
-    // Refill and check session bucket
     let session = this.sessionBuckets.get(sessionId);
     if (!session) {
       session = {
@@ -50,7 +48,6 @@ export class RateLimiter {
       return false;
     }
 
-    // Consume from both buckets
     this.globalBucket.tokens -= 1;
     session.tokens -= 1;
     return true;

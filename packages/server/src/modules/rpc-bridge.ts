@@ -64,14 +64,12 @@ export class RpcBridge {
   async handleRequest(request: RpcRequest): Promise<void> {
     const { rpcId, targetSessionId, method, args, viewerWs } = request
 
-    // Check if session has registered tools
     const sessionTools = this.tools.get(targetSessionId)
     if (!sessionTools) {
       this.sendErrorToViewer(viewerWs, rpcId, `Session "${targetSessionId}" not found`)
       return
     }
 
-    // Check if the requested method exists
     const tool = sessionTools.find((t) => t.name === method)
     if (!tool) {
       this.sendErrorToViewer(viewerWs, rpcId, `Unknown method "${method}" on session "${targetSessionId}"`)
@@ -83,7 +81,6 @@ export class RpcBridge {
       return
     }
 
-    // Create pending request with timeout
     return new Promise<void>((resolve) => {
       const timer = setTimeout(() => {
         this.pending.delete(rpcId)
@@ -93,7 +90,6 @@ export class RpcBridge {
 
       this.pending.set(rpcId, { viewerWs, timer, resolve })
 
-      // Forward request to client
       this.clientSender!(targetSessionId, {
         type: 'rpc_request',
         rpc_id: rpcId,

@@ -3,14 +3,12 @@
 // 2. Add re-exports below in the appropriate section
 // 3. Update protocol conformance fixtures if any
 
-// session-message.ts — Session lifecycle messages
 export {
     ApplicationInfo,
     SessionMessage,
     type ApplicationInfo as ApplicationInfoType
 } from './session-message.js'
 
-// event-message.ts — Structured log events
 export {
     EventMessage,
     ExceptionData,
@@ -20,39 +18,33 @@ export {
     StackFrame,
 } from './event-message.js'
 
-// data-message.ts — Key-value state updates
 export {
     DataMessage,
     DisplayLocation,
     WidgetConfig,
 } from './data-message.js'
 
-// widget.ts — Rich widget payload types
 export {
     TreeNodeSchema,
     WidgetPayload,
     type TreeNode
 } from './widget.js'
 
-// stored-entry.ts — Wire protocol (source of truth)
 export {
     EntryKind,
     StoredEntry
 } from './stored-entry.js'
 
-// server-broadcast.ts — Server → Viewer broadcast messages
 export {
     DataState,
     ServerBroadcast,
     SessionInfo
 } from './server-broadcast.js'
 
-// viewer-command.ts — Viewer → Server command messages
 export {
     ViewerCommand
 } from './viewer-command.js'
 
-// constants.ts — Shared size limits, network defaults, error codes
 export {
     DEFAULT_DATA_URL,
     DEFAULT_EVENTS_URL,

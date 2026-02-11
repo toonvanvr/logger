@@ -6,7 +6,6 @@ import type {
 } from '@logger/shared'
 
 // ─── Normalizer ──────────────────────────────────────────────────────
-// Converts input messages to unified StoredEntry.
 
 function now(): string {
   return new Date().toISOString()

@@ -55,7 +55,6 @@ export class RingBuffer {
   push(entry: StoredEntry): void {
     const size = estimateBytes(entry)
 
-    // Evict oldest entries if over capacity
     while (this.count > 0 && (this.count >= this.maxEntries || this.bytesUsed + size > this.maxBytes)) {
       this.evictOldest()
     }
@@ -67,7 +66,6 @@ export class RingBuffer {
     this.count++
     this.head = (this.head + 1) % this.maxEntries
 
-    // Update ID index
     this.indexId(entry.id, slot)
   }
 
@@ -96,7 +94,6 @@ export class RingBuffer {
     const startCursor = options.cursor ?? 0
     const results: StoredEntry[] = []
 
-    // Walk entries from oldest to newest
     let scanned = 0
     let skipped = 0
     let lastIndex = -1
@@ -106,13 +103,11 @@ export class RingBuffer {
       const entry = this.entries[slot]
       if (!entry) continue
 
-      // Apply cursor: skip entries before cursor position
       if (skipped < startCursor) {
         skipped++
         continue
       }
 
-      // Apply filters
       if (options.sessionId && entry.session_id !== options.sessionId) continue
       if (options.severity && entry.severity !== options.severity) continue
       if (options.from && entry.timestamp < options.from) continue

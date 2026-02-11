@@ -27,7 +27,6 @@ export function createStoreWriter(
     return new MemoryStoreWriter();
   }
 
-  // Default: loki
   return new LokiStoreWriter(deps.lokiForwarder);
 }
 
@@ -39,6 +38,5 @@ export function createStoreReader(
     return new MemoryStoreReader(deps.ringBuffer);
   }
 
-  // Default: loki
   return new LokiStoreReader({ lokiUrl: config.lokiUrl });
 }

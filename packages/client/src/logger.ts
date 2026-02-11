@@ -11,7 +11,6 @@ import {
 } from './logger-builders.js'
 import type { LoggerOptions } from './logger-types.js'
 
-// Re-export public types from their canonical location.
 export type { LoggerOptions, Middleware } from './logger-types.js'
 
 // ─── Logger ──────────────────────────────────────────────────────────

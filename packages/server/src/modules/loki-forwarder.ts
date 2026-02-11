@@ -98,6 +98,7 @@ export class LokiForwarder {
       streams: [{ stream: labels, values }],
     }
 
+    // Retry on both network errors and non-2xx responses (e.g. Loki 5xx) with exponential backoff
     for (let attempt = 0; attempt < this.cfg.retries; attempt++) {
       try {
         const res = await fetch(`${this.cfg.lokiUrl}/loki/api/v1/push`, {
