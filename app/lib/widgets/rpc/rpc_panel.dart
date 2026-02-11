@@ -85,8 +85,9 @@ class _PanelHeader extends StatelessWidget {
 class _ToolList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final rpcService = context.watch<RpcService>();
-    final toolsBySession = rpcService.tools;
+    final toolsBySession = context.select<RpcService, Map<String, List<RpcToolInfo>>>(
+      (s) => s.tools,
+    );
 
     if (toolsBySession.isEmpty) {
       return Center(

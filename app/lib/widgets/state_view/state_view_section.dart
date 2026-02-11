@@ -24,11 +24,12 @@ class StateViewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logStore = context.watch<LogStore>();
+    final state = context.select<LogStore, Map<String, dynamic>>(
+      (s) => s.mergedState,
+    );
     final isCollapsed = context.select<SettingsService, bool>(
       (s) => s.stateViewCollapsed,
     );
-    final state = logStore.mergedState;
 
     if (state.isEmpty) return const SizedBox.shrink();
 

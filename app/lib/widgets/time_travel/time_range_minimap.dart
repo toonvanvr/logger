@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/time_range_service.dart';
+import '../../services/time_range_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'minimap_painter.dart';
@@ -29,8 +30,22 @@ class _TimeRangeMinimapState extends State<TimeRangeMinimap>
     with _MinimapGestures {
   @override
   Widget build(BuildContext context) {
-    final service = context.watch<TimeRangeService>();
-    final buckets = service.buckets;
+    final service = context.read<TimeRangeService>();
+    final (buckets, maxCount, vpStart, vpEnd, isActive, sessStart, sessEnd) =
+        context.select<
+            TimeRangeService,
+            (List<BucketData>, int, double, double, bool, DateTime?,
+                DateTime?)>(
+      (s) => (
+        s.buckets,
+        s.maxBucketCount,
+        s.viewportStartNorm,
+        s.viewportEndNorm,
+        s.isActive,
+        s.sessionStart,
+        s.sessionEnd,
+      ),
+    );
 
     if (buckets.isEmpty) return const SizedBox.shrink();
 
@@ -61,10 +76,10 @@ class _TimeRangeMinimapState extends State<TimeRangeMinimap>
                   child: CustomPaint(
                     painter: MinimapPainter(
                       buckets: buckets,
-                      maxCount: service.maxBucketCount,
-                      vpStart: service.viewportStartNorm,
-                      vpEnd: service.viewportEndNorm,
-                      isActive: service.isActive,
+                      maxCount: maxCount,
+                      vpStart: vpStart,
+                      vpEnd: vpEnd,
+                      isActive: isActive,
                       leftHandleHovered: _leftHandleHovered,
                       rightHandleHovered: _rightHandleHovered,
                     ),

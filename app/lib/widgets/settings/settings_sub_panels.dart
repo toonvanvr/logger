@@ -16,7 +16,10 @@ class EditorSubPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsService>();
+    final (fileCmd, urlCmd) = context.select<SettingsService, (String, String)>(
+      (s) => (s.fileOpenCommand, s.urlOpenCommand),
+    );
+    final settings = context.read<SettingsService>();
     return Padding(
       key: const ValueKey('editor'),
       padding: const EdgeInsets.all(12),
@@ -31,7 +34,7 @@ class EditorSubPanel extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           SettingsTextField(
-            value: settings.fileOpenCommand,
+            value: fileCmd,
             onChanged: settings.setFileOpenCommand,
           ),
           const SizedBox(height: 8),
@@ -43,7 +46,7 @@ class EditorSubPanel extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           SettingsTextField(
-            value: settings.urlOpenCommand,
+            value: urlCmd,
             onChanged: settings.setUrlOpenCommand,
           ),
         ],
@@ -60,8 +63,9 @@ class RpcToolsSubPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rpcService = context.watch<RpcService>();
-    final toolsBySession = rpcService.tools;
+    final toolsBySession = context.select<RpcService, Map<String, List<RpcToolInfo>>>(
+      (s) => s.tools,
+    );
 
     if (toolsBySession.isEmpty) {
       return Padding(
