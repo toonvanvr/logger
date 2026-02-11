@@ -52,20 +52,17 @@ class HttpFilterPlugin extends FilterPlugin with EnableablePlugin {
 
     final expr = query.substring(5); // strip "http:"
 
-    // http:slow
     if (expr == 'slow') {
       final dur = (data['duration_ms'] as num?)?.toInt();
       return dur != null && dur >= 1000;
     }
 
-    // http:error
     if (expr == 'error') {
       final isError = data['is_error'] == true;
       final status = (data['status'] as num?)?.toInt();
       return isError || (status != null && status >= 400);
     }
 
-    // http:status=NNN or http:status=Nxx
     if (expr.startsWith('status=')) {
       final val = expr.substring(7);
       final status = (data['status'] as num?)?.toInt();
@@ -78,21 +75,18 @@ class HttpFilterPlugin extends FilterPlugin with EnableablePlugin {
       return status == int.tryParse(val);
     }
 
-    // http:method=GET
     if (expr.startsWith('method=')) {
       final val = expr.substring(7).toUpperCase();
       final method = (data['method'] as String?)?.toUpperCase();
       return method == val;
     }
 
-    // http:url~pattern
     if (expr.startsWith('url~')) {
       final pattern = expr.substring(4).toLowerCase();
       final url = (data['url'] as String?)?.toLowerCase();
       return url != null && url.contains(pattern);
     }
 
-    // http:request_id=abc
     if (expr.startsWith('request_id=')) {
       final val = expr.substring(11);
       return data['request_id'] == val;

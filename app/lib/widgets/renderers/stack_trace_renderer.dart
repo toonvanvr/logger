@@ -59,7 +59,6 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Exception type + message
         Text.rich(
           TextSpan(
             children: [
@@ -126,7 +125,6 @@ class _StackTraceRendererState extends State<StackTraceRenderer> {
             ),
           ),
         ],
-        // Nested cause chain
         if (exception.inner != null) ...[
           const SizedBox(height: 6),
           CauseChainWidget(

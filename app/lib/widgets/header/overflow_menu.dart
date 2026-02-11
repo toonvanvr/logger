@@ -30,7 +30,6 @@ class _OverflowButtonState extends State<OverflowButton> {
     _overlayEntry = OverlayEntry(
       builder: (_) => Stack(
         children: [
-          // Dismiss on tap outside
           Positioned.fill(
             child: GestureDetector(
               onTap: _removeOverlay,
@@ -38,7 +37,6 @@ class _OverflowButtonState extends State<OverflowButton> {
               child: const ColoredBox(color: Color(0x00000000)),
             ),
           ),
-          // Scrollable session list
           Positioned(
             left: position.dx,
             top: position.dy + _headerHeight,

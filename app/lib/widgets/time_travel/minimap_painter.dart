@@ -57,7 +57,6 @@ class MinimapPainter extends CustomPainter {
 
     final barWidth = barAreaWidth / buckets.length;
 
-    // Draw bars with severity stacking.
     for (int i = 0; i < buckets.length; i++) {
       final bucket = buckets[i];
       if (bucket.totalCount == 0) continue;
@@ -76,16 +75,13 @@ class MinimapPainter extends CustomPainter {
       }
     }
 
-    // Draw viewport overlay + handles when active.
     if (isActive) {
       final vpLeftX = _hPadding + vpStart * barAreaWidth;
       final vpRightX = _hPadding + vpEnd * barAreaWidth;
 
-      // Dim outside areas.
       final dimPaint = Paint()
         ..color = LoggerColors.bgBase.withValues(alpha: 0.5);
 
-      // Left dim.
       canvas.drawRect(
         Rect.fromLTWH(
           _hPadding,
@@ -95,7 +91,6 @@ class MinimapPainter extends CustomPainter {
         ),
         dimPaint,
       );
-      // Right dim.
       canvas.drawRect(
         Rect.fromLTWH(
           vpRightX,
@@ -106,13 +101,11 @@ class MinimapPainter extends CustomPainter {
         dimPaint,
       );
 
-      // Viewport fill.
       canvas.drawRect(
         Rect.fromLTWH(vpLeftX, _barAreaTop, vpRightX - vpLeftX, _barAreaHeight),
         Paint()..color = LoggerColors.bgActive.withValues(alpha: 0.4),
       );
 
-      // Viewport border.
       final borderPaint = Paint()
         ..color = LoggerColors.borderFocus
         ..style = PaintingStyle.stroke
@@ -122,7 +115,6 @@ class MinimapPainter extends CustomPainter {
         borderPaint,
       );
 
-      // Left handle.
       final lhWidth = leftHandleHovered ? _handleHoverWidth : _handleWidth;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -137,7 +129,6 @@ class MinimapPainter extends CustomPainter {
         Paint()..color = LoggerColors.borderFocus,
       );
 
-      // Right handle.
       final rhWidth = rightHandleHovered ? _handleHoverWidth : _handleWidth;
       canvas.drawRRect(
         RRect.fromRectAndRadius(

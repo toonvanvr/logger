@@ -31,7 +31,6 @@ class StateViewSection extends StatelessWidget {
 
     if (state.isEmpty) return const SizedBox.shrink();
 
-    // Separate chart, shelf, and display keys
     final chartEntries = <String, dynamic>{};
     final shelfEntries = <String, dynamic>{};
     final displayEntries = <String, dynamic>{};
@@ -56,7 +55,6 @@ class StateViewSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header row
           GestureDetector(
             onTap: () => context.read<SettingsService>().setStateViewCollapsed(
               !isCollapsed,
@@ -100,7 +98,6 @@ class StateViewSection extends StatelessWidget {
               ),
             ),
           ),
-          // Card grid + chart strip
           if (!isCollapsed)
             ConstrainedBox(
               constraints: BoxConstraints(

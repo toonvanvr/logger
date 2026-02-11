@@ -9,18 +9,15 @@ extension TimeRangeOps on TimeRangeService {
   void setRange(DateTime start, DateTime end) {
     if (_sessionStart == null || _sessionEnd == null) return;
 
-    // Auto-swap if inverted.
     if (start.isAfter(end)) {
       final tmp = start;
       start = end;
       end = tmp;
     }
 
-    // Clamp to session bounds.
     start = _clampToSession(start);
     end = _clampToSession(end);
 
-    // Enforce minimum range.
     if (end.difference(start) < _minRange) {
       end = start.add(_minRange);
       if (end.isAfter(_sessionEnd!)) {
@@ -56,7 +53,6 @@ extension TimeRangeOps on TimeRangeService {
       return;
     }
 
-    // Enforce minimum range.
     if (newDur < _minRange) return;
 
     final anchorNorm = anchor ?? 0.5;
@@ -68,7 +64,6 @@ extension TimeRangeOps on TimeRangeService {
     var newStart = DateTime.fromMicrosecondsSinceEpoch(newStartUs, isUtc: true);
     var newEnd = newStart.add(newDur);
 
-    // Clamp to session.
     if (newStart.isBefore(_sessionStart!)) {
       newStart = _sessionStart!;
       newEnd = newStart.add(newDur);
@@ -96,7 +91,6 @@ extension TimeRangeOps on TimeRangeService {
     var newStart = currentStart.add(offset);
     var newEnd = currentEnd.add(offset);
 
-    // Clamp to session bounds, preserving range width.
     if (newStart.isBefore(_sessionStart!)) {
       newStart = _sessionStart!;
       newEnd = newStart.add(rangeDur);

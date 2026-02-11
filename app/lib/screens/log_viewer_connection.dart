@@ -16,10 +16,8 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
 
     _messageSub = connection.messages.listen(_handleMessage);
 
-    // Register subscription with server so we receive broadcasts
     connection.subscribe();
 
-    // Re-subscribe when session selection changes
     context.read<SessionStore>().addListener(() {
       final selected = context.read<SessionStore>().selectedSessionIds;
       connection.subscribe(
@@ -27,10 +25,8 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
       );
     });
 
-    // Request current session list
     connection.send(const ViewerSessionListMessage());
 
-    // Load existing entries from the server's ring buffer
     connection.queryHistory(limit: 5000);
   }
 
@@ -48,7 +44,6 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
       case SessionListMessage(:final sessions):
         sessionStore.updateSessions(sessions);
       case SessionUpdateMessage():
-        // Re-fetch full session list to pick up new/ended sessions
         context.read<ConnectionManager>().send(
           const ViewerSessionListMessage(),
         );

@@ -24,7 +24,6 @@ class JsonRenderer extends StatelessWidget {
       return Text('[null]', style: LoggerTypography.logBody);
     }
 
-    // If jsonData is a raw string, attempt to parse it.
     dynamic parsed = data;
     if (data is String) {
       try {

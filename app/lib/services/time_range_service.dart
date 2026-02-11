@@ -92,7 +92,6 @@ class TimeRangeService extends ChangeNotifier {
       _buckets = [
         BucketData(bucketStart: _sessionStart!, bucketEnd: _sessionEnd!),
       ];
-      // Count entries in the single bucket.
       for (final entry in entries) {
         _buckets[0].increment(entry.severity);
       }
@@ -141,10 +140,8 @@ class TimeRangeService extends ChangeNotifier {
       }
     }
 
-    // If no buckets yet, nothing to increment.
     if (_buckets.isEmpty) return;
 
-    // Find bucket index.
     final sessionDur = _sessionEnd!.difference(_sessionStart!);
     if (sessionDur <= Duration.zero) {
       _buckets[0].increment(entry.severity);

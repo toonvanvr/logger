@@ -53,7 +53,6 @@ class _ImageRendererState extends State<ImageRenderer> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Label + dimensions.
         if (image.label != null || image.width != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
@@ -68,7 +67,6 @@ class _ImageRendererState extends State<ImageRenderer> {
               ),
             ),
           ),
-        // Image content.
         GestureDetector(
           onTap: () => setState(() => _expanded = !_expanded),
           child: _buildImage(image),
@@ -81,7 +79,7 @@ class _ImageRendererState extends State<ImageRenderer> {
     if (image.data != null) {
       final bytes = _getDecodedBytes(image.data!);
 
-      // Check if image is too small to be useful (happens with test/demo data)
+      // Images below threshold are likely tracking pixels or spacers
       if (bytes.length < 200 && (image.width == null || image.width! <= 4)) {
         return Container(
           height: 48,

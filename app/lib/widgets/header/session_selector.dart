@@ -81,7 +81,6 @@ class _SessionSelectorState extends State<SessionSelector> {
               child: CustomPaint(painter: LogoPainter()),
             ),
             const SizedBox(width: 4),
-            // Session buttons with horizontal scroll
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -148,14 +147,12 @@ class _SessionSelectorState extends State<SessionSelector> {
                 },
               ),
             ),
-            // Filter toggle
             HeaderIconButton(
               icon: Icons.filter_list,
               tooltip: 'Toggle filters',
               isActive: widget.isFilterExpanded,
               onTap: widget.onFilterToggle,
             ),
-            // Mini mode toggle
             HeaderIconButton(
               icon: Icons.picture_in_picture_alt,
               tooltip: 'Mini mode (Ctrl+M)',
@@ -165,7 +162,6 @@ class _SessionSelectorState extends State<SessionSelector> {
                 context.read<SettingsService>().setMiniMode(true);
               },
             ),
-            // Settings panel toggle
             HeaderIconButton(
               icon: Icons.settings,
               tooltip: 'Toggle settings panel',

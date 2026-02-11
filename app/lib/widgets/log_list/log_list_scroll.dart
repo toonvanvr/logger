@@ -55,7 +55,6 @@ mixin _LogListScrollMixin on State<LogListView> {
       setState(() => _isLiveMode = false);
     }
 
-    // Scrollback trigger: fetch more historical entries near top
     if (_hasMoreHistorical &&
         !_isFetchingHistorical &&
         pos.maxScrollExtent > 0) {

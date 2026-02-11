@@ -30,7 +30,6 @@ class _CauseChainWidgetState extends State<CauseChainWidget> {
   Widget build(BuildContext context) {
     final firstCause = widget.firstCause;
 
-    // Count total causes in the chain.
     int causeCount = 0;
     ExceptionData? current = firstCause;
     while (current != null) {

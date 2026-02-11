@@ -39,7 +39,6 @@ void main() {
   // Default to mini mode — hide window decoration at startup
   WindowService.setDecorated(false);
 
-  // Register built-in plugins
   PluginRegistry.instance.register(ProgressRendererPlugin());
   PluginRegistry.instance.register(TableRendererPlugin());
   PluginRegistry.instance.register(KvRendererPlugin());

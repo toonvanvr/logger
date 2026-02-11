@@ -35,23 +35,18 @@ class MiniTitleBar extends StatelessWidget {
             child: CustomPaint(painter: LogoPainter()),
           ),
           const SizedBox(width: 4),
-          // Center: Drag area for window move
           const Expanded(child: _DragArea()),
-          // Right: Action buttons + Window controls
-          // Filter toggle
           _MiniButton(
             icon: Icons.filter_list,
             tooltip: 'Toggle filters',
             isActive: isFilterExpanded,
             onTap: onFilterToggle,
           ),
-          // Settings toggle
           _MiniButton(
             icon: Icons.settings,
             tooltip: 'Settings',
             onTap: onSettingsToggle,
           ),
-          // Expand: exit mini mode
           _MiniButton(
             icon: Icons.open_in_full,
             tooltip: 'Exit mini mode (Ctrl+M)',
@@ -60,7 +55,6 @@ class MiniTitleBar extends StatelessWidget {
               context.read<SettingsService>().setMiniMode(false);
             },
           ),
-          // Window control buttons
           const _PinButton(),
           _WindowButton(
             icon: Icons.minimize,

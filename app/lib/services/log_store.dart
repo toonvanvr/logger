@@ -47,7 +47,6 @@ class LogStore extends ChangeNotifier {
   void addEntry(LogEntry entry) {
     _updateState(entry);
 
-    // Stacking: delegate to StackManager
     final stackResult = _stacking.processEntry(entry, _entries, _idIndex);
     if (stackResult != null) {
       _version++;
@@ -55,7 +54,6 @@ class LogStore extends ChangeNotifier {
       return;
     }
 
-    // Upsert: replace existing entry with same id (non-stacked)
     if (entry.replace == true && _idIndex.containsKey(entry.id)) {
       final index = _idIndex[entry.id]!;
       _entries[index] = entry;
@@ -64,7 +62,6 @@ class LogStore extends ChangeNotifier {
       return;
     }
 
-    // Normal insert
     _idIndex[entry.id] = _entries.length;
     _entries.add(entry);
     _evictIfNeeded();

@@ -82,7 +82,6 @@ class TextRenderer extends StatelessWidget {
     var lastEnd = 0;
 
     for (final match in _highlightPattern.allMatches(text)) {
-      // Plain text before this match.
       if (match.start > lastEnd) {
         spans.add(
           TextSpan(
@@ -113,7 +112,6 @@ class TextRenderer extends StatelessWidget {
         final rest = matchText.substring(protocolEnd);
         final portMatch = RegExp(r':(\d+)').firstMatch(rest);
         if (portMatch != null) {
-          // Before port
           if (portMatch.start > 0) {
             spans.add(
               TextSpan(
@@ -122,14 +120,12 @@ class TextRenderer extends StatelessWidget {
               ),
             );
           }
-          // Port (including colon)
           spans.add(
             TextSpan(
               text: rest.substring(portMatch.start, portMatch.end),
               style: baseStyle.copyWith(color: LoggerColors.syntaxNumber),
             ),
           );
-          // After port
           if (portMatch.end < rest.length) {
             spans.add(
               TextSpan(
@@ -173,7 +169,6 @@ class TextRenderer extends StatelessWidget {
       lastEnd = match.end;
     }
 
-    // Trailing plain text.
     if (lastEnd < text.length) {
       spans.add(TextSpan(text: text.substring(lastEnd), style: baseStyle));
     }

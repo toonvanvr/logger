@@ -41,7 +41,6 @@ class _BinaryRendererState extends State<BinaryRenderer> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Byte count + toggle.
         Row(
           children: [
             Text(

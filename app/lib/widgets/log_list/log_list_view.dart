@@ -98,7 +98,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       activeSeverities: widget.activeSeverities,
       selectedSessionIds: widget.selectedSessionIds,
     );
-    // Pre-scan for auto-collapse on first encounter of groups.
     autoCollapseGroups(
       entries: filteredEntries,
       collapsedGroups: _collapsedGroups,

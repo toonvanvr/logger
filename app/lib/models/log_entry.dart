@@ -17,14 +17,12 @@ export 'log_sub_models.dart';
 // ─── LogEntry ────────────────────────────────────────────────────────
 
 class LogEntry {
-  // Core (all entries)
   final String id;
   final String timestamp;
   final String sessionId;
   final EntryKind kind;
   final Severity severity;
 
-  // Event fields (null when kind ≠ event)
   final String? message;
   final String? tag;
   final ExceptionData? exception;
@@ -39,18 +37,15 @@ class LogEntry {
   final String? generatedAt;
   final String? sentAt;
 
-  // Data fields (null when kind ≠ data)
   final String? key;
   final dynamic value;
   final bool override_;
   final DisplayLocation display;
 
-  // Session fields (null when kind ≠ session)
   final SessionAction? sessionAction;
   final ApplicationInfo? application;
   final Map<String, dynamic>? metadata;
 
-  // Server-assigned
   final String? receivedAt;
 
   const LogEntry({

@@ -61,7 +61,6 @@ class StackManager {
   ) {
     final stackKey = stackKeyFor(entry);
 
-    // Existing stack: append and replace head in entries list
     if (stackKey != null && _stacks.containsKey(stackKey)) {
       final stack = _stacks[stackKey]!;
       final oldHead = stack.last;
@@ -80,7 +79,6 @@ class StackManager {
       return idIndex[entry.id];
     }
 
-    // New stack for stackable entries
     if (stackKey != null) {
       _stacks[stackKey] = [entry];
       _idToStack[entry.id] = stackKey;

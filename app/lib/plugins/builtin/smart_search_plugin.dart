@@ -62,7 +62,6 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
   bool matches(LogEntry entry, String query) {
     if (query.isEmpty) return true;
 
-    // Check for prefix-based matching
     for (final prefix in _searchPatterns.keys) {
       if (query.startsWith(prefix)) {
         final value = query.substring(prefix.length).trim();
@@ -82,7 +81,6 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
 
   @override
   List<String> getSuggestions(String partialQuery, List<LogEntry> entries) {
-    // If query starts with a known prefix, extract matching values
     for (final prefix in _searchPatterns.keys) {
       if (partialQuery.startsWith(prefix)) {
         final value = partialQuery.substring(prefix.length).trim();
@@ -90,19 +88,16 @@ class SmartSearchPlugin extends FilterPlugin with EnableablePlugin {
       }
     }
 
-    // If empty or partial, show available prefixes that match
     if (partialQuery.isEmpty) {
       return _searchPatterns.keys.toList();
     }
 
-    // Partial prefix match
     final lower = partialQuery.toLowerCase();
     final prefixMatches = _searchPatterns.keys
         .where((p) => p.startsWith(lower))
         .toList();
     if (prefixMatches.isNotEmpty) return prefixMatches;
 
-    // Fallback: show any entry text that contains the partial query
     final results = <String>{};
     for (final entry in entries) {
       final text = entry.message ?? '';

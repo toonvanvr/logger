@@ -105,7 +105,6 @@ class _RpcToolTileState extends State<RpcToolTile> {
               ),
             ),
           ),
-          // Show result / error inline.
           if (_result != null || _error != null)
             Container(
               margin: const EdgeInsets.only(top: 2),

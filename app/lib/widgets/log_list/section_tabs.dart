@@ -85,7 +85,6 @@ class _SectionTabsState extends State<SectionTabs> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          // Left arrow
           if (_canScrollLeft || _canScrollRight)
             AnimatedOpacity(
               opacity: _canScrollLeft ? 1.0 : 0.3,
@@ -95,7 +94,6 @@ class _SectionTabsState extends State<SectionTabs> {
                 onTap: _canScrollLeft ? () => _scrollBy(-80) : null,
               ),
             ),
-          // Scrollable tab row
           Expanded(
             child: Listener(
               onPointerSignal: (event) {
@@ -124,7 +122,6 @@ class _SectionTabsState extends State<SectionTabs> {
               ),
             ),
           ),
-          // Right arrow
           if (_canScrollLeft || _canScrollRight)
             AnimatedOpacity(
               opacity: _canScrollRight ? 1.0 : 0.3,

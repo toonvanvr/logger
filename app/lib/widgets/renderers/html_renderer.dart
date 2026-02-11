@@ -46,12 +46,10 @@ class _HtmlRendererState extends State<HtmlRenderer> {
 
   /// Sanitise then strip tags to produce readable text.
   static String _stripHtml(String html) {
-    // Remove <script> blocks entirely.
     var sanitized = html.replaceAll(
       RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false),
       '',
     );
-    // Remove event handler attributes.
     sanitized = sanitized.replaceAll(
       RegExp(r'\s+on\w+="[^"]*"', caseSensitive: false),
       '',
@@ -60,9 +58,7 @@ class _HtmlRendererState extends State<HtmlRenderer> {
       RegExp(r"\s+on\w+='[^']*'", caseSensitive: false),
       '',
     );
-    // Strip remaining tags.
     sanitized = sanitized.replaceAll(RegExp(r'<[^>]+>'), '');
-    // Collapse whitespace.
     sanitized = sanitized.replaceAll(RegExp(r'\s+'), ' ').trim();
     return sanitized;
   }
