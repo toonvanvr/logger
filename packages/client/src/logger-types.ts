@@ -1,5 +1,5 @@
-import type { TransportType } from './transport/auto.js'
-import type { TransportAdapter } from './transport/types.js'
+import type { TransportType } from './transport/auto'
+import type { TransportAdapter } from './transport/types'
 
 // ─── Message routing ─────────────────────────────────────────────────
 

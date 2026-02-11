@@ -1,7 +1,7 @@
-import type { Severity } from './logger-builders.js'
-import type { QueuedMessage } from './logger-types.js'
-import type { LogQueue } from './queue.js'
-import type { TransportAdapter } from './transport/types.js'
+import type { Severity } from './logger-builders'
+import type { QueuedMessage } from './logger-types'
+import type { LogQueue } from './queue'
+import type { TransportAdapter } from './transport/types'
 
 // ─── RPC handler type ────────────────────────────────────────────────
 

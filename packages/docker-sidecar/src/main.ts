@@ -7,10 +7,10 @@
  */
 
 import { Logger } from '@logger/client'
-import { config } from './config.ts'
-import type { ContainerEvent, ContainerInfo, TrackedContainer } from './types.ts'
-import { dockerGet, dockerStream } from './docker-client.ts'
-import { processLogChunk } from './log-parser.ts'
+import { config } from './config'
+import type { ContainerEvent, ContainerInfo, TrackedContainer } from './types'
+import { dockerGet, dockerStream } from './docker-client'
+import { processLogChunk } from './log-parser'
 
 const tracked = new Map<string, TrackedContainer>()
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import type { QueuedMessage } from './logger-types.js'
-import { LogQueue } from './queue.js'
+import type { QueuedMessage } from './logger-types'
+import { LogQueue } from './queue'
 
 function makeEntry(overrides?: Record<string, unknown>): QueuedMessage {
   return {

@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { DisplayLocation, WidgetConfig } from './data-message.js'
-import { IconRef } from './event-message.js'
-import { ApplicationInfo } from './session-message.js'
-import { StoredEntry } from './stored-entry.js'
+import { DisplayLocation, WidgetConfig } from './data-message'
+import { IconRef } from './event-message'
+import { ApplicationInfo } from './session-message'
+import { StoredEntry } from './stored-entry'
 
 // ─── Sub-schemas ─────────────────────────────────────────────────────
 

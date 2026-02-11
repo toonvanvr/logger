@@ -7,18 +7,18 @@ import {
   buildUnstickyEntry,
   type Severity,
   stringifyTags,
-} from './logger-builders.js'
+} from './logger-builders'
 import {
   buildSessionEndEntry,
   buildSessionStartEntry,
   drainTransportQueue,
   handleRpcRequest,
   type RpcHandler,
-} from './logger-session.js'
-import { type LoggerOptions, type Middleware, type QueuedMessage, runMiddlewareChain } from './logger-types.js'
-import { LogQueue } from './queue.js'
-import { createTransport, type TransportType } from './transport/auto.js'
-import type { TransportAdapter } from './transport/types.js'
+} from './logger-session'
+import { type LoggerOptions, type Middleware, type QueuedMessage, runMiddlewareChain } from './logger-types'
+import { LogQueue } from './queue'
+import { createTransport, type TransportType } from './transport/auto'
+import type { TransportAdapter } from './transport/types'
 
 // ─── LoggerBase ──────────────────────────────────────────────────────
 

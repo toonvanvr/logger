@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { DisplayLocation } from './data-message.js'
-import { ExceptionData, IconRef, Severity } from './event-message.js'
-import { ApplicationInfo } from './session-message.js'
-import { WidgetPayload } from './widget.js'
+import { DisplayLocation } from './data-message'
+import { ExceptionData, IconRef, Severity } from './event-message'
+import { ApplicationInfo } from './session-message'
+import { WidgetPayload } from './widget'
 
 // ─── EntryKind ───────────────────────────────────────────────────────
 

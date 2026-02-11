@@ -1,4 +1,4 @@
-import type { QueuedMessage } from './logger-types.js'
+import type { QueuedMessage } from './logger-types'
 
 /**
  * Internal circular-buffer queue for outgoing messages.

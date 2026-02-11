@@ -1,5 +1,5 @@
-import type { QueuedMessage } from '../logger-types.js'
-import type { TransportAdapter } from './types.js'
+import type { QueuedMessage } from '../logger-types'
+import type { TransportAdapter } from './types'
 
 const DEFAULT_HOST = 'localhost'
 const DEFAULT_TCP_PORT = 8082

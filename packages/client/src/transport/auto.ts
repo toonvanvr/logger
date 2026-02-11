@@ -1,8 +1,8 @@
-import { HttpTransport } from './http.js';
-import { TcpTransport } from './tcp.js';
-import type { TransportAdapter } from './types.js';
-import { UdpTransport } from './udp.js';
-import { WsTransport } from './ws.js';
+import { HttpTransport } from './http';
+import { TcpTransport } from './tcp';
+import type { TransportAdapter } from './types';
+import { UdpTransport } from './udp';
+import { WsTransport } from './ws';
 
 export type TransportType = 'ws' | 'http' | 'udp' | 'tcp' | 'auto';
 

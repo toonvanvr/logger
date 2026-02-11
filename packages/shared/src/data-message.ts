@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { IconRef } from './event-message.js'
+import { IconRef } from './event-message'
 
 // ─── Sub-schemas ─────────────────────────────────────────────────────
 

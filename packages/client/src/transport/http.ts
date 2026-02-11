@@ -1,5 +1,5 @@
-import type { QueuedMessage } from '../logger-types.js'
-import type { TransportAdapter } from './types.js'
+import type { QueuedMessage } from '../logger-types'
+import type { TransportAdapter } from './types'
 
 export interface HttpTransportOptions {
   url?: string

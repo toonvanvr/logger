@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
-import type { Middleware, QueuedMessage } from './index.js'
-import { Logger } from './logger.js'
-import type { TransportAdapter } from './transport/types.js'
+import type { Middleware, QueuedMessage } from './index'
+import { Logger } from './logger'
+import type { TransportAdapter } from './transport/types'
 
 // ─── Mock Transport ──────────────────────────────────────────────────
 

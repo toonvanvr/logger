@@ -1,5 +1,5 @@
 import type { Severity } from '@logger/shared'
-import type { QueuedMessage } from './logger-types.js'
+import type { QueuedMessage } from './logger-types'
 
 export type { Severity } from '@logger/shared'
 

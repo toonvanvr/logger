@@ -2,7 +2,7 @@
  * Docker Log Sidecar — Docker socket HTTP helper functions.
  */
 
-import { config } from './config.ts'
+import { config } from './config'
 
 /** Fetch JSON from the Docker socket API. */
 export async function dockerGet<T>(path: string, signal?: AbortSignal): Promise<T> {

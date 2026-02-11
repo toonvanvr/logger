@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { Severity } from './event-message.js'
+import { Severity } from './event-message'
 
 // ─── ViewerCommand (discriminated union) ─────────────────────────────
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseStackTrace } from './stack-parser.js';
+import { parseStackTrace } from './stack-parser';
 
 describe('parseStackTrace', () => {
   test('parse V8 stack trace', () => {

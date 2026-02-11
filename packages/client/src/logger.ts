@@ -1,5 +1,5 @@
-import { LoggerBase } from './logger-base.js'
-import type { Severity } from './logger-builders.js'
+import { LoggerBase } from './logger-base'
+import type { Severity } from './logger-builders'
 import {
     buildBinaryEntry,
     buildCustomEntry,
@@ -8,10 +8,10 @@ import {
     buildImageEntry,
     buildJsonEntry,
     buildStateEntry,
-} from './logger-builders.js'
-import type { LoggerOptions } from './logger-types.js'
+} from './logger-builders'
+import type { LoggerOptions } from './logger-types'
 
-export type { LoggerOptions, Middleware } from './logger-types.js'
+export type { LoggerOptions, Middleware } from './logger-types'
 
 // ─── Logger ──────────────────────────────────────────────────────────
 
