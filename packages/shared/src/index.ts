@@ -16,6 +16,8 @@ export {
     ExceptionData,
     IconRef,
     Severity,
+    SourceLocation,
+    StackFrame,
 } from './event-message.js'
 
 // data-message.ts — Key-value state updates

@@ -14,7 +14,7 @@ describe('parseStackTrace', () => {
     expect(frames[0].location.uri).toBe('/home/user/project/src/index.ts');
     expect(frames[0].location.line).toBe(10);
     expect(frames[0].location.column).toBe(5);
-    expect(frames[0].isVendor).toBe(false);
+    expect(frames[0].is_vendor).toBe(false);
 
     expect(frames[1].location.symbol).toBe('Object.run');
     expect(frames[1].location.uri).toBe('/home/user/project/src/runner.ts');
@@ -54,9 +54,9 @@ describe('parseStackTrace', () => {
 
     const frames = parseStackTrace(stack);
     expect(frames).toHaveLength(3);
-    expect(frames[0].isVendor).toBe(false);
-    expect(frames[1].isVendor).toBe(true);
-    expect(frames[2].isVendor).toBe(true);
+    expect(frames[0].is_vendor).toBe(false);
+    expect(frames[1].is_vendor).toBe(true);
+    expect(frames[2].is_vendor).toBe(true);
   });
 
   test('handle malformed stack', () => {

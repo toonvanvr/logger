@@ -57,3 +57,21 @@ export type Severity = z.infer<typeof Severity>
 export type ExceptionData = z.infer<typeof ExceptionData>
 export type IconRef = z.infer<typeof IconRef>
 
+// ─── StackFrame ──────────────────────────────────────────────────────
+
+export const SourceLocation = z.object({
+  uri: z.string(),
+  line: z.number().optional(),
+  column: z.number().optional(),
+  symbol: z.string().optional(),
+})
+
+export const StackFrame = z.object({
+  location: SourceLocation,
+  is_vendor: z.boolean().optional(),
+  raw: z.string().optional(),
+})
+
+export type SourceLocation = z.infer<typeof SourceLocation>
+export type StackFrame = z.infer<typeof StackFrame>
+

@@ -327,7 +327,7 @@ void main() {
     test('StackFrame fromJson/toJson round-trip', () {
       final json = {
         'location': {'uri': 'app.dart', 'line': 5},
-        'isVendor': true,
+        'is_vendor': true,
         'raw': '#0 main (app.dart:5)',
       };
       final frame = StackFrame.fromJson(json);
@@ -335,7 +335,7 @@ void main() {
 
       expect(output['location']['uri'], 'app.dart');
       expect(output['location']['line'], 5);
-      expect(output['isVendor'], isTrue);
+      expect(output['is_vendor'], isTrue);
       expect(output['raw'], '#0 main (app.dart:5)');
     });
 

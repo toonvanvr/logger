@@ -1,6 +1,6 @@
 export interface StackFrame {
   location: { uri: string; line: number; column: number; symbol?: string }
-  isVendor: boolean
+  is_vendor: boolean
   raw: string
 }
 
@@ -31,7 +31,7 @@ export function parseStackTrace(stack: string): StackFrame[] {
     const uri = hasParens ? m[2]! : m[5]!;
     const lineNo = parseInt(hasParens ? m[3]! : m[6]!, 10);
     const col = parseInt(hasParens ? m[4]! : m[7]!, 10);
-    const isVendor = uri.includes('node_modules') || uri.startsWith('node:');
+    const is_vendor = uri.includes('node_modules') || uri.startsWith('node:');
 
     frames.push({
       location: {
@@ -40,7 +40,7 @@ export function parseStackTrace(stack: string): StackFrame[] {
         column: col,
         ...(symbol ? { symbol } : {}),
       },
-      isVendor,
+      is_vendor,
       raw: line.trim(),
     });
   }

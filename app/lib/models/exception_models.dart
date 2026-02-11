@@ -49,14 +49,14 @@ class StackFrame {
       location: SourceLocation.fromJson(
         json['location'] as Map<String, dynamic>,
       ),
-      isVendor: json['isVendor'] as bool?,
+      isVendor: json['is_vendor'] as bool?,
       raw: json['raw'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'location': location.toJson(),
-    if (isVendor != null) 'isVendor': isVendor,
+    if (isVendor != null) 'is_vendor': isVendor,
     if (raw != null) 'raw': raw,
   };
 }
