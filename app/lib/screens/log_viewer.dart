@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +14,7 @@ import '../services/log_store.dart';
 import '../services/query_store.dart';
 import '../services/rpc_service.dart';
 import '../services/session_store.dart';
+import '../services/selection_service.dart';
 import '../services/settings_service.dart';
 import '../services/uri_handler.dart';
 import '../widgets/header/filter_bar.dart';
@@ -32,7 +32,6 @@ import '../widgets/time_travel/time_range_minimap.dart';
 part 'log_viewer_connection.dart';
 part 'log_viewer_content.dart';
 part 'log_viewer_keyboard.dart';
-part 'log_viewer_selection.dart';
 
 /// Main screen — the full log viewer UI.
 class LogViewerScreen extends StatefulWidget {
@@ -53,7 +52,7 @@ class LogViewerScreen extends StatefulWidget {
 }
 
 class _LogViewerScreenState extends State<LogViewerScreen>
-    with _SelectionMixin, _ConnectionMixin, _KeyboardMixin, _ContentMixin {
+    with _ConnectionMixin, _KeyboardMixin, _ContentMixin {
   @override
   void initState() {
     super.initState();

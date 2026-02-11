@@ -5,6 +5,7 @@ import 'package:app/services/keybind_registry.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/query_store.dart';
 import 'package:app/services/rpc_service.dart';
+import 'package:app/services/selection_service.dart';
 import 'package:app/services/session_store.dart';
 import 'package:app/services/settings_service.dart';
 import 'package:app/services/sticky_state.dart';
@@ -28,6 +29,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => LogStore()),
           ChangeNotifierProvider(create: (_) => SessionStore()),
           ChangeNotifierProvider(create: (_) => QueryStore()),
+          ChangeNotifierProvider(create: (_) => SelectionService()),
           ChangeNotifierProvider(create: (_) => StickyStateService()),
           ChangeNotifierProvider(create: (_) => RpcService()),
           ChangeNotifierProvider(create: (_) => SettingsService()),

@@ -1,7 +1,7 @@
 part of 'log_viewer.dart';
 
 /// Keyboard shortcut handling for the log viewer.
-mixin _KeyboardMixin on State<LogViewerScreen>, _SelectionMixin {
+mixin _KeyboardMixin on State<LogViewerScreen> {
   /// Register keybinds with the central registry.
   ///
   /// Called from postFrameCallback so [context] is available.
@@ -50,20 +50,21 @@ mixin _KeyboardMixin on State<LogViewerScreen>, _SelectionMixin {
     final registry = context.read<KeybindRegistry>();
     if (registry.handleKeyEvent(event)) return true;
 
-    // Shift hold for selection mode (stateful — stays in mixin)
+    // Shift hold for selection mode
+    final selection = context.read<SelectionService>();
     if (event is KeyDownEvent &&
         (event.logicalKey == LogicalKeyboardKey.shiftLeft ||
             event.logicalKey == LogicalKeyboardKey.shiftRight)) {
-      if (!_selectionMode) {
-        setState(() => _selectionMode = true);
+      if (!selection.selectionMode) {
+        selection.setSelectionMode(true);
       }
       return false;
     }
     if (event is KeyUpEvent &&
         (event.logicalKey == LogicalKeyboardKey.shiftLeft ||
             event.logicalKey == LogicalKeyboardKey.shiftRight)) {
-      if (_selectionMode && _selectedEntryIds.isEmpty) {
-        setState(() => _selectionMode = false);
+      if (selection.selectionMode && selection.selectedEntryIds.isEmpty) {
+        selection.setSelectionMode(false);
       }
       return false;
     }

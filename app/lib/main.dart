@@ -24,6 +24,7 @@ import 'services/log_store.dart';
 import 'services/query_store.dart';
 import 'services/rpc_service.dart';
 import 'services/session_store.dart';
+import 'services/selection_service.dart';
 import 'services/settings_service.dart';
 import 'services/sticky_state.dart';
 import 'services/time_range_service.dart';
@@ -124,6 +125,7 @@ class _LoggerAppState extends State<LoggerApp> {
         ChangeNotifierProvider(create: (_) => SessionStore()),
         ChangeNotifierProvider(create: (_) => RpcService()),
         ChangeNotifierProvider(create: (_) => QueryStore()),
+        ChangeNotifierProvider(create: (_) => SelectionService()),
         ChangeNotifierProvider(create: (_) => StickyStateService()),
         ChangeNotifierProvider(create: (_) => SettingsService()),
         ChangeNotifierProvider(create: (_) => TimeRangeService()),

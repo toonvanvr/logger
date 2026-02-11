@@ -1,8 +1,7 @@
 part of 'log_viewer.dart';
 
 /// UI/filter state and build helpers for the log viewer layout.
-mixin _ContentMixin
-    on State<LogViewerScreen>, _SelectionMixin, _ConnectionMixin {
+mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
   String? _selectedSection;
   bool _settingsPanelVisible = false;
   bool _landingDelayActive = true;
@@ -140,6 +139,7 @@ mixin _ContentMixin
 
   Widget _buildMainContent(BuildContext context) {
     final filterService = context.watch<FilterService>();
+    final selection = context.watch<SelectionService>();
     return Column(
       key: const ValueKey('content'),
       children: [
@@ -178,33 +178,34 @@ mixin _ContentMixin
                 activeSeverities: filterService.activeSeverities,
                 textFilter: filterService.effectiveFilter,
                 selectedSessionIds: selectedSessions,
-                selectionMode: _selectionMode,
-                selectedEntryIds: _selectedEntryIds,
-                onEntrySelected: _onEntrySelected,
-                onEntryRangeSelected: _onEntryRangeSelected,
-                bookmarkedEntryIds: _bookmarkedEntryIds,
-                stickyOverrideIds: _stickyOverrideIds,
+                selectionMode: selection.selectionMode,
+                selectedEntryIds: selection.selectedEntryIds,
+                onEntrySelected: selection.onEntrySelected,
+                onEntryRangeSelected: selection.onEntryRangeSelected,
+                bookmarkedEntryIds: selection.bookmarkedEntryIds,
+                stickyOverrideIds: selection.stickyOverrideIds,
                 flatMode: filterService.flatMode,
                 onFilterClear: () => filterService.clear(),
               );
+              final logStore = context.read<LogStore>();
               return Stack(
                 children: [
-                  _selectionMode
+                  selection.selectionMode
                       ? logListView
                       : SelectionArea(child: logListView),
-                  if (_selectedEntryIds.isNotEmpty)
+                  if (selection.selectedEntryIds.isNotEmpty)
                     Positioned(
                       bottom: 12,
                       left: 0,
                       right: 0,
                       child: Center(
                         child: SelectionActions(
-                          selectedCount: _selectedEntryIds.length,
-                          onCopy: _copySelected,
-                          onExportJson: _exportSelectedJson,
-                          onBookmark: _bookmarkSelected,
-                          onSticky: _stickySelected,
-                          onClear: _clearSelection,
+                          selectedCount: selection.selectedEntryIds.length,
+                          onCopy: () => selection.copySelected(logStore.entries),
+                          onExportJson: () => selection.exportSelectedJson(logStore.entries),
+                          onBookmark: selection.bookmarkSelected,
+                          onSticky: selection.stickySelected,
+                          onClear: selection.clearSelection,
                         ),
                       ),
                     ),
