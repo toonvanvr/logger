@@ -51,6 +51,6 @@ export {
     DEFAULT_TCP_PORT,
     DEFAULT_UDP_PORT,
     MAX_BATCH_SIZE,
-    MAX_TEXT_SIZE,
+    MAX_TEXT_SIZE
 } from './constants'
 
