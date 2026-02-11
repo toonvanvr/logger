@@ -310,7 +310,6 @@ The desktop viewer is a Flutter/Dart application (Linux-first). Entry point: `ap
 | `services/connection_manager.dart` | ~120 | Multi-server connection management with auto-reconnect |
 | `services/log_store.dart` | 104 | Log entry state management |
 | `services/log_store_stacking.dart` | ~80 | Entry stacking (version history) logic |
-| `screens/log_viewer_keyboard.dart` | ~80 | Keyboard shortcut handler |
 | `services/session_store.dart` | 71 | Session state management |
 
 #### State Management

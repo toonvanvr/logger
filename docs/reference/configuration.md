@@ -67,7 +67,7 @@ Controls the async batch forwarding of logs to Grafana Loki.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOGGER_STORE_BACKEND` | `loki` | Storage backend for log persistence. Options: `loki` (forward to Grafana Loki) or `memory` (in-memory only, no external dependencies). |
+| `LOGGER_STORE_BACKEND` | `memory` | Storage backend for log persistence. Options: `loki` (forward to Grafana Loki) or `memory` (in-memory only, no external dependencies). |
 
 ## Docker Compose Defaults
 

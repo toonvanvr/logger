@@ -8,8 +8,6 @@ Log entries are categorised by severity: `debug`, `info`, `warning`, `error`, `c
 
 ## Custom Renderers
 
-![Custom Renderers](../screenshots/02-custom-renderers.png)
-
 The viewer detects structured content types and renders them with purpose-built widgets:
 
 - **Progress** — renders a progress bar with percentage

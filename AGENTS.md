@@ -99,7 +99,7 @@ logger/
 | `app/lib/services/time_range_service.dart` | Time range zoom/pan state management |
 | `app/lib/services/log_store.dart` | In-memory log storage with filtering |
 | `app/lib/services/log_store_stacking.dart` | Entry stacking (version history) logic |
-| `app/lib/screens/log_viewer_keyboard.dart` | Keyboard shortcut handler for log viewer |
+| `app/lib/screens/log_viewer.dart` | Main log viewer screen with keyboard shortcut handling |
 | `app/lib/widgets/header/filter_bar.dart` | Search/filter bar with autocomplete |
 | `app/lib/widgets/log_list/log_list_view.dart` | Scrollable log list with live mode |
 | `app/lib/widgets/state_view/state_view_section.dart` | Persistent state key-value view section |
