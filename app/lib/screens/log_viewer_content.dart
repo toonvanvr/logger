@@ -94,7 +94,7 @@ mixin _ContentMixin
   /// Animated filter bar.
   Widget _buildFilterBar() {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 50),
       curve: Curves.easeInOut,
       alignment: Alignment.topCenter,
       child: _isFilterExpanded

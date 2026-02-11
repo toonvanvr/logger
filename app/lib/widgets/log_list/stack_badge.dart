@@ -14,9 +14,11 @@ class StackBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (depth <= 1) return const SizedBox.shrink();
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         margin: const EdgeInsets.only(left: 4),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
@@ -31,6 +33,7 @@ class StackBadge extends StatelessWidget {
             color: LoggerColors.fgSecondary,
           ),
         ),
+      ),
       ),
     );
   }

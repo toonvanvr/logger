@@ -99,13 +99,16 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Padding(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Tooltip(
+        message: tooltip,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(icon, size: 14, color: LoggerColors.fgSecondary),
+            child: Icon(icon, size: 14, color: LoggerColors.fgSecondary),
+          ),
         ),
       ),
     );

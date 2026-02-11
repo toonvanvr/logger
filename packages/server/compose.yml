@@ -9,6 +9,7 @@ services:
       - "8082:8082"
     environment:
       - LOGGER_LOKI_URL=http://loki:3100
+      - LOGGER_STORE_BACKEND=loki
       - LOGGER_BIND_ADDRESS=0.0.0.0
       - LOGGER_ENVIRONMENT=dev
     volumes:

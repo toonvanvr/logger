@@ -115,7 +115,7 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
         : (widget.isEvenRow
               ? LoggerColors.bgSurface
               : LoggerColors.bgSurface.withValues(alpha: 0.85));
-    if (isHovered) return Color.lerp(base, Colors.white, 0.03)!;
+    if (isHovered) return Color.lerp(base, Colors.white, 0.06)!;
     return base;
   }
 
@@ -195,22 +195,29 @@ class _LogRowState extends State<LogRow> with SingleTickerProviderStateMixin {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.selectionMode)
-              GestureDetector(
-                onTap: widget.onSelect,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(
-                    widget.isSelectionSelected
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    size: 14,
-                    color: widget.isSelectionSelected
-                        ? LoggerColors.borderFocus
-                        : LoggerColors.fgMuted,
-                  ),
-                ),
-              ),
+            SizedBox(
+              width: 22,
+              child: widget.selectionMode
+                  ? MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: widget.onSelect,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            widget.isSelectionSelected
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: 14,
+                            color: widget.isSelectionSelected
+                                ? LoggerColors.borderFocus
+                                : LoggerColors.fgMuted,
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
             ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 24),
               child: SeverityBar(severity: widget.entry.severity),

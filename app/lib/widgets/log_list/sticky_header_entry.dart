@@ -165,9 +165,11 @@ class HiddenItemsBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap != null ? () => onTap!(groupId) : null,
-      child: Container(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap != null ? () => onTap!(groupId) : null,
+        child: Container(
         height: 18,
         padding: EdgeInsets.only(left: 8.0 + depth * 12.0, right: 8),
         decoration: const BoxDecoration(
@@ -219,6 +221,7 @@ class HiddenItemsBadge extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -232,10 +235,12 @@ class StickyCloseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
         width: 20,
         height: 20,
         child: Icon(
@@ -245,6 +250,7 @@ class StickyCloseButton extends StatelessWidget {
               ? LoggerColors.severityWarningText
               : LoggerColors.fgMuted,
         ),
+      ),
       ),
     );
   }

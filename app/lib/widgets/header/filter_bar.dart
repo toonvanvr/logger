@@ -74,9 +74,11 @@ class _FilterBarState extends State<FilterBar> {
             for (final key in widget.activeStateFilters)
               Padding(
                 padding: const EdgeInsets.only(right: 4),
-                child: GestureDetector(
-                  onTap: () => widget.onStateFilterRemove?.call(key),
-                  child: Container(
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => widget.onStateFilterRemove?.call(key),
+                    child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: LoggerColors.severityInfoBar.withValues(alpha: 0.15),
@@ -91,6 +93,7 @@ class _FilterBarState extends State<FilterBar> {
                       const SizedBox(width: 3),
                       const Icon(Icons.close, size: 10, color: LoggerColors.fgMuted),
                     ]),
+                  ),
                   ),
                 ),
               ),
@@ -116,14 +119,17 @@ class _FilterBarState extends State<FilterBar> {
             },
           ),
           const SizedBox(width: 4),
-          GestureDetector(
-            onTap: widget.onClear,
-            child: const Tooltip(
-              message: 'Clear all filters',
-              child: Icon(
-                Icons.clear_all,
-                size: 16,
-                color: LoggerColors.fgMuted,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: widget.onClear,
+              child: const Tooltip(
+                message: 'Clear all filters',
+                  child: Icon(
+                  Icons.clear_all,
+                  size: 16,
+                  color: LoggerColors.fgMuted,
+                ),
               ),
             ),
           ),

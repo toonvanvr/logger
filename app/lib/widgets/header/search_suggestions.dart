@@ -183,7 +183,7 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
                             overflow: TextOverflow.ellipsis,
                             style: LoggerTypography.logMeta.copyWith(
                               color: isHighlighted
-                                  ? LoggerColors.fgSecondary
+                                  ? LoggerColors.fgPrimary
                                   : LoggerColors.fgSecondary,
                               fontWeight: isPrefix
                                   ? FontWeight.w500

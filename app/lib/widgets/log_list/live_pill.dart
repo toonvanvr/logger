@@ -52,12 +52,14 @@ class NewLogsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: LoggerColors.bgOverlay,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: LoggerColors.bgOverlay,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -76,6 +78,7 @@ class NewLogsButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

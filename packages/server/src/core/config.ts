@@ -46,7 +46,7 @@ export const config = {
   imageStoreMaxBytes: safeInt(process.env.LOGGER_IMAGE_STORE_MAX_BYTES, 2 * 1024 * 1024 * 1024),
 
   // Store
-  storeBackend: (process.env.LOGGER_STORE_BACKEND ?? 'loki') as 'loki' | 'memory',
+  storeBackend: (process.env.LOGGER_STORE_BACKEND ?? 'memory') as 'loki' | 'memory',
 
   // Hooks
   hookRedactPatterns: (process.env.LOGGER_HOOK_REDACT_PATTERNS ?? '').split(',').filter(Boolean),

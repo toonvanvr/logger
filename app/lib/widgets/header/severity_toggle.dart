@@ -20,9 +20,11 @@ class SeverityToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = severityBarColor(severity);
 
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onToggle,
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: isActive ? color.withAlpha(51) : Colors.transparent,
@@ -38,6 +40,7 @@ class SeverityToggle extends StatelessWidget {
             color: isActive ? color : LoggerColors.fgMuted,
           ),
         ),
+      ),
       ),
     );
   }
