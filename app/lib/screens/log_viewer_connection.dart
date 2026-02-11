@@ -4,7 +4,7 @@ part of 'log_viewer.dart';
 ///
 /// Manages WebSocket subscription, message routing, and session tracking.
 mixin _ConnectionMixin on State<LogViewerScreen> {
-  StreamSubscription<ServerMessage>? _messageSub;
+  StreamSubscription<ServerBroadcast>? _messageSub;
   bool _hasEverReceivedEntries = false;
 
   void _initConnection() {
@@ -34,12 +34,12 @@ mixin _ConnectionMixin on State<LogViewerScreen> {
     connection.queryHistory(limit: 5000);
   }
 
-  void _handleMessage(ServerMessage msg) {
+  void _handleMessage(ServerBroadcast msg) {
     final logStore = context.read<LogStore>();
     final sessionStore = context.read<SessionStore>();
 
     switch (msg) {
-      case EventMessage(:final entry):
+      case EventBroadcast(:final entry):
         logStore.addEntry(entry);
         _markEntriesReceived();
       case HistoryMessage(:final entries):

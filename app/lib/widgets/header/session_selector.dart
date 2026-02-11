@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/server_message.dart';
+import '../../models/server_broadcast.dart';
 import '../../services/session_store.dart';
 import '../../services/settings_service.dart';
 import '../../services/window_service.dart';

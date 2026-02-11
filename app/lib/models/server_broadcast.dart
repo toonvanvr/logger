@@ -1,4 +1,4 @@
-/// Dart equivalents of the v2 ServerMessage schema.
+/// Dart equivalents of the v2 ServerBroadcast schema.
 library;
 
 import 'log_entry.dart';
@@ -41,35 +41,35 @@ class SessionInfo {
 
 // ─── Server Message (sealed hierarchy) ───────────────────────────────
 
-sealed class ServerMessage {
-  const ServerMessage();
+sealed class ServerBroadcast {
+  const ServerBroadcast();
 
-  factory ServerMessage.fromJson(Map<String, dynamic> json) {
+  factory ServerBroadcast.fromJson(Map<String, dynamic> json) {
     final typeStr = json['type'] as String? ?? 'error';
     return switch (typeStr) {
       'ack' => AckMessage(
-        ackIds: (json['ids'] as List<dynamic>?)?.cast<String>() ?? [],
+        ids: (json['ids'] as List<dynamic>?)?.cast<String>() ?? [],
       ),
       'error' => ErrorMessage(
-        errorCode: json['code'] as String?,
-        errorMessage: json['message'] as String?,
+        code: json['code'] as String?,
+        message: json['message'] as String?,
         errorEntryId: json['entry_id'] as String?,
       ),
       'event' || 'log' =>
         json['entry'] != null
-            ? EventMessage(
+            ? EventBroadcast(
                 entry: LogEntry.fromJson(json['entry'] as Map<String, dynamic>),
               )
-            : ErrorMessage(errorMessage: 'event missing entry'),
+            : ErrorMessage(message: 'event missing entry'),
       'rpc_request' =>
         json['rpc_id'] != null && json['method'] != null
             ? RpcRequestMessage(
                 rpcId: json['rpc_id'] as String,
-                rpcMethod: json['method'] as String,
-                rpcArgs: json['args'],
+                method: json['method'] as String,
+                args: json['args'],
               )
             : ErrorMessage(
-                errorMessage: 'rpc_request missing rpc_id or method',
+                message: 'rpc_request missing rpc_id or method',
               ),
       'rpc_response' =>
         json['rpc_id'] != null
@@ -78,7 +78,7 @@ sealed class ServerMessage {
                 rpcResponse: json['result'],
                 rpcError: json['error'] as String?,
               )
-            : ErrorMessage(errorMessage: 'rpc_response missing rpc_id'),
+            : ErrorMessage(message: 'rpc_response missing rpc_id'),
       'session_list' => SessionListMessage(
         sessions:
             (json['sessions'] as List<dynamic>?)
@@ -108,18 +108,18 @@ sealed class ServerMessage {
         json['key'] != null
             ? DataUpdateMessage(
                 sessionId: json['session_id'] as String?,
-                dataKey: json['key'] as String,
-                dataValue: json['value'],
-                dataDisplay: json['display'] != null
+                key: json['key'] as String,
+                value: json['value'],
+                display: json['display'] != null
                     ? parseDisplayLocation(json['display'] as String)
                     : null,
-                dataWidget: json['widget'] != null
+                widget: json['widget'] != null
                     ? WidgetPayload.fromJson(
                         json['widget'] as Map<String, dynamic>,
                       )
                     : null,
               )
-            : ErrorMessage(errorMessage: 'data_update missing key'),
+            : ErrorMessage(message: 'data_update missing key'),
       'history' => HistoryMessage(
         queryId: json['query_id'] as String?,
         entries:
@@ -133,40 +133,40 @@ sealed class ServerMessage {
         fenceTs: json['fence_ts'] as String?,
       ),
       'subscribe_ack' => const SubscribeAckMessage(),
-      _ => ErrorMessage(errorMessage: 'unknown type: $typeStr'),
+      _ => ErrorMessage(message: 'unknown type: $typeStr'),
     };
   }
 }
 
-class AckMessage extends ServerMessage {
-  final List<String> ackIds;
-  const AckMessage({this.ackIds = const []});
+class AckMessage extends ServerBroadcast {
+  final List<String> ids;
+  const AckMessage({this.ids = const []});
 }
 
-class ErrorMessage extends ServerMessage {
-  final String? errorCode;
-  final String? errorMessage;
+class ErrorMessage extends ServerBroadcast {
+  final String? code;
+  final String? message;
   final String? errorEntryId;
-  const ErrorMessage({this.errorCode, this.errorMessage, this.errorEntryId});
+  const ErrorMessage({this.code, this.message, this.errorEntryId});
 }
 
-class EventMessage extends ServerMessage {
+class EventBroadcast extends ServerBroadcast {
   final LogEntry entry;
-  const EventMessage({required this.entry});
+  const EventBroadcast({required this.entry});
 }
 
-class RpcRequestMessage extends ServerMessage {
+class RpcRequestMessage extends ServerBroadcast {
   final String rpcId;
-  final String rpcMethod;
-  final dynamic rpcArgs;
+  final String method;
+  final dynamic args;
   const RpcRequestMessage({
     required this.rpcId,
-    required this.rpcMethod,
-    this.rpcArgs,
+    required this.method,
+    this.args,
   });
 }
 
-class RpcResponseMessage extends ServerMessage {
+class RpcResponseMessage extends ServerBroadcast {
   final String rpcId;
   final dynamic rpcResponse;
   final String? rpcError;
@@ -177,12 +177,12 @@ class RpcResponseMessage extends ServerMessage {
   });
 }
 
-class SessionListMessage extends ServerMessage {
+class SessionListMessage extends ServerBroadcast {
   final List<SessionInfo> sessions;
   const SessionListMessage({this.sessions = const []});
 }
 
-class SessionUpdateMessage extends ServerMessage {
+class SessionUpdateMessage extends ServerBroadcast {
   final String? sessionId;
   final SessionAction? sessionAction;
   final ApplicationInfo? application;
@@ -193,28 +193,28 @@ class SessionUpdateMessage extends ServerMessage {
   });
 }
 
-class DataSnapshotMessage extends ServerMessage {
+class DataSnapshotMessage extends ServerBroadcast {
   final String? sessionId;
   final Map<String, DataState> data;
   const DataSnapshotMessage({this.sessionId, this.data = const {}});
 }
 
-class DataUpdateMessage extends ServerMessage {
+class DataUpdateMessage extends ServerBroadcast {
   final String? sessionId;
-  final String dataKey;
-  final dynamic dataValue;
-  final DisplayLocation? dataDisplay;
-  final WidgetPayload? dataWidget;
+  final String key;
+  final dynamic value;
+  final DisplayLocation? display;
+  final WidgetPayload? widget;
   const DataUpdateMessage({
     this.sessionId,
-    required this.dataKey,
-    this.dataValue,
-    this.dataDisplay,
-    this.dataWidget,
+    required this.key,
+    this.value,
+    this.display,
+    this.widget,
   });
 }
 
-class HistoryMessage extends ServerMessage {
+class HistoryMessage extends ServerBroadcast {
   final String? queryId;
   final List<LogEntry> entries;
   final bool hasMore;
@@ -236,6 +236,6 @@ class HistoryMessage extends ServerMessage {
   });
 }
 
-class SubscribeAckMessage extends ServerMessage {
+class SubscribeAckMessage extends ServerBroadcast {
   const SubscribeAckMessage();
 }

@@ -9,7 +9,7 @@ import 'dart:convert';
 ///
 /// Each subclass corresponds to a single message type and carries only
 /// the fields relevant to that type. Prefixed with `Viewer` to avoid
-/// name collisions with [ServerMessage] subclasses.
+/// name collisions with [ServerBroadcast] subclasses.
 sealed class ViewerMessage {
   const ViewerMessage();
 
@@ -96,14 +96,14 @@ class ViewerHistoryQueryMessage extends ViewerMessage {
 class ViewerRpcRequestMessage extends ViewerMessage {
   final String? rpcId;
   final String? targetSessionId;
-  final String? rpcMethod;
-  final dynamic rpcArgs;
+  final String? method;
+  final dynamic args;
 
   const ViewerRpcRequestMessage({
     this.rpcId,
     this.targetSessionId,
-    this.rpcMethod,
-    this.rpcArgs,
+    this.method,
+    this.args,
   });
 
   @override
@@ -111,8 +111,8 @@ class ViewerRpcRequestMessage extends ViewerMessage {
     final map = <String, dynamic>{'type': 'rpc_request'};
     if (rpcId != null) map['rpc_id'] = rpcId;
     if (targetSessionId != null) map['target_session_id'] = targetSessionId;
-    if (rpcMethod != null) map['method'] = rpcMethod;
-    if (rpcArgs != null) map['args'] = rpcArgs;
+    if (method != null) map['method'] = method;
+    if (args != null) map['args'] = args;
     return map;
   }
 }
@@ -125,14 +125,14 @@ class ViewerSessionListMessage extends ViewerMessage {
 }
 
 class ViewerDataQueryMessage extends ViewerMessage {
-  final String? dataSessionId;
+  final String? sessionId;
 
-  const ViewerDataQueryMessage({this.dataSessionId});
+  const ViewerDataQueryMessage({this.sessionId});
 
   @override
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'type': 'data_query'};
-    if (dataSessionId != null) map['session_id'] = dataSessionId;
+    if (sessionId != null) map['session_id'] = sessionId;
     return map;
   }
 }

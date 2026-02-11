@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app/models/log_entry.dart';
-import 'package:app/models/server_message.dart';
+import 'package:app/models/server_broadcast.dart';
 import 'package:app/models/viewer_message.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,9 +17,9 @@ void main() {
   group('ServerBroadcast fixture conformance', () {
     test('broadcast_event.json', () {
       final json = loadFixture('broadcast_event.json');
-      final msg = ServerMessage.fromJson(json);
-      expect(msg, isA<EventMessage>());
-      final event = msg as EventMessage;
+      final msg = ServerBroadcast.fromJson(json);
+      expect(msg, isA<EventBroadcast>());
+      final event = msg as EventBroadcast;
       expect(event.entry.id, equals('fix-001'));
       expect(event.entry.severity, equals(Severity.info));
       expect(event.entry.message, equals('Test fixture event'));
@@ -35,17 +35,17 @@ void main() {
 
     test('broadcast_data_update.json', () {
       final json = loadFixture('broadcast_data_update.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<DataUpdateMessage>());
       final update = msg as DataUpdateMessage;
       expect(update.sessionId, equals('s1'));
-      expect(update.dataKey, equals('db_pool'));
-      expect(update.dataValue, isA<Map>());
+      expect(update.key, equals('db_pool'));
+      expect(update.value, isA<Map>());
     });
 
     test('broadcast_data_snapshot.json', () {
       final json = loadFixture('broadcast_data_snapshot.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<DataSnapshotMessage>());
       final snapshot = msg as DataSnapshotMessage;
       expect(snapshot.sessionId, equals('s1'));
@@ -55,7 +55,7 @@ void main() {
 
     test('broadcast_session_update.json', () {
       final json = loadFixture('broadcast_session_update.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<SessionUpdateMessage>());
       final update = msg as SessionUpdateMessage;
       expect(update.sessionId, equals('s1'));
@@ -66,7 +66,7 @@ void main() {
 
     test('broadcast_session_list.json', () {
       final json = loadFixture('broadcast_session_list.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<SessionListMessage>());
       final list = msg as SessionListMessage;
       expect(list.sessions, hasLength(1));
@@ -78,7 +78,7 @@ void main() {
 
     test('broadcast_history.json', () {
       final json = loadFixture('broadcast_history.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<HistoryMessage>());
       final history = msg as HistoryMessage;
       expect(history.queryId, equals('q1'));
@@ -90,33 +90,33 @@ void main() {
 
     test('broadcast_error.json', () {
       final json = loadFixture('broadcast_error.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<ErrorMessage>());
       final error = msg as ErrorMessage;
-      expect(error.errorCode, equals('RATE_LIMIT'));
-      expect(error.errorMessage, equals('Too many requests'));
+      expect(error.code, equals('RATE_LIMIT'));
+      expect(error.message, equals('Too many requests'));
     });
 
     test('broadcast_ack.json', () {
       final json = loadFixture('broadcast_ack.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<AckMessage>());
-      expect((msg as AckMessage).ackIds, equals(['id1', 'id2']));
+      expect((msg as AckMessage).ids, equals(['id1', 'id2']));
     });
 
     test('broadcast_rpc_request.json', () {
       final json = loadFixture('broadcast_rpc_request.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<RpcRequestMessage>());
       final rpc = msg as RpcRequestMessage;
       expect(rpc.rpcId, equals('rpc1'));
-      expect(rpc.rpcMethod, equals('getState'));
-      expect(rpc.rpcArgs, isA<Map>());
+      expect(rpc.method, equals('getState'));
+      expect(rpc.args, isA<Map>());
     });
 
     test('broadcast_rpc_response.json', () {
       final json = loadFixture('broadcast_rpc_response.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<RpcResponseMessage>());
       final rpc = msg as RpcResponseMessage;
       expect(rpc.rpcId, equals('rpc1'));
@@ -126,7 +126,7 @@ void main() {
 
     test('broadcast_subscribe_ack.json', () {
       final json = loadFixture('broadcast_subscribe_ack.json');
-      final msg = ServerMessage.fromJson(json);
+      final msg = ServerBroadcast.fromJson(json);
       expect(msg, isA<SubscribeAckMessage>());
     });
   });

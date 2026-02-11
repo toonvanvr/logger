@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/server_message.dart';
+import '../models/server_broadcast.dart';
 
 /// Manages session state for the viewer.
 class SessionStore extends ChangeNotifier {

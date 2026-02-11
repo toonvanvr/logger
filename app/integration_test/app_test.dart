@@ -9,7 +9,7 @@
 library;
 
 import 'package:app/models/log_entry.dart';
-import 'package:app/models/server_message.dart';
+import 'package:app/models/server_broadcast.dart';
 import 'package:app/screens/log_viewer.dart';
 import 'package:app/services/connection_manager.dart';
 import 'package:app/services/log_store.dart';

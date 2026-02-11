@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/server_connection.dart';
-import '../models/server_message.dart';
+import '../models/server_broadcast.dart';
 import '../models/viewer_message.dart';
 
 part 'connection_reconnect.dart';
@@ -16,8 +16,8 @@ class ConnectionManager extends ChangeNotifier with _ConnectionLifecycle {
   @override
   final Map<String, _ActiveConnection> _connections = {};
   @override
-  final StreamController<ServerMessage> _messageController =
-      StreamController<ServerMessage>.broadcast();
+  final StreamController<ServerBroadcast> _messageController =
+      StreamController<ServerBroadcast>.broadcast();
 
   // ─── Public API ─────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ class ConnectionManager extends ChangeNotifier with _ConnectionLifecycle {
   int get activeCount =>
       _connections.values.where((c) => c.config.isActive).length;
 
-  Stream<ServerMessage> get messages => _messageController.stream;
+  Stream<ServerBroadcast> get messages => _messageController.stream;
 
   /// Add a new server connection and optionally connect immediately.
   String addConnection(String url, {String? label, bool connect = true}) {

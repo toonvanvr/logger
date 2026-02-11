@@ -25,7 +25,7 @@ class _ActiveConnection {
 /// Connection lifecycle management (connect, disconnect, reconnect).
 mixin _ConnectionLifecycle on ChangeNotifier {
   Map<String, _ActiveConnection> get _connections;
-  StreamController<ServerMessage> get _messageController;
+  StreamController<ServerBroadcast> get _messageController;
 
   Future<void> _connect(String id) async {
     final conn = _connections[id];
@@ -95,7 +95,7 @@ mixin _ConnectionLifecycle on ChangeNotifier {
   void _onData(String id, dynamic data) {
     try {
       final json = jsonDecode(data as String) as Map<String, dynamic>;
-      _messageController.add(ServerMessage.fromJson(json));
+      _messageController.add(ServerBroadcast.fromJson(json));
     } catch (e) {
       debugPrint('ConnectionManager[$id]: parse error: $e');
     }

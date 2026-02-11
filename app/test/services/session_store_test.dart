@@ -1,5 +1,5 @@
 import 'package:app/models/log_entry.dart';
-import 'package:app/models/server_message.dart';
+import 'package:app/models/server_broadcast.dart';
 import 'package:app/services/session_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 

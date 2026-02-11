@@ -74,8 +74,8 @@ class RpcService extends ChangeNotifier {
       ViewerRpcRequestMessage(
         rpcId: rpcId,
         targetSessionId: sessionId,
-        rpcMethod: method,
-        rpcArgs: args,
+        method: method,
+        args: args,
       ),
     );
 

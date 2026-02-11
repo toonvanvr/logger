@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/server_message.dart';
+import '../../models/server_broadcast.dart';
 import '../../services/session_store.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';

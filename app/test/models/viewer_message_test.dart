@@ -71,13 +71,13 @@ void main() {
     // ── Test 4: rpc_request with all fields ──
 
     test(
-      'rpc_request toJson with targetSessionId, rpcId, rpcMethod, rpcArgs',
+      'rpc_request toJson with targetSessionId, rpcId, method, args',
       () {
         const msg = ViewerRpcRequestMessage(
           targetSessionId: 'sess-1',
           rpcId: 'rpc-1',
-          rpcMethod: 'getState',
-          rpcArgs: {'key': 'theme'},
+          method: 'getState',
+          args: {'key': 'theme'},
         );
         final json = msg.toJson();
 
@@ -100,8 +100,8 @@ void main() {
 
     // ── Test 6: data_query toJson ──
 
-    test('data_query toJson with dataSessionId', () {
-      const msg = ViewerDataQueryMessage(dataSessionId: 'sess-1');
+    test('data_query toJson with sessionId', () {
+      const msg = ViewerDataQueryMessage(sessionId: 'sess-1');
       final json = msg.toJson();
 
       expect(json['type'], 'data_query');
