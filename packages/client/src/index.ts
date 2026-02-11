@@ -1,20 +1,16 @@
 // ─── Main API ────────────────────────────────────────────────────────
-export { Logger } from './logger.js'
-export type { LoggerOptions, Middleware } from './logger.js'
+export { Logger } from './logger'
+export type { LoggerOptions, Middleware } from './logger'
 
 // ─── Message types ───────────────────────────────────────────────────
-export type { Severity } from './logger-builders.js'
-export type { MessageKind, QueuedMessage } from './logger-types.js'
+export type { Severity } from './logger-builders'
+export type { MessageKind, QueuedMessage } from './logger-types'
 
 // ─── Transport ───────────────────────────────────────────────────────
-export { createTransport } from './transport/auto.js'
-export type { TransportType } from './transport/auto.js'
-export type { TransportAdapter } from './transport/types.js'
-
-// ─── Internals (for advanced use) ────────────────────────────────────
-export { LogQueue } from './queue.js'
-export { parseStackTrace } from './stack-parser.js'
+export { createTransport } from './transport/auto'
+export type { TransportType } from './transport/auto'
+export type { TransportAdapter } from './transport/types'
 
 // ─── Color Helpers ───────────────────────────────────────────────────
-export * as color from './color.js'
+export * as color from './color'
 

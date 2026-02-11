@@ -7,7 +7,7 @@ export {
     ApplicationInfo,
     SessionMessage,
     type ApplicationInfo as ApplicationInfoType
-} from './session-message.js'
+} from './session-message'
 
 export {
     EventMessage,
@@ -17,53 +17,40 @@ export {
     SourceLocation,
     StackFrame,
     type SeverityLevel
-} from './event-message.js'
+} from './event-message'
 
 export {
     DataMessage,
     DisplayLocation,
     WidgetConfig
-} from './data-message.js'
+} from './data-message'
 
 export {
     TreeNodeSchema,
     WidgetPayload,
     type TreeNode
-} from './widget.js'
+} from './widget'
 
 export {
     EntryKind,
     StoredEntry
-} from './stored-entry.js'
+} from './stored-entry'
 
 export {
     DataState,
     ServerBroadcast,
     SessionInfo
-} from './server-broadcast.js'
+} from './server-broadcast'
 
 export {
     ViewerCommand
-} from './viewer-command.js'
+} from './viewer-command'
 
 export {
-    DEFAULT_DATA_URL,
-    DEFAULT_EVENTS_URL,
     DEFAULT_HOST,
-    DEFAULT_SERVER_PORT,
-    DEFAULT_SESSION_URL,
     DEFAULT_TCP_PORT,
     DEFAULT_UDP_PORT,
-    DEFAULT_WS_URL,
-    ERROR_CODES,
     MAX_BATCH_SIZE,
-    MAX_BINARY_SIZE,
-    MAX_IMAGE_SIZE,
-    MAX_JSON_SIZE,
-    MAX_SESSION_ID_LENGTH,
-    MAX_TAGS,
     MAX_TEXT_SIZE,
-    RING_BUFFER_DEFAULT_SIZE
-} from './constants.js'
-export type { ErrorCode } from './constants.js'
+} from './constants'
 

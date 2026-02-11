@@ -1,6 +1,6 @@
 export interface StackFrame {
   location: { uri: string; line: number; column: number; symbol?: string }
-  is_vendor: boolean
+  is_vendor?: boolean
   raw: string
 }
 
