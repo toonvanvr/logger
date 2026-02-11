@@ -88,7 +88,12 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
   Widget build(BuildContext context) {
     final logStore = context.watch<LogStore>();
     final stickyState = context.watch<StickyStateService>();
-    final timeRange = context.watch<TimeRangeService>();
+    // Select only filter-relevant fields — avoids rebuilds when buckets,
+    // viewport position, or other minimap state changes.
+    context.select<TimeRangeService, (bool, DateTime?, DateTime?)>(
+      (s) => (s.isActive, s.rangeStart, s.rangeEnd),
+    );
+    final timeRange = context.read<TimeRangeService>();
 
     final filteredEntries = _filterCache.getFiltered(
       logStore: logStore,
