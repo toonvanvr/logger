@@ -120,7 +120,7 @@ class _ChartCardState extends State<_ChartCard> {
             border: Border.all(
               color: Color.lerp(
                 LoggerColors.borderSubtle,
-                Colors.white,
+                LoggerColors.fgPrimary,
                 _isHovered ? 0.1 : 0.0,
               )!,
             ),
@@ -136,7 +136,7 @@ class _ChartCardState extends State<_ChartCard> {
                     widget.data.title!,
                     style: LoggerTypography.logMeta.copyWith(
                       color: LoggerColors.fgSecondary,
-                      fontSize: 9,
+                      fontSize: kFontSizeLabel,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

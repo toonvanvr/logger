@@ -79,7 +79,7 @@ class _ToolGroupState extends State<ToolGroup>
                   widget.title.toUpperCase(),
                   style: LoggerTypography.sectionH.copyWith(
                     color: LoggerColors.fgSecondary,
-                    fontSize: 10,
+                    fontSize: kFontSizeBody,
                     letterSpacing: 1.0,
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/query_store.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Bookmark icon button that shows saved queries in a popup menu.
@@ -110,7 +111,7 @@ class BookmarkButton extends StatelessWidget {
           'Save Query',
           style: LoggerTypography.logMeta.copyWith(
             color: LoggerColors.fgPrimary,
-            fontSize: 14,
+            fontSize: kFontSizeIcon,
           ),
         ),
         content: TextField(

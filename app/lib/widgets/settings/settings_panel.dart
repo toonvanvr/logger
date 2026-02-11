@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../plugins/plugin_registry.dart';
 import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../version.dart';
 import 'connection_settings.dart';
 import 'settings_panel_header.dart';

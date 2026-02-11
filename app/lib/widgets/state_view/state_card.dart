@@ -50,7 +50,7 @@ class _StateCardState extends State<StateCard> {
                       0.15,
                     )!
                   : LoggerColors.bgSurface,
-              Colors.white,
+              LoggerColors.fgPrimary,
               _isHovered ? 0.05 : 0.0,
             )!,
             borderRadius: kBorderRadiusSm,
@@ -77,7 +77,7 @@ class _StateCardState extends State<StateCard> {
                   color: widget.isActiveFilter
                       ? LoggerColors.fgPrimary
                       : LoggerColors.fgMuted,
-                  fontSize: 10,
+                  fontSize: kFontSizeBody,
                 ),
               ),
               const SizedBox(width: 4),
@@ -91,7 +91,7 @@ class _StateCardState extends State<StateCard> {
                       overflow: TextOverflow.ellipsis,
                       style: LoggerTypography.logMeta.copyWith(
                         color: LoggerColors.fgPrimary,
-                        fontSize: 10,
+                        fontSize: kFontSizeBody,
                       ),
                     ),
                   ),
@@ -107,7 +107,7 @@ class _StateCardState extends State<StateCard> {
                       overflow: TextOverflow.ellipsis,
                       style: LoggerTypography.logMeta.copyWith(
                         color: LoggerColors.fgPrimary,
-                        fontSize: 10,
+                        fontSize: kFontSizeBody,
                       ),
                     ),
                   ),

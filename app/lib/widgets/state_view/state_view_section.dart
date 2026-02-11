@@ -92,7 +92,7 @@ class StateViewSection extends StatelessWidget {
                       '${displayEntries.length}',
                       style: LoggerTypography.badge.copyWith(
                         color: LoggerColors.fgMuted,
-                        fontSize: 9,
+                        fontSize: kFontSizeLabel,
                       ),
                     ),
                   ),

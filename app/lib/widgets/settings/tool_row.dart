@@ -43,7 +43,7 @@ class ToolRow extends StatelessWidget {
                 label,
                 style: LoggerTypography.drawer.copyWith(
                   color: LoggerColors.fgSecondary,
-                  fontSize: 12,
+                  fontSize: kFontSizeControl,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

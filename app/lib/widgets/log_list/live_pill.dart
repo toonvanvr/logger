@@ -27,7 +27,7 @@ class LivePill extends StatelessWidget {
             children: [
               const Text(
                 '⬇',
-                style: TextStyle(fontSize: 8, color: LoggerColors.fgMuted),
+                style: TextStyle(fontSize: kFontSizeBadge, color: LoggerColors.fgMuted),
               ),
               const SizedBox(width: 3),
               Text(
@@ -68,7 +68,7 @@ class NewLogsButton extends StatelessWidget {
             children: [
               const Text(
                 '⬇',
-                style: TextStyle(fontSize: 8, color: LoggerColors.syntaxNumber),
+                style: TextStyle(fontSize: kFontSizeBadge, color: LoggerColors.syntaxNumber),
               ),
               const SizedBox(width: 3),
               Text(

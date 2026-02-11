@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/server_connection.dart';
 import '../../services/connection_manager.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 // ─── Status item ─────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ class StatusItem extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: LoggerTypography.logMeta.copyWith(fontSize: 9, color: color),
+          style: LoggerTypography.logMeta.copyWith(fontSize: kFontSizeLabel, color: color),
         ),
       ],
     );
@@ -159,7 +160,7 @@ class ConnectionIndicatorState extends State<ConnectionIndicator> {
             Text(
               _label,
               style: LoggerTypography.logMeta.copyWith(
-                fontSize: 9,
+                fontSize: kFontSizeLabel,
                 color: textColor,
               ),
             ),
@@ -199,7 +200,7 @@ class StickyStatusSection extends StatelessWidget {
         Text(
           parts.join(', '),
           style: LoggerTypography.logMeta.copyWith(
-            fontSize: 9,
+            fontSize: kFontSizeLabel,
             color: LoggerColors.fgMuted,
           ),
         ),
@@ -209,7 +210,7 @@ class StickyStatusSection extends StatelessWidget {
           child: Text(
             'Restore all',
             style: LoggerTypography.logMeta.copyWith(
-              fontSize: 9,
+              fontSize: kFontSizeLabel,
               color: LoggerColors.borderFocus,
             ),
           ),

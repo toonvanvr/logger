@@ -102,7 +102,7 @@ class _FilterBarState extends State<FilterBar> {
                             'state:$key',
                             style: LoggerTypography.logMeta.copyWith(
                               color: LoggerColors.fgPrimary,
-                              fontSize: 10,
+                              fontSize: kFontSizeBody,
                             ),
                           ),
                           const SizedBox(width: 3),

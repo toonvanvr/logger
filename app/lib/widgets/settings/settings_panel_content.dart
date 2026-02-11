@@ -147,7 +147,7 @@ class _PanelContentState extends State<_PanelContent> {
                   if (commitSha.isNotEmpty) commitSha.substring(0, 7),
                 ].join(' · '),
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: kFontSizeSubhead,
                   fontFamily: 'JetBrains Mono',
                 ),
               ),

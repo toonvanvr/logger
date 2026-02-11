@@ -53,7 +53,7 @@ class StickyGroupHeader extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: LoggerTypography.groupTitle.copyWith(fontSize: 11),
+            style: LoggerTypography.groupTitle.copyWith(fontSize: kFontSizeSubhead),
           ),
           const SizedBox(width: 8),
           Container(
@@ -69,7 +69,7 @@ class StickyGroupHeader extends StatelessWidget {
             child: Text(
               'PINNED',
               style: LoggerTypography.badge.copyWith(
-                fontSize: 8,
+                fontSize: kFontSizeBadge,
                 color: LoggerColors.borderFocus,
                 letterSpacing: 0.6,
               ),
@@ -207,7 +207,7 @@ class HiddenItemsBadge extends StatelessWidget {
               child: Text(
                 '$count item${count == 1 ? '' : 's'} hidden',
                 style: LoggerTypography.badge.copyWith(
-                  fontSize: 8,
+                  fontSize: kFontSizeBadge,
                   color: LoggerColors.fgSecondary,
                 ),
               ),

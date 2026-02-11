@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
+import '../../theme/colors.dart';
 import '../plugin_manifest.dart';
 import '../plugin_registry.dart';
 import '../plugin_types.dart';
@@ -117,7 +118,7 @@ class ChartRendererPlugin extends RendererPlugin with EnableablePlugin {
       painter: ChartPainter(
         variant: 'sparkline',
         values: values,
-        color: Colors.blueGrey,
+        color: LoggerColors.fgSecondary,
         textColor: Colors.transparent,
       ),
       size: const Size(80, 24),

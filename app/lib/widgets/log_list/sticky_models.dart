@@ -54,7 +54,7 @@ class SectionCountBar extends StatelessWidget {
             Text(
               '$total sections pinned',
               style: LoggerTypography.badge.copyWith(
-                fontSize: 8,
+                fontSize: kFontSizeBadge,
                 color: LoggerColors.fgSecondary,
               ),
             ),
@@ -62,7 +62,7 @@ class SectionCountBar extends StatelessWidget {
             Text(
               expanded ? 'collapse' : 'expand',
               style: LoggerTypography.badge.copyWith(
-                fontSize: 8,
+                fontSize: kFontSizeBadge,
                 color: LoggerColors.borderFocus,
               ),
             ),
@@ -102,7 +102,7 @@ class OverflowIndicator extends StatelessWidget {
           child: Text(
             '$count more hidden...',
             style: LoggerTypography.badge.copyWith(
-              fontSize: 8,
+              fontSize: kFontSizeBadge,
               color: LoggerColors.borderFocus,
             ),
           ),

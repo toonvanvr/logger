@@ -83,7 +83,7 @@ class ProgressRenderer extends StatelessWidget {
                             child: Text(
                               label,
                               style: LoggerTypography.logMeta.copyWith(
-                                color: Colors.white,
+                                color: LoggerColors.fgPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -91,7 +91,7 @@ class ProgressRenderer extends StatelessWidget {
                         Text(
                           '$percentage%',
                           style: LoggerTypography.logMeta.copyWith(
-                            color: Colors.white,
+                            color: LoggerColors.fgPrimary,
                           ),
                         ),
                       ],

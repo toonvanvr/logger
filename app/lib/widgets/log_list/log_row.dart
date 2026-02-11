@@ -72,7 +72,7 @@ mixin _LogRowInteraction<T extends StatefulWidget> on State<T> {
         : (_row.isEvenRow
               ? LoggerColors.bgSurface
               : LoggerColors.bgSurface.withValues(alpha: 0.85));
-    if (isHovered) return Color.lerp(base, Colors.white, 0.06)!;
+    if (isHovered) return Color.lerp(base, LoggerColors.fgPrimary, 0.06)!;
     return base;
   }
 

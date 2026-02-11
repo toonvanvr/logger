@@ -197,7 +197,7 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
                             _prefixHint(suggestion),
                             style: LoggerTypography.logMeta.copyWith(
                               color: LoggerColors.fgMuted,
-                              fontSize: 9,
+                              fontSize: kFontSizeLabel,
                             ),
                           ),
                       ],

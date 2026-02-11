@@ -79,7 +79,7 @@ class StackExpansionPanel extends StatelessWidget {
               child: Text(
                 entry.message ?? '(no message)',
                 style: LoggerTypography.logBody.copyWith(
-                  fontSize: 11,
+                  fontSize: kFontSizeSubhead,
                   color: isActive
                       ? LoggerColors.fgPrimary
                       : LoggerColors.fgSecondary,

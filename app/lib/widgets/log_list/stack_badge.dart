@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Pill badge showing the stack depth (×N) for stacked log entries.
@@ -29,7 +30,7 @@ class StackBadge extends StatelessWidget {
         child: Text(
           '×$depth',
           style: LoggerTypography.logBody.copyWith(
-            fontSize: 10,
+            fontSize: kFontSizeBody,
             color: LoggerColors.fgSecondary,
           ),
         ),

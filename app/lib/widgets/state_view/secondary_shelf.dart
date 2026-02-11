@@ -49,7 +49,7 @@ class SecondaryShelf extends StatelessWidget {
                     'Secondary',
                     style: LoggerTypography.badge.copyWith(
                       color: LoggerColors.fgMuted,
-                      fontSize: 9,
+                      fontSize: kFontSizeLabel,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -67,7 +67,7 @@ class SecondaryShelf extends StatelessWidget {
                       '${entries.length}',
                       style: LoggerTypography.badge.copyWith(
                         color: LoggerColors.fgMuted,
-                        fontSize: 8,
+                        fontSize: kFontSizeBadge,
                       ),
                     ),
                   ),

@@ -48,7 +48,7 @@ class _ShelfCardState extends State<ShelfCard> {
           decoration: BoxDecoration(
             color: Color.lerp(
               LoggerColors.bgSurface.withValues(alpha: 0.6),
-              Colors.white,
+              LoggerColors.fgPrimary,
               _isHovered ? 0.05 : 0.0,
             )!,
             borderRadius: kBorderRadiusSm,
@@ -63,7 +63,7 @@ class _ShelfCardState extends State<ShelfCard> {
                 displayKey,
                 style: LoggerTypography.logMeta.copyWith(
                   color: LoggerColors.fgMuted,
-                  fontSize: 9,
+                  fontSize: kFontSizeLabel,
                 ),
               ),
               const SizedBox(width: 4),
@@ -77,7 +77,7 @@ class _ShelfCardState extends State<ShelfCard> {
                     overflow: TextOverflow.ellipsis,
                     style: LoggerTypography.logMeta.copyWith(
                       color: LoggerColors.fgSecondary,
-                      fontSize: 10,
+                      fontSize: kFontSizeBody,
                     ),
                   ),
                 ),

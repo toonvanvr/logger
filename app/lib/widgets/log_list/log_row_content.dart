@@ -216,7 +216,7 @@ class _DurationBadge extends StatelessWidget {
         text,
         style: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 9,
+          fontSize: kFontSizeLabel,
           fontWeight: FontWeight.bold,
           color: color,
           height: 1.2,

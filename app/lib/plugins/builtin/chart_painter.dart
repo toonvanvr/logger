@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../theme/constants.dart';
+
 /// Custom painter for bar, sparkline, area, and dense bar charts.
 class ChartPainter extends CustomPainter {
   final String variant;
@@ -61,7 +63,7 @@ class ChartPainter extends CustomPainter {
       if (labels != null && i < labels!.length) {
         final span = TextSpan(
           text: labels![i],
-          style: TextStyle(color: textColor, fontSize: 9),
+          style: TextStyle(color: textColor, fontSize: kFontSizeLabel),
         );
         final tp = TextPainter(
           text: span,
