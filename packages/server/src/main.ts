@@ -1,18 +1,15 @@
-import { config } from './core/config'
-import { HookManager } from './core/hooks'
-import { RateLimiter } from './core/rate-limiter'
-import { FileStore } from './modules/file-store'
-import { LokiForwarder } from './modules/loki-forwarder'
-import { RingBuffer } from './modules/ring-buffer'
-import { RpcBridge } from './modules/rpc-bridge'
-import { SelfLogger } from './modules/self-logger'
-import { SessionManager } from './modules/session-manager'
-import { WebSocketHub } from './modules/ws-hub'
+import { config, HookManager, RateLimiter } from './core'
+import {
+  FileStore,
+  LokiForwarder,
+  RingBuffer,
+  RpcBridge,
+  SelfLogger,
+  SessionManager,
+  WebSocketHub,
+} from './modules'
 import { createStoreReader, createStoreWriter } from './store'
-import { setupHttpRoutes } from './transport/http'
-import { setupTcp } from './transport/tcp'
-import { setupUdp } from './transport/udp'
-import { setupWebSocket } from './transport/ws'
+import { setupHttpRoutes, setupTcp, setupUdp, setupWebSocket } from './transport'
 
 // HOW TO ADD A MODULE:
 // 1. Create module class in modules/ (implement shutdown() for lifecycle)
