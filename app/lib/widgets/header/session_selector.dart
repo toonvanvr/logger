@@ -8,7 +8,7 @@ import '../../services/settings_service.dart';
 import '../../services/window_service.dart';
 import '../../theme/colors.dart';
 import '../landing/landing_helpers.dart';
-import 'overflow_menu.dart';
+import 'overflow_button.dart';
 import 'session_button.dart';
 import 'window_controls.dart';
 

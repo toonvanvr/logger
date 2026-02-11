@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../services/sticky_state.dart';
 import '../../theme/colors.dart';
-import 'sticky_header_entry.dart';
+import 'sticky_group_header.dart';
 import 'sticky_models.dart';
 
 export 'sticky_models.dart' show StickySection, OnHiddenTap;

@@ -1,6 +1,6 @@
 import 'package:app/services/session_store.dart';
 import 'package:app/theme/theme.dart';
-import 'package:app/widgets/log_list/sticky_header_entry.dart';
+import 'package:app/widgets/log_list/sticky_group_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';

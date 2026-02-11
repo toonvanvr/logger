@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
-import 'cause_chain_renderer.dart';
-import 'stack_frame_list.dart';
+import 'cause_chain_widget.dart';
+import 'stack_frame_widget.dart';
 
 /// Renders an [ExceptionData] stack trace with collapsible frames.
 ///

@@ -6,7 +6,7 @@ import '../../theme/colors.dart';
 import '../../version.dart';
 import 'connection_settings.dart';
 import 'settings_panel_header.dart';
-import 'settings_sub_panels.dart';
+import 'editor_sub_panel.dart';
 import 'tool_group.dart';
 import 'tool_row.dart';
 

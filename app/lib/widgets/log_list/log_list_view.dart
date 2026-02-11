@@ -13,8 +13,8 @@ import 'live_pill.dart';
 import 'log_filter_cache.dart';
 import 'log_list_builder.dart';
 import 'log_row.dart';
-import 'stack_expansion.dart';
-import 'sticky_header.dart';
+import 'stack_expansion_panel.dart';
+import 'sticky_header_overlay.dart';
 import 'sticky_section_builder.dart';
 
 part 'log_list_item_builder.dart';

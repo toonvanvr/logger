@@ -2,7 +2,7 @@ import 'package:app/models/log_entry.dart';
 import 'package:app/services/session_store.dart';
 import 'package:app/services/sticky_state.dart';
 import 'package:app/theme/theme.dart';
-import 'package:app/widgets/log_list/sticky_header.dart';
+import 'package:app/widgets/log_list/sticky_header_overlay.dart';
 import 'package:app/widgets/log_list/sticky_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

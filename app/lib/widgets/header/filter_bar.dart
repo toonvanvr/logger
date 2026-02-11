@@ -4,7 +4,7 @@ import '../../theme/colors.dart';
 import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'bookmark_button.dart';
-import 'filter_suggestions.dart';
+import 'filter_search_field.dart';
 import 'severity_toggle.dart';
 
 const _filterBarHeight = 32.0;
