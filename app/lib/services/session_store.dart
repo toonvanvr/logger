@@ -6,12 +6,13 @@ import '../models/server_broadcast.dart';
 class SessionStore extends ChangeNotifier {
   final Map<String, SessionInfo> _sessions = {};
   final Set<String> _selectedSessionIds = {};
+  Set<String> _cachedSelectedIds = const {};
 
   /// All known sessions.
   List<SessionInfo> get sessions => _sessions.values.toList();
 
   /// Currently selected session IDs.
-  Set<String> get selectedSessionIds => Set.unmodifiable(_selectedSessionIds);
+  Set<String> get selectedSessionIds => _cachedSelectedIds;
 
   /// Update or insert a session.
   void updateSession(SessionInfo session) {
@@ -27,6 +28,10 @@ class SessionStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _updateSelectedCache() {
+    _cachedSelectedIds = Set.unmodifiable(_selectedSessionIds);
+  }
+
   /// Toggle selection state for a session.
   void toggleSession(String sessionId) {
     if (_selectedSessionIds.contains(sessionId)) {
@@ -34,6 +39,7 @@ class SessionStore extends ChangeNotifier {
     } else {
       _selectedSessionIds.add(sessionId);
     }
+    _updateSelectedCache();
     notifyListeners();
   }
 
@@ -48,18 +54,21 @@ class SessionStore extends ChangeNotifier {
         ..clear()
         ..add(sessionId);
     }
+    _updateSelectedCache();
     notifyListeners();
   }
 
   /// Select all known sessions.
   void selectAll() {
     _selectedSessionIds.addAll(_sessions.keys);
+    _updateSelectedCache();
     notifyListeners();
   }
 
   /// Deselect all sessions.
   void deselectAll() {
     _selectedSessionIds.clear();
+    _updateSelectedCache();
     notifyListeners();
   }
 

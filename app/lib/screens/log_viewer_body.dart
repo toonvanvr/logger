@@ -189,7 +189,8 @@ class LogViewerBody extends StatelessWidget {
           child: Builder(
             builder: (context) {
               final selectedSessions =
-                  context.watch<SessionStore>().selectedSessionIds;
+                  context.select<SessionStore, Set<String>>(
+                      (s) => s.selectedSessionIds);
               final logListView = LogListView(
                 tagFilter: selectedSection,
                 activeSeverities: filterService.activeSeverities,
