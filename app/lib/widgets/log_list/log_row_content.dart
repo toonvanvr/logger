@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../models/log_entry.dart';
 import '../../plugins/plugin_types.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import '../renderers/renderer_factory.dart';
 import 'hover_action_bar.dart';
@@ -209,7 +210,7 @@ class _DurationBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withAlpha(38),
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: kBorderRadiusSm,
       ),
       child: Text(
         text,
@@ -237,7 +238,8 @@ String serializeLogEntry(LogEntry entry) {
         '  ',
       ).convert(entry.widget!.data['data']);
       return text.isNotEmpty ? '$text\n$encoded' : encoded;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: widget data serialization failed: $e');
       return text.isNotEmpty
           ? '$text\n${entry.widget!.data['data']}'
           : '${entry.widget!.data['data']}';
@@ -249,7 +251,8 @@ String serializeLogEntry(LogEntry entry) {
         '  ',
       ).convert(entry.widget!.data);
       return text.isNotEmpty ? '$text\n$encoded' : encoded;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: widget data serialization failed: $e');
       return text.isNotEmpty ? text : '${entry.widget!.data}';
     }
   }

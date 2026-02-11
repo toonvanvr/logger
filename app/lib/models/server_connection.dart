@@ -1,6 +1,8 @@
 /// Connection state and configuration for a server connection.
 library;
 
+import 'package:flutter/foundation.dart';
+
 /// Connection state for a server connection.
 enum ServerConnectionState {
   disconnected,
@@ -41,7 +43,8 @@ class ServerConnection {
     if (label != null && label!.isNotEmpty) return label!;
     try {
       return Uri.parse(url).host;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: URL parse failed for "$url": $e');
       return url;
     }
   }

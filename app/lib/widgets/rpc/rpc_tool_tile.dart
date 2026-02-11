@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../services/connection_manager.dart';
 import '../../services/rpc_service.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Displays a single RPC tool with invoke/result inline.
@@ -60,7 +61,7 @@ class _RpcToolTileState extends State<RpcToolTile> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: LoggerColors.bgSurface,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: kBorderRadius,
                 border: Border.all(color: LoggerColors.borderSubtle),
               ),
               child: Row(
@@ -111,7 +112,7 @@ class _RpcToolTileState extends State<RpcToolTile> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: LoggerColors.bgBase,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: kBorderRadius,
               ),
               child: Text(
                 _error ?? _formatResult(_result),
@@ -193,7 +194,8 @@ class _RpcToolTileState extends State<RpcToolTile> {
     try {
       const encoder = JsonEncoder.withIndent('  ');
       return encoder.convert(data);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: RPC result JSON formatting failed: $e');
       return data.toString();
     }
   }

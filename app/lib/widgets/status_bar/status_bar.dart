@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../services/log_store.dart';
 import '../../services/sticky_state.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import 'status_bar_segments.dart';
 
 /// A subtle status bar at the bottom of the app showing entry count,
@@ -28,7 +29,7 @@ class StatusBar extends StatelessWidget {
     return Container(
       height: 20,
       color: LoggerColors.bgBase,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: kHPadding8,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final narrow = constraints.maxWidth < 400;

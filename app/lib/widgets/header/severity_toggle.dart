@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Single-letter severity toggle button used in the filter bar.
@@ -28,7 +29,7 @@ class SeverityToggle extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: isActive ? color.withAlpha(51) : Colors.transparent,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: kBorderRadiusSm,
             border: Border.all(
               color: isActive ? color : LoggerColors.borderDefault,
               width: 1,

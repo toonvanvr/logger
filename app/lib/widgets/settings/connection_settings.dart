@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/server_connection.dart';
 import '../../services/connection_manager.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'settings_text_field.dart';
 
@@ -123,7 +124,7 @@ class _AddConnectionButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           border: Border.all(color: LoggerColors.borderSubtle),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
         ),
         alignment: Alignment.center,
         child: Row(

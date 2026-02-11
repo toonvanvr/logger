@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/rpc_service.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'rpc_tool_tile.dart';
 
@@ -62,7 +63,7 @@ class _PanelHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: kHPadding12,
       child: Row(
         children: [
           Text('Tools', style: LoggerTypography.sectionH),

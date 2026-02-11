@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Renders an image log entry.
@@ -86,7 +87,7 @@ class _ImageRendererState extends State<ImageRenderer> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: LoggerColors.bgOverlay,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: kBorderRadius,
             border: Border.all(color: LoggerColors.borderSubtle),
           ),
           child: Row(
@@ -133,7 +134,7 @@ class _ImageRendererState extends State<ImageRenderer> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: LoggerColors.bgOverlay,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
           border: Border.all(color: LoggerColors.borderSubtle),
         ),
         child: Row(

@@ -28,7 +28,8 @@ class JsonRenderer extends StatelessWidget {
     if (data is String) {
       try {
         parsed = jsonDecode(data);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('Warning: JSON decode failed: $e');
         return Text(data, style: LoggerTypography.logBody);
       }
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/log_entry.dart';
 import '../../../theme/colors.dart';
+import '../../../theme/constants.dart';
 import '../../../theme/typography.dart';
 
 class ProgressRenderer extends StatelessWidget {
@@ -57,7 +58,7 @@ class ProgressRenderer extends StatelessWidget {
             height: 24,
             decoration: BoxDecoration(
               color: LoggerColors.bgOverlay,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: kBorderRadius,
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -67,13 +68,13 @@ class ProgressRenderer extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: kBorderRadius,
                     ),
                   ),
                 ),
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: kHPadding8,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

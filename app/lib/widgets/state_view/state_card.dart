@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Compact card showing a single state key:value pair.
@@ -52,7 +53,7 @@ class _StateCardState extends State<StateCard> {
               Colors.white,
               _isHovered ? 0.05 : 0.0,
             )!,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: kBorderRadiusSm,
             border: Border(
               left: BorderSide(
                 color: widget.isActiveFilter

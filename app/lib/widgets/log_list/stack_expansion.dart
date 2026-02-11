@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'stack_timeline.dart';
 
@@ -61,7 +62,7 @@ class StackExpansionPanel extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
         decoration: BoxDecoration(
           color: isActive ? LoggerColors.bgActive : Colors.transparent,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: kBorderRadiusSm,
         ),
         child: Row(
           children: [
@@ -101,7 +102,8 @@ class StackExpansionPanel extends StatelessWidget {
       return '${dt.hour.toString().padLeft(2, '0')}:'
           '${dt.minute.toString().padLeft(2, '0')}:'
           '${dt.second.toString().padLeft(2, '0')}';
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: timestamp parse failed: $e');
       return timestamp;
     }
   }

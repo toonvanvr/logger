@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Collapsible group in the settings panel containing [ToolRow] children.
@@ -64,7 +65,7 @@ class _ToolGroupState extends State<ToolGroup>
           onTap: _toggle,
           child: Container(
             height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: kHPadding12,
             color: LoggerColors.bgSurface,
             child: Row(
               children: [

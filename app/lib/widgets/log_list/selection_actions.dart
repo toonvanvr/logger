@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Floating action bar shown when log entries are selected in selection mode.
@@ -29,7 +30,7 @@ class SelectionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: kHPadding8,
       decoration: BoxDecoration(
         color: LoggerColors.bgOverlay,
         borderRadius: BorderRadius.circular(6),
@@ -70,7 +71,7 @@ class SelectionActions extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: LoggerColors.bgActive,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: kBorderRadius,
             ),
             child: Text('$selectedCount', style: LoggerTypography.badge),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'colors.dart';
+import 'constants.dart';
 
 /// Constructs the app-wide [ThemeData] using the Logger color system.
 ThemeData createLoggerTheme() {
@@ -28,7 +29,7 @@ ThemeData createLoggerTheme() {
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
         color: LoggerColors.bgOverlay,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: kBorderRadius,
         border: Border.all(color: LoggerColors.borderDefault),
       ),
       textStyle: const TextStyle(fontSize: 11, color: LoggerColors.fgPrimary),
@@ -38,11 +39,11 @@ ThemeData createLoggerTheme() {
       fillColor: LoggerColors.bgSurface,
       border: OutlineInputBorder(
         borderSide: const BorderSide(color: LoggerColors.borderDefault),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: kBorderRadius,
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: const BorderSide(color: LoggerColors.borderFocus),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: kBorderRadius,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     ),

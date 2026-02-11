@@ -2,6 +2,7 @@ import '../../models/log_entry.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// A section of sticky entries grouped under an optional parent group header.
@@ -42,7 +43,7 @@ class SectionCountBar extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 16,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: kHPadding8,
         decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(color: LoggerColors.borderSubtle, width: 0.5),
@@ -90,7 +91,7 @@ class OverflowIndicator extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 18,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: kHPadding8,
         decoration: const BoxDecoration(
           color: LoggerColors.bgOverlay,
           border: Border(

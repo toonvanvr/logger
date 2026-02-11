@@ -85,7 +85,8 @@ parseUrl(String url) {
 String decodeUrlForDisplay(String url) {
   try {
     return Uri.decodeFull(url);
-  } catch (_) {
+  } catch (e) {
+    debugPrint('Warning: URL decode failed: $e');
     return url;
   }
 }

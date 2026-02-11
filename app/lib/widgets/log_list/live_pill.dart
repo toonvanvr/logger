@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Small "LIVE" pill shown when auto-scroll is active.
@@ -19,7 +20,7 @@ class LivePill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: LoggerColors.bgOverlay.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: kBorderRadius,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -60,7 +61,7 @@ class NewLogsButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: LoggerColors.bgOverlay,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: kBorderRadius,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../services/log_store.dart';
 import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'secondary_shelf.dart';
 import 'state_card.dart';
@@ -61,7 +62,7 @@ class StateViewSection extends StatelessWidget {
             ),
             child: Container(
               height: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: kHPadding8,
               child: Row(
                 children: [
                   Icon(
@@ -84,7 +85,7 @@ class StateViewSection extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: LoggerColors.bgSurface,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: kBorderRadiusSm,
                     ),
                     child: Text(
                       '${displayEntries.length}',

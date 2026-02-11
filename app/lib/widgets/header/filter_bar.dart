@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'bookmark_button.dart';
 import 'filter_suggestions.dart';
@@ -57,7 +58,7 @@ class _FilterBarState extends State<FilterBar> {
     return Container(
       height: _filterBarHeight,
       color: LoggerColors.bgRaised,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: kHPadding8,
       child: Row(
         children: [
           for (final severity in _severities)
@@ -87,7 +88,7 @@ class _FilterBarState extends State<FilterBar> {
                         color: LoggerColors.severityInfoBar.withValues(
                           alpha: 0.15,
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: kBorderRadiusSm,
                         border: Border.all(
                           color: LoggerColors.severityInfoBar.withValues(
                             alpha: 0.4,

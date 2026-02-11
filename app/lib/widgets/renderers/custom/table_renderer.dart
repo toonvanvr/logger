@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/log_entry.dart';
 import '../../../theme/colors.dart';
+import '../../../theme/constants.dart';
 import '../../../theme/typography.dart';
 
 class TableRenderer extends StatefulWidget {
@@ -60,7 +61,7 @@ class _TableRendererState extends State<TableRenderer> {
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(color: LoggerColors.borderSubtle),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: kBorderRadius,
             ),
             clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/status_bar_item.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import '../plugin_manifest.dart';
 import '../plugin_registry.dart';
@@ -172,7 +173,7 @@ class _DockerLogsPanel extends StatelessWidget {
           ),
           border: OutlineInputBorder(
             borderSide: const BorderSide(color: LoggerColors.borderDefault),
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: kBorderRadiusSm,
           ),
         ),
         onChanged: onChanged,

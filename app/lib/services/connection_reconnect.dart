@@ -48,7 +48,8 @@ mixin _ConnectionLifecycle on ChangeNotifier {
       // Wait for the WebSocket handshake to complete before marking connected
       try {
         await channel.ready;
-      } catch (_) {
+      } catch (e) {
+        debugPrint('Warning: WebSocket handshake failed for ${conn.config.url}: $e');
         // Handshake failed — trigger reconnect via onError/onDone path
         return;
       }

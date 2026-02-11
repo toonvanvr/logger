@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Reusable text field for settings panels.
@@ -52,15 +53,15 @@ class _SettingsTextFieldState extends State<SettingsTextField> {
         filled: true,
         fillColor: LoggerColors.bgSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
           borderSide: const BorderSide(color: LoggerColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
           borderSide: const BorderSide(color: LoggerColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
           borderSide: const BorderSide(color: LoggerColors.borderFocus),
         ),
       ),

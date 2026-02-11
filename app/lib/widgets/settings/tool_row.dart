@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// A single tool entry in a [ToolGroup]: icon + label + optional checkbox
@@ -32,7 +33,7 @@ class ToolRow extends StatelessWidget {
     return SizedBox(
       height: 30,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: kHPadding12,
         child: Row(
           children: [
             Icon(icon, size: 14, color: LoggerColors.fgMuted),

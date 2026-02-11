@@ -7,6 +7,7 @@ import '../../plugins/builtin/smart_search_plugin.dart';
 import '../../plugins/plugin_registry.dart';
 import '../../services/log_store.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'search_suggestions.dart';
 
@@ -137,7 +138,7 @@ class _FilterSearchFieldState extends State<FilterSearchField> {
 
   @override
   Widget build(BuildContext context) {
-    final br = BorderRadius.circular(3);
+    final br = kBorderRadiusSm;
     final border = OutlineInputBorder(
       borderSide: const BorderSide(color: LoggerColors.borderDefault),
       borderRadius: br,

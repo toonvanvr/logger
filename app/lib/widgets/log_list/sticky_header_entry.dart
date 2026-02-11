@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/log_entry.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import '../renderers/renderer_factory.dart';
 import 'session_dot.dart';
@@ -59,7 +60,7 @@ class StickyGroupHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
               color: LoggerColors.borderFocus.withAlpha(30),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: kBorderRadiusSm,
               border: Border.all(
                 color: LoggerColors.borderFocus.withAlpha(80),
                 width: 0.5,

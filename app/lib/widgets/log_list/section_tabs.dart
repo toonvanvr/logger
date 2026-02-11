@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Tabs for filtering logs by tag (State, Events, custom tags).
@@ -188,7 +189,7 @@ class _SectionTabState extends State<_SectionTab> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: kHPadding8,
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(

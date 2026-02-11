@@ -33,7 +33,8 @@ class _BinaryRendererState extends State<BinaryRenderer> {
     Uint8List bytes;
     try {
       bytes = base64Decode(raw);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Warning: base64 decode failed, using raw bytes: $e');
       bytes = Uint8List.fromList(utf8.encode(raw));
     }
 

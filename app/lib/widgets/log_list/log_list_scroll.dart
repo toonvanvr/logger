@@ -111,8 +111,8 @@ mixin _LogListScrollMixin on State<LogListView> {
       if (!connection.isConnected) return;
       _isFetchingHistorical = true;
       connection.queryHistory(cursor: _historicalCursor, limit: 500);
-    } catch (_) {
-      // No ConnectionManager available in the widget tree — skip.
+    } catch (e) {
+      debugPrint('Warning: history request failed (no ConnectionManager?): $e');
     }
   }
 

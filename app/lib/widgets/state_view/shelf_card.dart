@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Dimmed card variant for secondary state (_shelf.* prefix keys).
@@ -50,7 +51,7 @@ class _ShelfCardState extends State<ShelfCard> {
               Colors.white,
               _isHovered ? 0.05 : 0.0,
             )!,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: kBorderRadiusSm,
             border: const Border(
               left: BorderSide(color: LoggerColors.borderSubtle, width: 2),
             ),

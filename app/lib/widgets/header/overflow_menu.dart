@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/server_broadcast.dart';
 import '../../services/session_store.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 const _headerHeight = 40.0;
@@ -43,7 +44,7 @@ class _OverflowButtonState extends State<OverflowButton> {
             child: Material(
               color: LoggerColors.bgOverlay,
               elevation: 8,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: kBorderRadius,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   maxHeight: 300,
@@ -91,7 +92,7 @@ class _OverflowButtonState extends State<OverflowButton> {
       child: SizedBox(
         height: 28,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: kHPadding8,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

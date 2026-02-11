@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/settings_service.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 import 'shelf_card.dart';
 
@@ -34,7 +35,7 @@ class SecondaryShelf extends StatelessWidget {
           child: SizedBox(
             height: 20,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: kHPadding8,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -60,7 +61,7 @@ class SecondaryShelf extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: LoggerColors.bgSurface,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: kBorderRadiusSm,
                     ),
                     child: Text(
                       '${entries.length}',

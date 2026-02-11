@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../theme/colors.dart';
+import '../../../../theme/constants.dart';
 import '../../../../theme/typography.dart';
 import 'http_utils.dart';
 
@@ -124,7 +125,7 @@ class HttpCollapsedRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: kBorderRadiusSm,
       ),
       child: Text(
         method,

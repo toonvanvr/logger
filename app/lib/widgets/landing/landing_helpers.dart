@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Geometric "L" logo painter — amber stroke wh quadratic curve.
@@ -48,7 +49,7 @@ class StepRow extends StatelessWidget {
             height: 20,
             decoration: BoxDecoration(
               color: LoggerColors.bgSurface,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: kBorderRadius,
             ),
             alignment: Alignment.center,
             child: Text(number, style: LoggerTypography.stepNumber),
@@ -80,7 +81,7 @@ class KbdChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: LoggerColors.bgSurface,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: kBorderRadiusSm,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// A dropdown overlay showing autocomplete suggestions grouped by pattern type.
@@ -131,7 +132,7 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
         decoration: BoxDecoration(
           color: LoggerColors.bgOverlay,
           border: Border.all(color: LoggerColors.borderSubtle),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: kBorderRadius,
           boxShadow: const [
             BoxShadow(
               color: LoggerColors.scrim,
@@ -161,7 +162,7 @@ class _SearchSuggestionsState extends State<SearchSuggestions> {
                   onEnter: (_) => setState(() => _highlightedIndex = index),
                   child: Container(
                     alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: kHPadding8,
                     color: isHighlighted
                         ? LoggerColors.bgActive
                         : Colors.transparent,

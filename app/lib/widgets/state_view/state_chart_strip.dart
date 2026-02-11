@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../plugins/builtin/chart_painter.dart';
 import '../../theme/colors.dart';
+import '../../theme/constants.dart';
 import '../../theme/typography.dart';
 
 /// Horizontal scrollable strip of live-updating charts from `_chart.*` state keys.
@@ -37,7 +38,7 @@ class StateChartStrip extends StatelessWidget {
       height: stripHeight,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: kHPadding8,
         itemCount: entries.length,
         itemBuilder: (context, index) {
           final entry = entries[index];
@@ -123,7 +124,7 @@ class _ChartCardState extends State<_ChartCard> {
                 _isHovered ? 0.1 : 0.0,
               )!,
             ),
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: kBorderRadiusSm,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
