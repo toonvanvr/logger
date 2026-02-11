@@ -7,7 +7,7 @@ import type { ServerDeps } from './types'
  * Ingest a validated StoredEntry: session tracking, buffer, Loki, WS broadcast.
  */
 export function ingest(entry: StoredEntry, deps: ServerDeps): void {
-  const { sessionManager, ringBuffer, lokiForwarder, wsHub, storeWriter } = deps
+  const { sessionManager, ringBuffer, wsHub, storeWriter } = deps
 
   if (entry.kind === 'session') {
     sessionManager.handleSession(entry)
@@ -24,11 +24,7 @@ export function ingest(entry: StoredEntry, deps: ServerDeps): void {
   }
 
   if (!isSystemSession(entry.session_id)) {
-    if (storeWriter) {
-      storeWriter.push([entry])
-    } else {
-      lokiForwarder.push(entry)
-    }
+    storeWriter.push([entry])
   }
 
   wsHub.broadcast({ type: 'event', entry })
