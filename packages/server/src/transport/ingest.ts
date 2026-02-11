@@ -32,6 +32,9 @@ export function ingest(entry: StoredEntry, deps: ServerDeps): void {
   }
 
   wsHub.broadcast({ type: 'event', entry })
+
+  // Post-store hooks (logging, metrics, side effects)
+  deps.hookManager.runPostStore(entry)
 }
 
 /**
@@ -42,20 +45,27 @@ export function parseAndIngest(
   parsed: { type?: string;[k: string]: unknown },
   deps: ServerDeps,
 ): boolean {
-  if (parsed.type === 'session') {
-    const r = SessionMessage.safeParse(parsed)
+  // Pre-validate hooks (redaction, shaping)
+  const processed = deps.hookManager.runPreValidate(parsed) as { type?: string;[k: string]: unknown }
+
+  let entry: StoredEntry
+  if (processed.type === 'session') {
+    const r = SessionMessage.safeParse(processed)
     if (!r.success) return false
-    ingest(normalizeSession(r.data), deps)
-    return true
-  }
-  if (parsed.type === 'data') {
-    const r = DataMessage.safeParse(parsed)
+    entry = normalizeSession(r.data)
+  } else if (processed.type === 'data') {
+    const r = DataMessage.safeParse(processed)
     if (!r.success) return false
-    ingest(normalizeData(r.data), deps)
-    return true
+    entry = normalizeData(r.data)
+  } else {
+    const r = EventMessage.safeParse(processed)
+    if (!r.success) return false
+    entry = normalizeEvent(r.data)
   }
-  const r = EventMessage.safeParse(parsed)
-  if (!r.success) return false
-  ingest(normalizeEvent(r.data), deps)
+
+  // Post-validate hooks (transformation, enrichment)
+  entry = deps.hookManager.runPostValidate(entry)
+
+  ingest(entry, deps)
   return true
 }

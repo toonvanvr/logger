@@ -32,10 +32,8 @@ export class RingBuffer {
   private readonly maxEntries: number
   private readonly maxBytes: number
 
-  /** ID → slot index for O(1) lookup */
+  /** ID → slot index for O(1) lookup. Map insertion order doubles as LRU queue. */
   private idIndex = new Map<string, number>();
-  /** Insertion-order tracking for LRU eviction of ID index */
-  private idInsertionOrder: string[] = [];
 
   constructor(maxEntries: number, maxBytes: number) {
     this.maxEntries = maxEntries
@@ -154,30 +152,25 @@ export class RingBuffer {
     this.count = 0
     this.bytesUsed = 0
     this.idIndex.clear()
-    this.idInsertionOrder.length = 0
   }
 
   private indexId(id: string, slot: number): void {
-    // If already in index, remove from insertion order
-    if (this.idIndex.has(id)) {
-      const idx = this.idInsertionOrder.indexOf(id)
-      if (idx !== -1) this.idInsertionOrder.splice(idx, 1)
-    }
-
+    // Map.delete + Map.set moves key to end (insertion order)
+    this.idIndex.delete(id)
     this.idIndex.set(id, slot)
-    this.idInsertionOrder.push(id)
 
     // LRU eviction of ID index entries
-    while (this.idInsertionOrder.length > ID_INDEX_MAX) {
-      const evictId = this.idInsertionOrder.shift()!
-      // Only delete from idIndex if it still points to the same old entry
-      // (the slot may have been reused)
-      const evictSlot = this.idIndex.get(evictId)
-      if (evictSlot !== undefined) {
-        const slotEntry = this.entries[evictSlot]
-        if (!slotEntry || slotEntry.id === evictId) {
-          this.idIndex.delete(evictId)
-        }
+    while (this.idIndex.size > ID_INDEX_MAX) {
+      const oldestKey = this.idIndex.keys().next().value
+      if (oldestKey === undefined) break
+      // Only delete if it still points to a valid entry
+      const evictSlot = this.idIndex.get(oldestKey)!
+      const slotEntry = this.entries[evictSlot]
+      if (!slotEntry || slotEntry.id === oldestKey) {
+        this.idIndex.delete(oldestKey)
+      } else {
+        // Slot was reused, just remove the stale index entry
+        this.idIndex.delete(oldestKey)
       }
     }
   }
