@@ -1,6 +1,7 @@
 import 'package:app/screens/log_viewer.dart';
 import 'package:app/services/connection_manager.dart';
 import 'package:app/services/filter_service.dart';
+import 'package:app/services/keybind_registry.dart';
 import 'package:app/services/log_store.dart';
 import 'package:app/services/query_store.dart';
 import 'package:app/services/rpc_service.dart';
@@ -21,6 +22,7 @@ Widget _wrap({LogStore? logStore}) {
     providers: [
       ChangeNotifierProvider(create: (_) => ConnectionManager()),
       ChangeNotifierProvider(create: (_) => FilterService()),
+      ChangeNotifierProvider(create: (_) => KeybindRegistry()),
       ChangeNotifierProvider(create: (_) => logStore ?? LogStore()),
       ChangeNotifierProvider(create: (_) => SessionStore()),
       ChangeNotifierProvider(create: (_) => QueryStore()),

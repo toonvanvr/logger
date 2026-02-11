@@ -19,6 +19,7 @@ import 'plugins/plugin_registry.dart';
 import 'screens/log_viewer.dart';
 import 'services/connection_manager.dart';
 import 'services/filter_service.dart';
+import 'services/keybind_registry.dart';
 import 'services/log_store.dart';
 import 'services/query_store.dart';
 import 'services/rpc_service.dart';
@@ -118,6 +119,7 @@ class _LoggerAppState extends State<LoggerApp> {
       providers: [
         ChangeNotifierProvider.value(value: _connectionManager),
         ChangeNotifierProvider(create: (_) => FilterService()),
+        ChangeNotifierProvider(create: (_) => KeybindRegistry()),
         ChangeNotifierProvider(create: (_) => LogStore()),
         ChangeNotifierProvider(create: (_) => SessionStore()),
         ChangeNotifierProvider(create: (_) => RpcService()),
