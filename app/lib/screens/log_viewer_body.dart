@@ -1,53 +1,77 @@
-part of 'log_viewer.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-/// UI/filter state and build helpers for the log viewer layout.
-mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
-  String? _selectedSection;
-  bool _settingsPanelVisible = false;
-  bool _landingDelayActive = true;
-  Timer? _landingDelayTimer;
+import '../services/connection_manager.dart';
+import '../services/filter_service.dart';
+import '../services/log_store.dart';
+import '../services/selection_service.dart';
+import '../services/session_store.dart';
+import '../services/settings_service.dart';
+import '../widgets/header/filter_bar.dart';
+import '../widgets/header/session_selector.dart';
+import '../widgets/landing/empty_landing_page.dart';
+import '../widgets/log_list/log_list_view.dart';
+import '../widgets/log_list/section_tabs.dart';
+import '../widgets/log_list/selection_actions.dart';
+import '../widgets/mini_mode/mini_title_bar.dart';
+import '../widgets/settings/settings_panel.dart';
+import '../widgets/state_view/state_view_section.dart';
+import '../widgets/status_bar/status_bar.dart';
+import '../widgets/time_travel/time_range_minimap.dart';
 
-  void _setupQueryStore() {
-    final queryStore = context.read<QueryStore>();
-    queryStore.onQueryLoaded = (query) {
-      context.read<FilterService>().loadQuery(
-        severities: Set.from(query.severities),
-        textFilter: query.textFilter,
-      );
-    };
-  }
+/// Stateless build logic for the log viewer screen.
+///
+/// Local UI state is managed by [LogViewerScreen] and passed via callbacks.
+class LogViewerBody extends StatelessWidget {
+  final String? selectedSection;
+  final bool settingsPanelVisible;
+  final bool hasEverReceivedEntries;
+  final bool landingDelayActive;
+  final ValueChanged<String?> onSectionChanged;
+  final VoidCallback onSettingsToggle;
+  final VoidCallback onSettingsClose;
+  final VoidCallback onSettingsOpen;
 
-  /// Process launch URI for filter, tab, and clear actions.
-  void _handleLaunchUri() {
-    final uri = widget.launchUri;
-    if (uri == null) return;
-    final filterService = context.read<FilterService>();
-    UriHandler.handleUri(
-      uri,
-      connectionManager: context.read<ConnectionManager>(),
-      onFilter: (query) => filterService.setTextFilter(query),
-      onTab: (name) => setState(() => _selectedSection = name),
-      onClear: () => filterService.clear(),
+  const LogViewerBody({
+    super.key,
+    required this.selectedSection,
+    required this.settingsPanelVisible,
+    required this.hasEverReceivedEntries,
+    required this.landingDelayActive,
+    required this.onSectionChanged,
+    required this.onSettingsToggle,
+    required this.onSettingsClose,
+    required this.onSettingsOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsService>();
+    return Scaffold(
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              _buildHeader(settings),
+              _buildFilterBar(context),
+              _buildContentArea(context),
+              const StatusBar(),
+            ],
+          ),
+          ..._buildSettingsOverlay(settings),
+        ],
+      ),
     );
   }
 
-  /// Toggles a state key in/out of the filter stack.
-  void _toggleStateFilter(String stateKey) {
-    context.read<FilterService>().toggleStateFilter(stateKey);
-  }
-
-  /// Header bar: mini title bar or session selector.
   Widget _buildHeader(SettingsService settings) {
-    void toggleSettings() =>
-        setState(() => _settingsPanelVisible = !_settingsPanelVisible);
     if (settings.miniMode) {
-      return MiniTitleBar(onSettingsToggle: toggleSettings);
+      return MiniTitleBar(onSettingsToggle: onSettingsToggle);
     }
-    return SessionSelector(onRpcToggle: toggleSettings);
+    return SessionSelector(onRpcToggle: onSettingsToggle);
   }
 
-  /// Always-visible filter bar (hidden only in mini mode).
-  Widget _buildFilterBar() {
+  Widget _buildFilterBar(BuildContext context) {
     final settings = context.watch<SettingsService>();
     if (settings.miniMode) return const SizedBox.shrink();
 
@@ -64,8 +88,7 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
     );
   }
 
-  /// Content area: landing page or main log content.
-  Widget _buildContentArea() {
+  Widget _buildContentArea(BuildContext context) {
     return Expanded(
       child: Builder(
         builder: (context) {
@@ -76,10 +99,10 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
             (c) => c.activeCount > 0,
           );
           final showLanding =
-              !_hasEverReceivedEntries &&
+              !hasEverReceivedEntries &&
               !hasEntries &&
               !hasConnection &&
-              !_landingDelayActive;
+              !landingDelayActive;
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 150),
             switchInCurve: Curves.easeOut,
@@ -93,9 +116,7 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
             child: showLanding
                 ? EmptyLandingPage(
                     key: const ValueKey('landing'),
-                    onConnect: () {
-                      setState(() => _settingsPanelVisible = true);
-                    },
+                    onConnect: onSettingsOpen,
                   )
                 : _buildMainContent(context),
           );
@@ -104,7 +125,6 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
     );
   }
 
-  /// Settings panel overlay with scrim backdrop.
   List<Widget> _buildSettingsOverlay(SettingsService settings) {
     final top = settings.miniMode ? 28.0 : 40.0;
     return [
@@ -114,12 +134,12 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
         top: top,
         bottom: 0,
         child: IgnorePointer(
-          ignoring: !_settingsPanelVisible,
+          ignoring: !settingsPanelVisible,
           child: AnimatedOpacity(
-            opacity: _settingsPanelVisible ? 1.0 : 0.0,
+            opacity: settingsPanelVisible ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
             child: GestureDetector(
-              onTap: () => setState(() => _settingsPanelVisible = false),
+              onTap: onSettingsClose,
               child: const ColoredBox(color: Color(0x40000000)),
             ),
           ),
@@ -130,8 +150,8 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
         top: top,
         bottom: 0,
         child: SettingsPanel(
-          isVisible: _settingsPanelVisible,
-          onClose: () => setState(() => _settingsPanelVisible = false),
+          isVisible: settingsPanelVisible,
+          onClose: onSettingsClose,
         ),
       ),
     ];
@@ -151,30 +171,26 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
             }.toList()..sort();
             return SectionTabs(
               tags: sections,
-              selectedTag: _selectedSection,
-              onTagChanged: (section) {
-                setState(() => _selectedSection = section);
-              },
+              selectedTag: selectedSection,
+              onTagChanged: onSectionChanged,
             );
           },
         ),
         StateViewSection(
           onStateFilter: (filter) {
-            final key = filter.startsWith('state:')
-                ? filter.substring(6)
-                : filter;
-            _toggleStateFilter(key);
+            final key =
+                filter.startsWith('state:') ? filter.substring(6) : filter;
+            context.read<FilterService>().toggleStateFilter(key);
           },
           activeStateFilters: filterService.activeStateFilters,
         ),
         Expanded(
           child: Builder(
             builder: (context) {
-              final selectedSessions = context
-                  .watch<SessionStore>()
-                  .selectedSessionIds;
+              final selectedSessions =
+                  context.watch<SessionStore>().selectedSessionIds;
               final logListView = LogListView(
-                tagFilter: _selectedSection,
+                tagFilter: selectedSection,
                 activeSeverities: filterService.activeSeverities,
                 textFilter: filterService.effectiveFilter,
                 selectedSessionIds: selectedSessions,
@@ -201,8 +217,10 @@ mixin _ContentMixin on State<LogViewerScreen>, _ConnectionMixin {
                       child: Center(
                         child: SelectionActions(
                           selectedCount: selection.selectedEntryIds.length,
-                          onCopy: () => selection.copySelected(logStore.entries),
-                          onExportJson: () => selection.exportSelectedJson(logStore.entries),
+                          onCopy: () =>
+                              selection.copySelected(logStore.entries),
+                          onExportJson: () =>
+                              selection.exportSelectedJson(logStore.entries),
                           onBookmark: selection.bookmarkSelected,
                           onSticky: selection.stickySelected,
                           onClear: selection.clearSelection,
