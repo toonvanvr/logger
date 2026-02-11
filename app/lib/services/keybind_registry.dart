@@ -49,6 +49,12 @@ class KeybindRegistry extends ChangeNotifier {
     }
     return false;
   }
+
+  @override
+  void dispose() {
+    _bindings.clear();
+    super.dispose();
+  }
 }
 
 class _RegisteredKeybind {

@@ -81,4 +81,10 @@ class QueryStore extends ChangeNotifier {
   void loadQuery(SavedQuery query) {
     onQueryLoaded?.call(query);
   }
+
+  @override
+  void dispose() {
+    onQueryLoaded = null;
+    super.dispose();
+  }
 }

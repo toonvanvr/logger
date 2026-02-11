@@ -102,4 +102,10 @@ class RpcService extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    _pending.clear();
+    super.dispose();
+  }
 }

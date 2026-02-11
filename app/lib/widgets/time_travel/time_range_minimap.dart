@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/time_range_service.dart';
-import '../../services/time_range_types.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'minimap_painter.dart';
