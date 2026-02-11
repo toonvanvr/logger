@@ -162,28 +162,39 @@ export function buildHttpEntry(
     method: string
     url: string
     status?: number
+    status_text?: string
     duration_ms?: number
+    ttfb_ms?: number
     request_headers?: Record<string, string>
     response_headers?: Record<string, string>
     request_body?: string
     response_body?: string
+    request_body_size?: number
+    response_body_size?: number
     request_id?: string
     started_at?: string
+    content_type?: string
+    is_error?: boolean
   },
 ): QueuedMessage {
-  const contentType = data.response_headers?.['content-type']
+  const contentType = data.content_type
+    ?? data.response_headers?.['content-type']
     ?? data.response_headers?.['Content-Type']
-  const isError = data.status != null ? data.status >= 400 : undefined
+  const isError = data.is_error ?? (data.status != null ? data.status >= 400 : undefined)
 
   return buildCustomEntry(base, 'http_request', {
     method: data.method,
     url: data.url,
     ...(data.request_headers ? { request_headers: data.request_headers } : {}),
     ...(data.request_body ? { request_body: data.request_body } : {}),
+    ...(data.request_body_size != null ? { request_body_size: data.request_body_size } : {}),
     ...(data.response_headers ? { response_headers: data.response_headers } : {}),
     ...(data.response_body ? { response_body: data.response_body } : {}),
+    ...(data.response_body_size != null ? { response_body_size: data.response_body_size } : {}),
     ...(data.status != null ? { status: data.status } : {}),
+    ...(data.status_text ? { status_text: data.status_text } : {}),
     ...(data.duration_ms != null ? { duration_ms: data.duration_ms } : {}),
+    ...(data.ttfb_ms != null ? { ttfb_ms: data.ttfb_ms } : {}),
     ...(data.request_id ? { request_id: data.request_id } : {}),
     started_at: data.started_at ?? new Date().toISOString(),
     ...(contentType ? { content_type: contentType } : {}),

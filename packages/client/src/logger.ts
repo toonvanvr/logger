@@ -69,13 +69,19 @@ export class Logger extends LoggerBase {
 
   http(method: string, url: string, opts?: {
     status?: number
+    status_text?: string
     duration_ms?: number
+    ttfb_ms?: number
     request_headers?: Record<string, string>
     response_headers?: Record<string, string>
     request_body?: string
     response_body?: string
+    request_body_size?: number
+    response_body_size?: number
     request_id?: string
     started_at?: string
+    content_type?: string
+    is_error?: boolean
   }): void {
     const severity = opts?.status != null
       ? (opts.status >= 500 ? 'error' : opts.status >= 400 ? 'warning' : 'info')

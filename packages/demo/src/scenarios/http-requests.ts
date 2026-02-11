@@ -89,6 +89,7 @@ export async function runHttpRequests() {
     // ── 4. Timeout (no response, is_error=true) ────────────────────
     logger.http('GET', 'https://api.example.com/api/v1/reports/annual', {
       duration_ms: 30000,
+      is_error: true,
       request_headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWxpY2UifQ.abc',
