@@ -42,13 +42,9 @@ mixin _ContentMixin
     void toggleSettings() =>
         setState(() => _settingsPanelVisible = !_settingsPanelVisible);
     if (settings.miniMode) {
-      return MiniTitleBar(
-        onSettingsToggle: toggleSettings,
-      );
+      return MiniTitleBar(onSettingsToggle: toggleSettings);
     }
-    return SessionSelector(
-      onRpcToggle: toggleSettings,
-    );
+    return SessionSelector(onRpcToggle: toggleSettings);
   }
 
   /// Always-visible filter bar (hidden only in mini mode).

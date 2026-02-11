@@ -25,22 +25,22 @@ class SeverityToggle extends StatelessWidget {
       child: GestureDetector(
         onTap: onToggle,
         child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: isActive ? color.withAlpha(51) : Colors.transparent,
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(
-            color: isActive ? color : LoggerColors.borderDefault,
-            width: 1,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: isActive ? color.withAlpha(51) : Colors.transparent,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(
+              color: isActive ? color : LoggerColors.borderDefault,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            severity[0].toUpperCase(),
+            style: LoggerTypography.badge.copyWith(
+              color: isActive ? color : LoggerColors.fgMuted,
+            ),
           ),
         ),
-        child: Text(
-          severity[0].toUpperCase(),
-          style: LoggerTypography.badge.copyWith(
-            color: isActive ? color : LoggerColors.fgMuted,
-          ),
-        ),
-      ),
       ),
     );
   }

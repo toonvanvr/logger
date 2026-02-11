@@ -20,10 +20,7 @@ class SessionSelector extends StatefulWidget {
   /// Called when the RPC panel toggle button is pressed.
   final VoidCallback? onRpcToggle;
 
-  const SessionSelector({
-    super.key,
-    this.onRpcToggle,
-  });
+  const SessionSelector({super.key, this.onRpcToggle});
 
   @override
   State<SessionSelector> createState() => _SessionSelectorState();

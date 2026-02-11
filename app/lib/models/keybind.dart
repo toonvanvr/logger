@@ -26,13 +26,17 @@ class Keybind {
   bool matches(KeyEvent event) {
     if (event.logicalKey != key) return false;
     final pressed = HardwareKeyboard.instance.logicalKeysPressed;
-    final hasCtrl = pressed.contains(LogicalKeyboardKey.controlLeft) ||
+    final hasCtrl =
+        pressed.contains(LogicalKeyboardKey.controlLeft) ||
         pressed.contains(LogicalKeyboardKey.controlRight);
-    final hasShift = pressed.contains(LogicalKeyboardKey.shiftLeft) ||
+    final hasShift =
+        pressed.contains(LogicalKeyboardKey.shiftLeft) ||
         pressed.contains(LogicalKeyboardKey.shiftRight);
-    final hasAlt = pressed.contains(LogicalKeyboardKey.altLeft) ||
+    final hasAlt =
+        pressed.contains(LogicalKeyboardKey.altLeft) ||
         pressed.contains(LogicalKeyboardKey.altRight);
-    final hasMeta = pressed.contains(LogicalKeyboardKey.metaLeft) ||
+    final hasMeta =
+        pressed.contains(LogicalKeyboardKey.metaLeft) ||
         pressed.contains(LogicalKeyboardKey.metaRight);
     return hasCtrl == ctrl &&
         hasShift == shift &&

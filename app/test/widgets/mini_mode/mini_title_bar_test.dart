@@ -3,16 +3,10 @@ import 'package:app/widgets/mini_mode/mini_title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _buildTestWidget({
-  VoidCallback? onSettingsToggle,
-}) {
+Widget _buildTestWidget({VoidCallback? onSettingsToggle}) {
   return MaterialApp(
     theme: createLoggerTheme(),
-    home: Scaffold(
-      body: MiniTitleBar(
-        onSettingsToggle: onSettingsToggle,
-      ),
-    ),
+    home: Scaffold(body: MiniTitleBar(onSettingsToggle: onSettingsToggle)),
   );
 }
 

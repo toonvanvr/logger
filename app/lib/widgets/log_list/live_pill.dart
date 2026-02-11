@@ -60,25 +60,25 @@ class NewLogsButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: LoggerColors.bgOverlay,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '⬇',
-              style: TextStyle(fontSize: 8, color: LoggerColors.syntaxNumber),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              '$count new',
-              style: LoggerTypography.badge.copyWith(
-                color: LoggerColors.syntaxNumber,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '⬇',
+                style: TextStyle(fontSize: 8, color: LoggerColors.syntaxNumber),
               ),
-            ),
-          ],
+              const SizedBox(width: 3),
+              Text(
+                '$count new',
+                style: LoggerTypography.badge.copyWith(
+                  color: LoggerColors.syntaxNumber,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

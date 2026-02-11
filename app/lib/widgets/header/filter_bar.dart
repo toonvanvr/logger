@@ -79,21 +79,40 @@ class _FilterBarState extends State<FilterBar> {
                   child: GestureDetector(
                     onTap: () => widget.onStateFilterRemove?.call(key),
                     child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: LoggerColors.severityInfoBar.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(
-                        color: LoggerColors.severityInfoBar.withValues(alpha: 0.4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: LoggerColors.severityInfoBar.withValues(
+                          alpha: 0.15,
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: LoggerColors.severityInfoBar.withValues(
+                            alpha: 0.4,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'state:$key',
+                            style: LoggerTypography.logMeta.copyWith(
+                              color: LoggerColors.fgPrimary,
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          const Icon(
+                            Icons.close,
+                            size: 10,
+                            color: LoggerColors.fgMuted,
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text('state:$key', style: LoggerTypography.logMeta
-                          .copyWith(color: LoggerColors.fgPrimary, fontSize: 10)),
-                      const SizedBox(width: 3),
-                      const Icon(Icons.close, size: 10, color: LoggerColors.fgMuted),
-                    ]),
-                  ),
                   ),
                 ),
               ),
@@ -125,7 +144,7 @@ class _FilterBarState extends State<FilterBar> {
               onTap: widget.onClear,
               child: const Tooltip(
                 message: 'Clear all filters',
-                  child: Icon(
+                child: Icon(
                   Icons.clear_all,
                   size: 16,
                   color: LoggerColors.fgMuted,
@@ -145,12 +164,14 @@ class _FilterBarState extends State<FilterBar> {
       child: Tooltip(
         message: widget.flatMode ? 'Grouped view' : 'Flat view',
         child: SizedBox(
-          width: 28, height: 28,
+          width: 28,
+          height: 28,
           child: Icon(
             widget.flatMode ? Icons.view_list : Icons.account_tree,
             size: 16,
             color: widget.flatMode
-                ? LoggerColors.borderFocus : LoggerColors.fgMuted,
+                ? LoggerColors.borderFocus
+                : LoggerColors.fgMuted,
           ),
         ),
       ),

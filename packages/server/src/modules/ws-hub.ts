@@ -1,6 +1,6 @@
-import type { ServerBroadcast, StoredEntry } from '@logger/shared'
-import type { ServerWebSocket } from 'bun'
-import type { WsData } from '../transport/ws'
+import type { ServerBroadcast } from '@logger/shared';
+import type { ServerWebSocket } from 'bun';
+import type { WsData } from '../transport/ws';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -19,6 +19,8 @@ export interface ViewerSubscription {
 interface ViewerEntry {
   ws: ServerWebSocket<WsData>
   subscription: ViewerSubscription
+  buffer: string[]
+  flushTimer: Timer | null
 }
 
 // ─── Severity ordering for filter comparison ─────────────────────────
@@ -41,11 +43,17 @@ export class WebSocketHub {
     this.viewers.set(ws, {
       ws,
       subscription: { sessionIds: [] },
+      buffer: [],
+      flushTimer: null,
     })
   }
 
   /** Unregister a viewer WebSocket connection. */
   removeViewer(ws: ServerWebSocket<WsData>): void {
+    const entry = this.viewers.get(ws)
+    if (entry?.flushTimer) {
+      clearTimeout(entry.flushTimer)
+    }
     this.viewers.delete(ws)
   }
 
@@ -72,9 +80,29 @@ export class WebSocketHub {
     const data = JSON.stringify(message)
 
     for (const entry of this.viewers.values()) {
-      if (this.matchesSubscription(message, entry.subscription)) {
+      if (!this.matchesSubscription(message, entry.subscription)) continue
+
+      if (message.type === 'event') {
+        entry.buffer.push(data)
+        if (!entry.flushTimer) {
+          entry.flushTimer = setTimeout(() => this.flushViewer(entry), 16)
+        }
+      } else {
         entry.ws.send(data)
       }
+    }
+  }
+
+  /** Flush buffered event messages for a viewer. */
+  private flushViewer(entry: ViewerEntry): void {
+    entry.flushTimer = null
+    if (entry.buffer.length === 0) return
+
+    const messages = entry.buffer
+    entry.buffer = []
+
+    for (const msg of messages) {
+      entry.ws.send(msg)
     }
   }
 
@@ -102,6 +130,7 @@ export class WebSocketHub {
   /** Close all viewer connections and clear state. */
   shutdown(): void {
     for (const entry of this.viewers.values()) {
+      if (entry.flushTimer) clearTimeout(entry.flushTimer)
       try { entry.ws.close() } catch { /* already closed */ }
     }
     this.viewers.clear()

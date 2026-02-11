@@ -12,10 +12,7 @@ import '../landing/landing_helpers.dart';
 class MiniTitleBar extends StatelessWidget {
   final VoidCallback? onSettingsToggle;
 
-  const MiniTitleBar({
-    super.key,
-    this.onSettingsToggle,
-  });
+  const MiniTitleBar({super.key, this.onSettingsToggle});
 
   @override
   Widget build(BuildContext context) {

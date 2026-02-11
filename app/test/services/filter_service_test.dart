@@ -112,10 +112,7 @@ void main() {
       service.toggleStateFilter('count');
       service.setFlatMode(true);
 
-      service.loadQuery(
-        severities: {'info'},
-        textFilter: 'loaded',
-      );
+      service.loadQuery(severities: {'info'}, textFilter: 'loaded');
       expect(service.activeSeverities, {'info'});
       expect(service.textFilter, 'loaded');
       expect(service.stateFilterStack, isEmpty);

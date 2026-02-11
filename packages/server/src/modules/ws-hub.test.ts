@@ -1,7 +1,7 @@
-import type { StoredEntry } from '@logger/shared'
-import type { ServerWebSocket } from 'bun'
-import { describe, expect, it } from 'bun:test'
-import { WebSocketHub } from './ws-hub'
+import type { StoredEntry } from '@logger/shared';
+import type { ServerWebSocket } from 'bun';
+import { describe, expect, it } from 'bun:test';
+import { WebSocketHub } from './ws-hub';
 
 // ─── Mock WebSocket ──────────────────────────────────────────────────
 
@@ -15,6 +15,9 @@ class MockWebSocket {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
+
+/** Wait for the 16ms WS broadcast flush interval to complete. */
+const flushBuffers = () => new Promise(resolve => setTimeout(resolve, 20))
 
 function makeLogMessage(overrides: Partial<StoredEntry> & { id: string }): Record<string, unknown> {
   return {
@@ -48,7 +51,7 @@ describe('WebSocketHub', () => {
     expect(hub.getViewerCount()).toBe(1)
   })
 
-  it('broadcasts to all viewers', () => {
+  it('broadcasts to all viewers', async () => {
     const hub = new WebSocketHub()
     const ws1 = new MockWebSocket() as unknown as ServerWebSocket<any>
     const ws2 = new MockWebSocket() as unknown as ServerWebSocket<any>
@@ -60,13 +63,14 @@ describe('WebSocketHub', () => {
 
     const msg = makeLogMessage({ id: 'e1' })
     hub.broadcast(msg)
+    await flushBuffers()
 
     expect(mock1.sent).toHaveLength(1)
     expect(mock1.sent[0].type).toBe('event')
     expect(mock2.sent).toHaveLength(1)
   })
 
-  it('filters by sessionId subscription', () => {
+  it('filters by sessionId subscription', async () => {
     const hub = new WebSocketHub()
     const ws = new MockWebSocket() as unknown as ServerWebSocket<any>
     const mock = ws as unknown as MockWebSocket
@@ -76,12 +80,13 @@ describe('WebSocketHub', () => {
 
     hub.broadcast(makeLogMessage({ id: 'e1', session_id: 'sess-a' }))
     hub.broadcast(makeLogMessage({ id: 'e2', session_id: 'sess-b' }))
+    await flushBuffers()
 
     expect(mock.sent).toHaveLength(1)
     expect(mock.sent[0].entry.session_id).toBe('sess-a')
   })
 
-  it('filters by severity', () => {
+  it('filters by severity', async () => {
     const hub = new WebSocketHub()
     const ws = new MockWebSocket() as unknown as ServerWebSocket<any>
     const mock = ws as unknown as MockWebSocket
@@ -94,12 +99,13 @@ describe('WebSocketHub', () => {
     hub.broadcast(makeLogMessage({ id: 'e3', severity: 'warning' }))
     hub.broadcast(makeLogMessage({ id: 'e4', severity: 'error' }))
     hub.broadcast(makeLogMessage({ id: 'e5', severity: 'critical' }))
+    await flushBuffers()
 
     expect(mock.sent).toHaveLength(3)
     expect(mock.sent.map((m: any) => m.entry.severity)).toEqual(['warning', 'error', 'critical'])
   })
 
-  it('filters by text in entry message and labels', () => {
+  it('filters by text in entry message and labels', async () => {
     const hub = new WebSocketHub()
     const ws = new MockWebSocket() as unknown as ServerWebSocket<any>
     const mock = ws as unknown as MockWebSocket
@@ -116,6 +122,7 @@ describe('WebSocketHub', () => {
         labels: { env: 'Needle-prod' },
       }),
     )
+    await flushBuffers()
 
     expect(mock.sent).toHaveLength(2)
     expect(mock.sent.map((m: any) => m.entry.id)).toEqual(['e1', 'e3'])
@@ -187,7 +194,7 @@ describe('WebSocketHub', () => {
     expect(mock.sent[0].type).toBe('session_list')
   })
 
-  it('filters by section', () => {
+  it('filters by section', async () => {
     const hub = new WebSocketHub()
     const ws = new MockWebSocket() as unknown as ServerWebSocket<any>
     const mock = ws as unknown as MockWebSocket
@@ -198,6 +205,7 @@ describe('WebSocketHub', () => {
     hub.broadcast(makeLogMessage({ id: 'e1', tag: 'network' }))
     hub.broadcast(makeLogMessage({ id: 'e2', tag: 'database' }))
     hub.broadcast(makeLogMessage({ id: 'e3' })) // defaults to 'events', should be filtered
+    await flushBuffers()
 
     expect(mock.sent).toHaveLength(1)
     expect(mock.sent[0].entry.id).toBe('e1')

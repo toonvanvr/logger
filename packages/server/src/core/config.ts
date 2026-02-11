@@ -47,7 +47,9 @@ export const ConfigSchema = z.object({
   hookRedactPatterns: z.string().default('').transform(s => s.split(',').filter(Boolean)).describe('Comma-separated redaction patterns'),
 })
 
-const envSource = {
+export type Config = z.infer<typeof ConfigSchema>
+
+export const config = ConfigSchema.parse({
   host: process.env.LOGGER_BIND_ADDRESS,
   port: process.env.LOGGER_PORT,
   udpPort: process.env.LOGGER_UDP_PORT,
@@ -69,7 +71,4 @@ const envSource = {
   imageStoreMaxBytes: process.env.LOGGER_IMAGE_STORE_MAX_BYTES,
   storeBackend: process.env.LOGGER_STORE_BACKEND,
   hookRedactPatterns: process.env.LOGGER_HOOK_REDACT_PATTERNS,
-}
-
-export const config = ConfigSchema.parse(envSource)
-export type Config = z.infer<typeof ConfigSchema>
+})

@@ -162,7 +162,9 @@ mixin _LogRowInteraction<T extends StatefulWidget> on State<T> {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(
-                Icons.bookmark, size: 12, color: LoggerColors.borderFocus,
+                Icons.bookmark,
+                size: 12,
+                color: LoggerColors.borderFocus,
               ),
             ),
         ],
@@ -195,9 +197,7 @@ class _StaticLogRowState extends State<_StaticLogRow>
             decoration: BoxDecoration(
               color: computeBackground(isHovered),
               border: Border(
-                bottom: BorderSide(
-                  color: LoggerColors.borderSubtle, width: 1,
-                ),
+                bottom: BorderSide(color: LoggerColors.borderSubtle, width: 1),
               ),
             ),
             child: child,
@@ -230,23 +230,32 @@ class _AnimatedLogRowState extends State<_AnimatedLogRow>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2000));
-    _opacityAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0, 0.075, curve: Curves.easeOut),
-    ));
-    _slideAnimation = Tween<double>(begin: 4, end: 0).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0, 0.075, curve: Curves.easeOut),
-    ));
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _opacityAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.075, curve: Curves.easeOut),
+      ),
+    );
+    _slideAnimation = Tween<double>(begin: 4, end: 0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.075, curve: Curves.easeOut),
+      ),
+    );
     const hl = LoggerColors.highlight;
     _highlightAnimation = TweenSequence<Color?>([
       TweenSequenceItem(
-        tween: ColorTween(begin: Colors.transparent, end: hl), weight: 150),
+        tween: ColorTween(begin: Colors.transparent, end: hl),
+        weight: 150,
+      ),
+      TweenSequenceItem(tween: ConstantTween<Color?>(hl), weight: 200),
       TweenSequenceItem(
-        tween: ConstantTween<Color?>(hl), weight: 200),
-      TweenSequenceItem(
-        tween: ColorTween(begin: hl, end: Colors.transparent), weight: 1650),
+        tween: ColorTween(begin: hl, end: Colors.transparent),
+        weight: 1650,
+      ),
     ]).animate(_controller);
     _controller.forward();
   }
@@ -276,7 +285,8 @@ class _AnimatedLogRowState extends State<_AnimatedLogRow>
                       color: computeBackground(isHovered),
                       border: Border(
                         bottom: BorderSide(
-                          color: LoggerColors.borderSubtle, width: 1,
+                          color: LoggerColors.borderSubtle,
+                          width: 1,
                         ),
                       ),
                     ),
