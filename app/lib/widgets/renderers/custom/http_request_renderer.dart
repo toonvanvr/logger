@@ -8,6 +8,7 @@ import 'http/http_collapsed_row.dart';
 import 'http/http_headers_section.dart';
 import 'http/http_meta_section.dart';
 import 'http/http_timing_bar.dart';
+import 'http/http_url_section.dart';
 
 /// Renders an HTTP request/response entry.
 ///
@@ -55,6 +56,7 @@ class _HttpRequestRendererState extends State<HttpRequestRenderer> {
   }
 
   Widget _buildExpandedView(Map<String, dynamic> data) {
+    final url = data['url'] as String?;
     final durationMs = (data['duration_ms'] as num?)?.toInt();
     final ttfbMs = (data['ttfb_ms'] as num?)?.toInt();
     final reqHeaders = data['request_headers'] as Map<String, dynamic>?;
@@ -70,10 +72,7 @@ class _HttpRequestRendererState extends State<HttpRequestRenderer> {
       child: Container(
         decoration: const BoxDecoration(
           border: Border(
-            left: BorderSide(
-              color: LoggerColors.borderSubtle,
-              width: 2,
-            ),
+            left: BorderSide(color: LoggerColors.borderSubtle, width: 2),
           ),
         ),
         padding: const EdgeInsets.only(left: 8),
@@ -81,15 +80,16 @@ class _HttpRequestRendererState extends State<HttpRequestRenderer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (url != null && url.isNotEmpty) ...[
+              HttpUrlSection(url: url),
+              const SizedBox(height: 8),
+            ],
             if (durationMs != null) ...[
               HttpTimingBar(durationMs: durationMs, ttfbMs: ttfbMs),
               const SizedBox(height: 8),
             ],
             if (reqHeaders != null && reqHeaders.isNotEmpty) ...[
-              HttpHeadersSection(
-                title: 'Request Headers',
-                headers: reqHeaders,
-              ),
+              HttpHeadersSection(title: 'Request Headers', headers: reqHeaders),
               const SizedBox(height: 8),
             ],
             if (reqBody != null || reqBodySize != null) ...[

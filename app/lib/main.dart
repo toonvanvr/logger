@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'plugins/builtin/chart_plugin.dart';
 import 'plugins/builtin/docker_logs_plugin.dart';
+import 'plugins/builtin/http_filter_plugin.dart';
 import 'plugins/builtin/http_request_plugin.dart';
 import 'plugins/builtin/id_uniquifier_plugin.dart';
 import 'plugins/builtin/kv_plugin.dart';
@@ -48,6 +49,7 @@ void main() {
   PluginRegistry.instance.register(ChartRendererPlugin());
   PluginRegistry.instance.register(DockerLogsPlugin());
   PluginRegistry.instance.register(HttpRequestRendererPlugin());
+  PluginRegistry.instance.register(HttpFilterPlugin());
   PluginRegistry.instance.register(ThemePlugin());
 
   runApp(const LoggerApp());
