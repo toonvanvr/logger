@@ -17,6 +17,7 @@ import 'stack_expansion.dart';
 import 'sticky_header.dart';
 import 'sticky_section_builder.dart';
 
+part 'log_list_item_builder.dart';
 part 'log_list_scroll.dart';
 
 /// Main virtualized log list with auto-scroll (LIVE mode) and sticky headers.
@@ -61,16 +62,9 @@ class LogListView extends StatefulWidget {
   State<LogListView> createState() => _LogListViewState();
 }
 
-class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
+class _LogListViewState extends State<LogListView>
+    with _LogListScrollMixin, _LogListItemBuilderMixin {
   final LogFilterCache _filterCache = LogFilterCache();
-  final Set<String> _seenEntryIds = {};
-  final Set<String> _collapsedGroups = {};
-  final Set<String> _autoCollapsedSeen = {};
-  final Set<String> _expandedStacks = {};
-  final Map<String, int> _stackActiveIndices = {};
-  final Set<String> _processedUnpinIds = {};
-  List<DisplayEntry> _currentDisplayEntries = [];
-  int _selectedIndex = -1;
 
   @override
   void initState() {
@@ -94,7 +88,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       (s) => (s.isActive, s.rangeStart, s.rangeEnd),
     );
     final timeRange = context.read<TimeRangeService>();
-
     final filteredEntries = _filterCache.getFiltered(
       logStore: logStore,
       timeRange: timeRange,
@@ -108,7 +101,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       collapsedGroups: _collapsedGroups,
       seenGroupIds: _autoCollapsedSeen,
     );
-
     final displayEntries = processGrouping(
       entries: filteredEntries,
       textFilter: widget.textFilter,
@@ -118,7 +110,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       flatMode: widget.flatMode,
     );
     _currentDisplayEntries = displayEntries;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       processUnpinEntries(
         logStore: logStore,
@@ -131,7 +122,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
         isLiveMode: _isLiveMode,
       );
     });
-
     final stickySections = computeStickySections(
       displayEntries,
       firstVisibleIndex: _isLiveMode
@@ -142,7 +132,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
       expandedStickyGroups: _expandedStickyGroups,
       collapsedGroups: _collapsedGroups,
     );
-
     _trackNewEntries(displayEntries.length);
 
     if (_isLiveMode && displayEntries.isNotEmpty) {
@@ -158,7 +147,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
         _isAutoScrolling = false;
       });
     }
-
     if (displayEntries.isEmpty) {
       return Container(
         color: LoggerColors.bgSurface,
@@ -206,91 +194,6 @@ class _LogListViewState extends State<LogListView> with _LogListScrollMixin {
             right: 8,
             child: LivePill(onTap: widget.onFilterClear),
           ),
-      ],
-    );
-  }
-
-  Widget _buildItem(DisplayEntry display, int index, LogStore logStore) {
-    final entry = display.entry;
-    final isNew = _seenEntryIds.add(entry.id);
-    final isExpanded = _expandedStacks.contains(entry.id);
-    final row = LogRow(
-      key: ValueKey(entry.id),
-      entry: entry,
-      isNew: isNew,
-      isEvenRow: index.isEven,
-      isSelected: _selectedIndex == index,
-      selectionMode: widget.selectionMode,
-      isSelectionSelected: widget.selectedEntryIds.contains(entry.id),
-      onSelect: () {
-        if (widget.selectionMode && _isShiftHeld()) {
-          final orderedIds = _currentDisplayEntries
-              .map((e) => e.entry.id)
-              .toList();
-          widget.onEntryRangeSelected?.call(entry.id, orderedIds);
-        } else {
-          widget.onEntrySelected?.call(entry.id);
-        }
-      },
-      isBookmarked: widget.bookmarkedEntryIds.contains(entry.id),
-      groupDepth: display.depth,
-      showGroupChevron:
-          !widget.flatMode &&
-          entry.groupId != null &&
-          entry.id == entry.groupId &&
-          !display.isStandalone,
-      stackDepth: display.stackDepth,
-      onStackToggle: display.stackDepth > 1
-          ? () => setState(() {
-              if (_expandedStacks.contains(entry.id)) {
-                _expandedStacks.remove(entry.id);
-                _stackActiveIndices.remove(entry.id);
-              } else {
-                _expandedStacks.add(entry.id);
-                final stack = logStore.getStack(entry.id);
-                _stackActiveIndices[entry.id] = stack.length - 1;
-              }
-            })
-          : null,
-      onTap: () {
-        setState(() {
-          _selectedIndex = _selectedIndex == index ? -1 : index;
-        });
-      },
-      onGroupToggle:
-          !widget.flatMode &&
-              entry.groupId != null &&
-              entry.id == entry.groupId &&
-              !display.isStandalone
-          ? () => setState(() {
-              final gid = entry.groupId!;
-              _collapsedGroups.contains(gid)
-                  ? _collapsedGroups.remove(gid)
-                  : _collapsedGroups.add(gid);
-            })
-          : null,
-      isCollapsed:
-          entry.groupId != null &&
-          entry.id == entry.groupId &&
-          !display.isStandalone &&
-          _collapsedGroups.contains(entry.groupId!),
-    );
-
-    if (!isExpanded) return row;
-
-    final stack = logStore.getStack(entry.id);
-    final activeIdx = _stackActiveIndices[entry.id] ?? (stack.length - 1);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        row,
-        StackExpansionPanel(
-          stack: stack,
-          activeIndex: activeIdx,
-          onVersionSelected: (i) => setState(() {
-            _stackActiveIndices[entry.id] = i;
-          }),
-        ),
       ],
     );
   }

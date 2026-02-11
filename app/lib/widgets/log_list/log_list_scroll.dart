@@ -78,15 +78,6 @@ mixin _LogListScrollMixin on State<LogListView> {
     });
   }
 
-  bool _isShiftHeld() {
-    return HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftLeft,
-        ) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(
-          LogicalKeyboardKey.shiftRight,
-        );
-  }
-
   void _onHiddenTap(String? groupId) {
     if (groupId == null) return;
     setState(() {
