@@ -135,6 +135,8 @@ async function shutdown(signal: string): Promise<void> {
   await lokiForwarder.shutdown()  // flush remaining Loki buffer
   ringBuffer.shutdown()  // clear buffer memory
   fileStore.shutdown()   // release file store resources
+  hookManager.shutdown() // clear hook registrations
+  rateLimiter.shutdown() // clear rate limit tracking
   selfLogger.shutdown()  // finalize self-logger
   console.log('Shutdown complete.')
   process.exit(0)

@@ -68,6 +68,11 @@ export class RateLimiter {
     };
   }
 
+  /** Clear all session tracking state. */
+  shutdown(): void {
+    this.sessionBuckets.clear();
+  }
+
   private refill(bucket: Bucket, rate: number, now: number): void {
     const elapsed = (now - bucket.lastRefill) / 1000; // seconds
     if (elapsed <= 0) return;

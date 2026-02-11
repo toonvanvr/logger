@@ -61,6 +61,13 @@ export class HookManager {
       hook(entry)
     }
   }
+
+  /** Clear all registered hooks. */
+  shutdown(): void {
+    this.preValidateHooks.length = 0
+    this.postValidateHooks.length = 0
+    this.postStoreHooks.length = 0
+  }
 }
 
 /**
