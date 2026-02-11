@@ -114,6 +114,9 @@ logger/
 | `packages/server/src/store/adapters/memory-adapter.ts` | In-memory storage adapter |
 | `packages/server/src/modules/self-logger.ts` | Server self-logging module |
 | `packages/docker-sidecar/src/main.ts` | Docker container log forwarding sidecar |
+| `docs/reference/client-sdk.md` | Client SDK API reference |
+| `docs/reference/docker-sidecar.md` | Docker sidecar reference |
+| `docs/reference/mcp-server.md` | MCP server reference |
 
 ## Build, Test, Run
 

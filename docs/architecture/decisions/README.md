@@ -11,11 +11,13 @@ This directory contains Architecture Decision Records (ADRs) for the Logger proj
 | [003](003-loki-persistence.md) | Loki for Log Storage | Accepted | 2026-02-08 | Grafana Loki over Elasticsearch/ClickHouse |
 | [004](004-websocket-primary.md) | WebSocket as Primary Transport | Accepted | 2026-02-08 | WebSocket over SSE for viewer communication |
 | [005](005-plugin-architecture.md) | Plugin Architecture | Accepted | 2026-02-08 | Registry-based plugin system for viewer extensibility |
+| [006](006-zod-source-of-truth.md) | Zod as Schema Source of Truth | Accepted | 2026-02-11 | Zod schemas in packages/shared as single source of truth |
+| [007](007-client-batch-queue.md) | Client Batching Queue Strategy | Accepted | 2026-02-11 | Byte-budgeted circular buffer with fixed drain interval |
 
 ## Creating a New ADR
 
 1. Copy the template below
-2. Number sequentially (next: `006`)
+2. Number sequentially (next: `008`)
 3. Fill in all sections
 4. Add to the index table above
 5. Commit with the related code change

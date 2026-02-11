@@ -924,6 +924,8 @@ Architecture Decision Records are in `docs/architecture/decisions/`.
 | [003](architecture/decisions/003-loki-persistence.md) | **Grafana Loki** for storage | Label-based indexing, low resource usage, Grafana integration |
 | [004](architecture/decisions/004-websocket-primary.md) | **WebSocket** for viewer transport | Full duplex, low latency, subscription model, RPC bridging |
 | [005](architecture/decisions/005-plugin-architecture.md) | **Registry-based plugins** | O(1) renderer lookup, typed interfaces, open/closed principle |
+| [006](architecture/decisions/006-zod-source-of-truth.md) | **Zod as schema source of truth** | Single shared schema, runtime + compile-time safety |
+| [007](architecture/decisions/007-client-batch-queue.md) | **Client batching queue** | Byte-budgeted buffer, 100ms drain interval, bounded memory |
 
 ---
 
@@ -997,14 +999,17 @@ logger/
 │   ├── README.md               Project overview, quick start
 │   ├── architecture/
 │   │   ├── README.md           Architecture overview with Mermaid diagrams
-│   │   └── decisions/          ADR-001 through ADR-005
+│   │   └── decisions/          ADR-001 through ADR-007
 │   ├── guides/
 │   │   ├── getting-started.md  Setup tutorial
 │   │   └── features.md         Feature overview
 │   ├── reference/
 │   │   ├── configuration.md    Environment variable reference
 │   │   ├── protocol.md         LogEntry schema reference
-│   │   └── plugin-api.md       Plugin development guide
+│   │   ├── plugin-api.md       Plugin development guide
+│   │   ├── client-sdk.md       Client SDK API reference
+│   │   ├── docker-sidecar.md   Docker sidecar reference
+│   │   └── mcp-server.md       MCP server reference
 │   └── design/
 │       ├── color-system.md     Color token reference
 │       └── ux-principles.md    UX design philosophy
