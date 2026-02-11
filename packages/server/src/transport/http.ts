@@ -3,6 +3,7 @@ import {
 } from '@logger/shared'
 import { z } from 'zod'
 import { normalizeSession } from '../core/normalizer'
+import { safeSelfLog } from '../core/safe-self-log'
 import { handleDataBatch, handleEventBatch, handleSingleData, handleSingleEvent } from './http-routes'
 import { ingest } from './ingest'
 import type { ServerDeps } from './types'
@@ -124,7 +125,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
           )
           return Response.json({ ok: true, ref })
         } catch (err) {
-          try { deps.selfLogger.error(`[HTTP] File upload error: ${err}`) } catch { console.error('[HTTP] File upload error:', err) }
+          safeSelfLog(deps.selfLogger, 'error', `[HTTP] File upload error: ${err}`)
           return Response.json({ ok: false, error: 'Internal server error' }, { status: 500 })
         }
       },

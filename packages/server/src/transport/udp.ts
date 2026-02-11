@@ -1,3 +1,4 @@
+import { safeSelfLog } from '../core/safe-self-log'
 import { parseAndIngest } from './ingest'
 import type { ServerDeps } from './types'
 
@@ -9,7 +10,7 @@ export async function setupUdp(deps: ServerDeps): Promise<void> {
   // Bun.udpSocket may not be available in all versions
   const udpSocket = (Bun as any).udpSocket
   if (typeof udpSocket !== 'function') {
-    try { deps.selfLogger.warn('[UDP] Bun.udpSocket not available, skipping UDP transport') } catch { console.warn('[UDP] Bun.udpSocket not available, skipping UDP transport') }
+    safeSelfLog(deps.selfLogger, 'warn', '[UDP] Bun.udpSocket not available, skipping UDP transport')
     return
   }
 
@@ -30,5 +31,5 @@ export async function setupUdp(deps: ServerDeps): Promise<void> {
     },
   })
 
-  try { deps.selfLogger.info(`UDP socket listening on ${config.host}:${config.udpPort}`) } catch { console.log(`UDP socket listening on ${config.host}:${config.udpPort}`) }
+  safeSelfLog(deps.selfLogger, 'info', `UDP socket listening on ${config.host}:${config.udpPort}`)
 }

@@ -1,4 +1,5 @@
 import type { StoredEntry } from '@logger/shared'
+import { safeSelfLog } from '../core/safe-self-log'
 import type { SelfLogger } from './self-logger'
 
 export interface LokiForwarderConfig {
@@ -32,7 +33,7 @@ export class LokiForwarder {
   /** Add entry to buffer for async forwarding. Drops if buffer full. */
   push(entry: StoredEntry): void {
     if (this.buffer.length >= this.cfg.maxBuffer) {
-      try { this.selfLogger?.warn('[LokiForwarder] Buffer full, dropping entry') } catch { console.warn('[LokiForwarder] Buffer full, dropping entry') }
+      safeSelfLog(this.selfLogger, 'warn', '[LokiForwarder] Buffer full, dropping entry')
       this.updateHealth()
       return
     }

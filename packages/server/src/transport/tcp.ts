@@ -1,3 +1,4 @@
+import { safeSelfLog } from '../core/safe-self-log'
 import { parseAndIngest } from './ingest'
 import type { ServerDeps } from './types'
 
@@ -39,7 +40,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
           state.buffer = state.buffer.slice(newlineIndex + 1)
 
           if (line.length > MAX_LINE_SIZE) {
-            try { deps.selfLogger.warn('[TCP] Line exceeds 16MB limit, dropping') } catch { console.warn('[TCP] Line exceeds 16MB limit, dropping') }
+            safeSelfLog(deps.selfLogger, 'warn', '[TCP] Line exceeds 16MB limit, dropping')
             continue
           }
 
@@ -68,7 +69,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
 
         // Guard against unbounded buffer growth
         if (state.buffer.length > MAX_LINE_SIZE) {
-          try { deps.selfLogger.warn('[TCP] Buffer exceeds 16MB, clearing') } catch { console.warn('[TCP] Buffer exceeds 16MB, clearing') }
+          safeSelfLog(deps.selfLogger, 'warn', '[TCP] Buffer exceeds 16MB, clearing')
           state.buffer = ''
         }
       },
@@ -76,7 +77,7 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
       close() { },
 
       error(_socket, err) {
-        try { deps.selfLogger.error(`[TCP] Socket error: ${err}`) } catch { console.error('[TCP] Socket error:', err) }
+        safeSelfLog(deps.selfLogger, 'error', `[TCP] Socket error: ${err}`)
       },
 
       timeout(socket) {
@@ -85,5 +86,5 @@ export async function setupTcp(deps: ServerDeps): Promise<void> {
     },
   })
 
-  try { deps.selfLogger.info(`TCP server listening on ${config.host}:${config.tcpPort}`) } catch { console.log(`TCP server listening on ${config.host}:${config.tcpPort}`) }
+  safeSelfLog(deps.selfLogger, 'info', `TCP server listening on ${config.host}:${config.tcpPort}`)
 }

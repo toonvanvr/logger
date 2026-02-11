@@ -2,7 +2,7 @@ import type { ApplicationInfo, StoredEntry } from '@logger/shared'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-export interface SessionInfo {
+export interface InternalSessionInfo {
   sessionId: string
   application: ApplicationInfo
   startedAt: string
@@ -13,7 +13,7 @@ export interface SessionInfo {
 }
 
 export type SessionEvent = 'session-start' | 'session-end' | 'session-update'
-export type SessionEventListener = (event: SessionEvent, session: SessionInfo) => void
+export type SessionEventListener = (event: SessionEvent, session: InternalSessionInfo) => void
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ const SESSION_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 // ─── Session Manager ─────────────────────────────────────────────────
 
 export class SessionManager {
-  private sessions = new Map<string, SessionInfo>();
+  private sessions = new Map<string, InternalSessionInfo>();
   private nextColorIndex = 0;
   private listeners: SessionEventListener[] = [];
   private timeoutTimer: Timer | null = null;
@@ -74,7 +74,7 @@ export class SessionManager {
   }
 
   /** Get existing session or create a new one. */
-  getOrCreate(sessionId: string, application?: ApplicationInfo): SessionInfo {
+  getOrCreate(sessionId: string, application?: ApplicationInfo): InternalSessionInfo {
     let session = this.sessions.get(sessionId)
     if (session) return session
 
@@ -93,12 +93,12 @@ export class SessionManager {
   }
 
   /** Get a session by ID. */
-  getSession(sessionId: string): SessionInfo | undefined {
+  getSession(sessionId: string): InternalSessionInfo | undefined {
     return this.sessions.get(sessionId)
   }
 
   /** List all sessions. */
-  getSessions(): SessionInfo[] {
+  getSessions(): InternalSessionInfo[] {
     return Array.from(this.sessions.values())
   }
 
@@ -150,7 +150,7 @@ export class SessionManager {
   }
 
   /** Emit event to all listeners. */
-  private emit(event: SessionEvent, session: SessionInfo): void {
+  private emit(event: SessionEvent, session: InternalSessionInfo): void {
     for (const listener of this.listeners) {
       listener(event, session)
     }
