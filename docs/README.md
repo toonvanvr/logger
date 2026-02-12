@@ -6,6 +6,37 @@ Logger captures, stores, and visualises structured log entries from any applicat
 
 ---
 
+## Start here
+
+- **Layer 0 (Orientation)** — Start with this overview and then the system-wide map in [INDEX.md](INDEX.md).
+- **Layer 1 (Guides)** — Follow the setup path in [guides/getting-started.md](guides/getting-started.md) and skim capabilities in [guides/features.md](guides/features.md).
+- **Layer 2 (Reference)** — Look up specifics in [reference/configuration.md](reference/configuration.md), [reference/protocol.md](reference/protocol.md), and [reference/client-sdk.md](reference/client-sdk.md).
+- **Layer 3 (Architecture)** — Dive into the system design in [architecture/README.md](architecture/README.md) and the ADRs under [architecture/decisions/](architecture/decisions/).
+- **Layer 4 (UX & Extensibility)** — Understand UX constraints in [design/ux-principles.md](design/ux-principles.md) and extend via [reference/plugin-api.md](reference/plugin-api.md).
+
+## Documentation layers
+
+Logger docs are organised into layers so you can find the right level of detail quickly:
+
+- **Layer 0 — Orientation**: high-level “what is this?” and where everything lives.
+    - [docs/README.md](README.md) (this page)
+    - [docs/INDEX.md](INDEX.md) (single-document system index)
+- **Layer 1 — Guides**: step-by-step tasks and workflows.
+    - [Getting started](guides/getting-started.md)
+    - [Feature overview](guides/features.md)
+- **Layer 2 — Reference**: stable shapes, commands, and configuration.
+    - [Configuration](reference/configuration.md)
+    - [Protocol](reference/protocol.md)
+    - [Client SDK](reference/client-sdk.md)
+    - [Keybindings](reference/keybindings.md)
+    - [Plugin API](reference/plugin-api.md)
+- **Layer 3 — Architecture**: how components fit together and why decisions were made.
+    - [Architecture overview](architecture/README.md)
+    - [Architecture decisions (ADRs)](architecture/decisions/)
+- **Layer 4 — UX & Product constraints**: interaction principles and visual semantics.
+    - [UX principles](design/ux-principles.md)
+    - [Color system](design/color-system.md)
+
 ## Architecture
 
 ```mermaid

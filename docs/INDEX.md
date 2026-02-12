@@ -5,6 +5,10 @@
 
 ---
 
+## Documentation layers
+
+If you’re looking for the right entry point (overview vs guides vs reference), start with the layer map in [docs/README.md → Documentation layers](README.md#documentation-layers).
+
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
