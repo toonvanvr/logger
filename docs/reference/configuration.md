@@ -9,8 +9,23 @@ All Logger server configuration is done via environment variables. The server re
 | `LOGGER_BIND_ADDRESS` | `127.0.0.1` | IP address the server binds to. Use `0.0.0.0` in Docker. |
 | `LOGGER_PORT` | `8080` | HTTP API port for log ingestion and health checks. |
 | `LOGGER_UDP_PORT` | `8081` | UDP port for high-throughput log ingestion. |
-| `LOGGER_TCP_PORT` | `8082` | TCP port for WebSocket viewer connections. |
+| `LOGGER_TCP_PORT` | `8082` | TCP port for **NDJSON ingestion** (not WebSocket). |
 | `LOGGER_ENVIRONMENT` | `dev` | Environment label attached to all logs. |
+
+### Port / Transport Mapping
+
+Logger uses multiple transports, each on a specific port by default:
+
+| Purpose | Transport | Default | Example |
+|---------|-----------|---------|---------|
+| HTTP API base | HTTP | `LOGGER_PORT` (`8080`) | `http://127.0.0.1:8080` |
+| Viewer stream | WebSocket (upgrade on HTTP server) | `LOGGER_PORT` (`8080`) | `ws://127.0.0.1:8080/api/v2/stream` |
+| High-throughput ingest | UDP | `LOGGER_UDP_PORT` (`8081`) | `udp://127.0.0.1:8081` |
+| Raw ingest | TCP (NDJSON) | `LOGGER_TCP_PORT` (`8082`) | `tcp://127.0.0.1:8082` |
+
+Notes:
+- The viewer WebSocket runs on the HTTP server (`LOGGER_PORT`) at `/api/v2/stream`.
+- `LOGGER_TCP_PORT` is for TCP ingestion and does not accept WebSocket connections.
 
 ## Ring Buffer
 
@@ -87,12 +102,71 @@ Resource limits:
 
 ## Viewer (Flutter App)
 
-The Flutter desktop viewer (`app/`) has no persistent configuration files. All state is in-memory:
+The Flutter desktop viewer (`app/`) persists a small amount of UI/tray state to disk.
+
+### Persisted state
+
+Files are stored in the platform config directory.
+
+Linux:
+- `$XDG_CONFIG_HOME/logger/settings.json` (fallback `~/.config/logger/settings.json`)
+- `$XDG_CONFIG_HOME/logger/tray_prefs.json` (fallback `~/.config/logger/tray_prefs.json`)
+
+macOS:
+- `~/Library/Application Support/logger/settings.json`
+- `~/Library/Application Support/logger/tray_prefs.json`
+
+Windows:
+- `%APPDATA%\\logger\\settings.json`
+- `%APPDATA%\\logger\\tray_prefs.json`
+
+What is persisted:
+- **Store enabled**: stored per server base URL and re-applied when you connect.
+- **Tray toggles**: tray menu checkbox state (e.g. Loki/Grafana integration toggles).
+
+### In-memory only
 
 | Setting | Storage | Description |
 |---------|---------|-------------|
 | Server connections | In-memory `Map` | Added via the UI connection dialog. Not persisted to disk — connections must be re-added after restarting the viewer. Intentional for a local-dev tool. |
 | Filters & subscriptions | In-memory | Active filters, severity toggles, and session subscriptions reset on restart. |
+
+### Clear semantics
+
+Logger has multiple “clear” actions with different meanings:
+
+- **Clear all filters**: clears active filters in the filter bar (does not affect stored data).
+- **Timeline “Clear”**: performs a *timeline cut* (“show logs since now”) without deleting entries. It is reversible via the existing timeline reset controls.
+- **Tray “Clear store”**: clears stored log/state data (viewer caches + server in-memory store). It does **not** delete history already forwarded to Loki.
+
+### Linux tray behavior
+
+On Linux builds with tray support enabled:
+
+- **Show/hide logger** toggles the window visibility while keeping the app running.
+- **Quit** terminates the viewer process and removes the tray indicator.
+- **Official documentation** opens the project docs at: https://github.com/toonvanvr/logger/tree/main/docs
+
+### Minimap discoverability
+
+The minimap is the 48dp timeline bar at the bottom of the log view.
+
+- Use it to zoom/pan the visible time range.
+- The minimap includes a **Clear** control to “show logs since now” (timeline cut).
+
+### Detached (noninteractive) run — Linux
+
+To run the viewer detached from your terminal (while keeping tray access), use:
+
+```bash
+./scripts/run-viewer-detached-linux.sh
+```
+
+Behavior:
+- Builds `app/build/linux/x64/release/bundle/app` if missing.
+- Detaches via `nohup`/`setsid` and writes logs to an on-disk log file.
+- Writes a PID file to `$XDG_RUNTIME_DIR/logger/viewer.pid` (fallback `~/.cache/logger/viewer.pid`).
+- If the PID file points to a live process, it exits 0 without launching a second instance.
 
 ## Workspace Setup
 

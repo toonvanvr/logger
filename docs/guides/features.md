@@ -199,9 +199,17 @@ Logger registers a `logger://` URI scheme for automation and sharing. URIs can b
 |-----|--------|
 | `logger://connect?host=localhost&port=8080` | Open Logger and connect to a server |
 | `logger://filter?severity=error` | Set the severity filter to error and above |
-| `logger://clear` | Clear the current log view |
+| `logger://clear` | Clear all filters |
 
 On Linux, the URI scheme requires a `.desktop` file to be registered (included in release builds). From a shell: `xdg-open 'logger://connect?host=staging&port=8080'`.
+
+### Clear semantics
+
+Logger has multiple “clear” actions with different meanings:
+
+- **Clear all filters** (filter bar) and `logger://clear`: clears active filters only.
+- **Timeline “Clear”**: performs a timeline cut (“show logs since now”) without deleting entries; reversible via the timeline reset controls.
+- **Tray “Clear store”**: clears stored log/state data (viewer caches + server in-memory store) and does **not** delete history already forwarded to Loki.
 
 ## Self-Logging
 

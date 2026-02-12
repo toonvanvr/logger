@@ -15,7 +15,7 @@ graph TB
         direction TB
         HTTP[HTTP Transport<br/>:8080]
         UDP[UDP Transport<br/>:8081]
-        TCP[TCP/WS Transport<br/>:8082]
+        TCP[TCP Transport<br/>:8082]
         
         HTTP --> Ingest[Ingest Pipeline]
         UDP --> Ingest
@@ -36,8 +36,8 @@ graph TB
     end
 
     subgraph "Viewers"
-        WSHub <-->|WebSocket| FV[Flutter Viewer]
-        WSHub <-->|WebSocket| MCP[MCP Server]
+        WSHub <-->|WebSocket (:8080)| FV[Flutter Viewer]
+        WSHub <-->|WebSocket (:8080)| MCP[MCP Server]
     end
 
     SDK1 --> HTTP
@@ -64,7 +64,7 @@ The server is a Bun-based TypeScript application with modular architecture:
 |--------|------|----------------|
 | **HTTP Transport** | `transport/http.ts` | REST API for log ingestion, health checks, image upload |
 | **UDP Transport** | `transport/udp.ts` | High-throughput UDP log ingestion |
-| **TCP Transport** | `transport/tcp.ts` | TCP + WebSocket for viewer connections |
+| **TCP Transport** | `transport/tcp.ts` | TCP ingestion (newline-delimited JSON) |
 | **Ingest Pipeline** | `transport/ingest.ts` | Validates, normalizes, routes incoming logs |
 | **Ring Buffer** | `modules/ring-buffer.ts` | In-memory log storage with size-based eviction |
 | **Session Manager** | `modules/session-manager.ts` | Tracks active sessions, heartbeats, lifecycle |
@@ -143,7 +143,7 @@ sequenceDiagram
     participant SM as Session Manager
     participant RB as Ring Buffer
 
-    V->>WS: Connect WebSocket (:8082)
+    V->>WS: Connect WebSocket (:8080 /api/v2/stream)
     WS->>SM: Get active sessions
     SM-->>WS: Session list
     WS-->>V: session_list message

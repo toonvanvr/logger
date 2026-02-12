@@ -79,7 +79,7 @@ graph TB
         direction TB
         HTTP[HTTP Transport<br/>:8080]
         UDP[UDP Transport<br/>:8081]
-        TCP[TCP/WS Transport<br/>:8082]
+      TCP[TCP Transport<br/>:8082]
 
         HTTP --> Ingest[Ingest Pipeline]
         UDP --> Ingest
@@ -100,8 +100,8 @@ graph TB
     end
 
     subgraph "Viewers"
-        WSHub <-->|WebSocket| FV[Flutter Viewer]
-        WSHub <-->|WebSocket| MCP[MCP Server]
+      WSHub <-->|WebSocket (:8080)| FV[Flutter Viewer]
+      WSHub <-->|WebSocket (:8080)| MCP[MCP Server]
     end
 
     SDK1 --> HTTP
@@ -149,7 +149,7 @@ sequenceDiagram
     participant SM as Session Manager
     participant RB as Ring Buffer
 
-    V->>WS: Connect WebSocket (:8082)
+    V->>WS: Connect WebSocket (:8080 /api/v2/stream)
     WS->>SM: Get active sessions
     SM-->>WS: Session list
     WS-->>V: session_list message
@@ -167,7 +167,7 @@ sequenceDiagram
 |------|---------|----------|
 | 8080 | Server HTTP API | HTTP (log ingestion, health, upload) |
 | 8081 | Server UDP ingest | UDP (high-throughput logs) |
-| 8082 | Server TCP/WS | TCP + WebSocket (viewer connections) |
+| 8082 | Server TCP ingest | TCP (newline-delimited JSON ingestion) |
 | 3000 | Grafana | HTTP (dashboards) |
 | 3100 | Loki | HTTP (internal, push API) |
 
@@ -185,7 +185,7 @@ The server is a modular Bun/TypeScript application. Entry point: `packages/serve
 |--------|------|-------|----------------|
 | **HTTP Transport** | `transport/http.ts` | 192 | REST API: `/api/v2/` endpoints (session, events, data, upload, health, query) |
 | **UDP Transport** | `transport/udp.ts` | ~50 | High-throughput UDP log ingestion via `Bun.udpSocket()` |
-| **TCP Transport** | `transport/tcp.ts` | 92 | TCP + WebSocket for viewer connections |
+| **TCP Transport** | `transport/tcp.ts` | 92 | TCP ingestion (newline-delimited JSON) |
 | **Ingest Pipeline** | `transport/ingest.ts` | ~80 | Validates via Zod, normalizes to StoredEntry, routes to buffer/hub/loki |
 | **Ring Buffer** | `modules/ring-buffer.ts` | 179 | In-memory log storage with size-based and count-based eviction |
 | **Session Manager** | `modules/session-manager.ts` | 157 | Tracks active sessions, heartbeats, lifecycle events |
@@ -702,7 +702,7 @@ All server configuration via environment variables. Server reads from `packages/
 | `LOGGER_BIND_ADDRESS` | `127.0.0.1` | Server bind address (`0.0.0.0` in Docker) |
 | `LOGGER_PORT` | `8080` | HTTP API port |
 | `LOGGER_UDP_PORT` | `8081` | UDP ingestion port |
-| `LOGGER_TCP_PORT` | `8082` | TCP/WebSocket port |
+| `LOGGER_TCP_PORT` | `8082` | TCP ingestion port (NDJSON) |
 | `LOGGER_ENVIRONMENT` | `dev` | Environment label attached to logs |
 
 ### Ring Buffer
