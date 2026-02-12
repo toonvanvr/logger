@@ -54,8 +54,20 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 
+# Tray icon support via AppIndicator/StatusNotifier (Ayatana preferred).
+pkg_check_modules(APPINDICATOR QUIET IMPORTED_TARGET ayatana-appindicator3-0.1)
+if(NOT APPINDICATOR_FOUND)
+  pkg_check_modules(APPINDICATOR QUIET IMPORTED_TARGET appindicator3-0.1)
+endif()
+if(NOT APPINDICATOR_FOUND)
+  message(FATAL_ERROR "AppIndicator development package not found. Install libayatana-appindicator3-dev (preferred) or libappindicator3-dev.")
+endif()
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
+
+# Link tray dependencies to the application target.
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::APPINDICATOR)
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
