@@ -42,7 +42,7 @@ jobs:
         with:
           channel: stable
       - name: Install Linux dependencies
-        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libdbusmenu-gtk3-dev
       - name: Build
         run: |
           cd app
