@@ -16,6 +16,8 @@ import '../services/rpc_service.dart';
 import '../services/selection_service.dart';
 import '../services/session_store.dart';
 import '../services/settings_service.dart';
+import '../services/time_range_service.dart';
+import '../services/tray_service.dart';
 import '../services/uri_handler.dart';
 import 'log_viewer_body.dart';
 
@@ -44,6 +46,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   bool _settingsPanelVisible = false;
   bool _landingDelayActive = true;
   Timer? _landingDelayTimer;
+  TrayService? _trayService;
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       _setupQueryStore();
       _initConnection();
       _handleLaunchUri();
+      _initTray();
     });
     _landingDelayTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted) setState(() => _landingDelayActive = false);
@@ -65,7 +69,20 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     _messageSub?.cancel();
     _landingDelayTimer?.cancel();
+    _trayService?.dispose();
     super.dispose();
+  }
+
+  void _initTray() {
+    if (_trayService != null) return;
+
+    _trayService = TrayService(
+      connectionManager: context.read<ConnectionManager>(),
+      logStore: context.read<LogStore>(),
+      timeRangeService: context.read<TimeRangeService>(),
+      settings: context.read<SettingsService>(),
+    );
+    _trayService!.start();
   }
 
   void _registerKeybinds() {
@@ -111,7 +128,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   bool _handleKeyEvent(KeyEvent event) {
     if (context.read<KeybindRegistry>().handleKeyEvent(event)) return true;
     final selection = context.read<SelectionService>();
-    final isShift = event.logicalKey == LogicalKeyboardKey.shiftLeft ||
+    final isShift =
+        event.logicalKey == LogicalKeyboardKey.shiftLeft ||
         event.logicalKey == LogicalKeyboardKey.shiftRight;
     if (isShift && event is KeyDownEvent && !selection.selectionMode) {
       selection.setSelectionMode(true);
@@ -161,16 +179,25 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
         context.read<ConnectionManager>().send(
           const ViewerSessionListMessage(),
         );
-      case RpcResponseMessage(:final rpcId, :final rpcResponse, :final rpcError):
+      case RpcResponseMessage(
+        :final rpcId,
+        :final rpcResponse,
+        :final rpcError,
+      ):
         context.read<RpcService>().handleResponse(rpcId, rpcResponse, rpcError);
-      case DataSnapshotMessage() || AckMessage() || ErrorMessage() ||
-          RpcRequestMessage() || DataUpdateMessage() || SubscribeAckMessage():
+      case DataSnapshotMessage() ||
+          AckMessage() ||
+          ErrorMessage() ||
+          RpcRequestMessage() ||
+          DataUpdateMessage() ||
+          SubscribeAckMessage():
         break;
     }
   }
 
   void _markEntriesReceived() {
-    if (!_hasEverReceivedEntries) setState(() => _hasEverReceivedEntries = true);
+    if (!_hasEverReceivedEntries)
+      setState(() => _hasEverReceivedEntries = true);
   }
 
   void _setupQueryStore() {
@@ -206,10 +233,8 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       onSectionChanged: (s) => setState(() => _selectedSection = s),
       onSettingsToggle: () =>
           setState(() => _settingsPanelVisible = !_settingsPanelVisible),
-      onSettingsClose: () =>
-          setState(() => _settingsPanelVisible = false),
-      onSettingsOpen: () =>
-          setState(() => _settingsPanelVisible = true),
+      onSettingsClose: () => setState(() => _settingsPanelVisible = false),
+      onSettingsOpen: () => setState(() => _settingsPanelVisible = true),
     );
   }
 }

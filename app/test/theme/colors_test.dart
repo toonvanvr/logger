@@ -14,7 +14,7 @@ void main() {
         LoggerColors.bgActive,
         LoggerColors.bgDivider,
       ]) {
-        expect(c.alpha, 255, reason: '$c should be opaque');
+        expect(c.a, 1.0, reason: '$c should be opaque');
       }
     });
 
@@ -49,7 +49,7 @@ void main() {
 
     test('all colors are opaque', () {
       for (final c in LoggerColors.sessionPool) {
-        expect(c.alpha, 255, reason: '$c should be opaque');
+        expect(c.a, 1.0, reason: '$c should be opaque');
       }
     });
   });
@@ -86,11 +86,11 @@ void main() {
 
   group('LoggerColors overlays', () {
     test('scrim has alpha channel', () {
-      expect(LoggerColors.scrim.alpha, lessThan(255));
+      expect(LoggerColors.scrim.a, lessThan(1.0));
     });
 
     test('highlight has alpha channel', () {
-      expect(LoggerColors.highlight.alpha, lessThan(255));
+      expect(LoggerColors.highlight.a, lessThan(1.0));
     });
   });
 }

@@ -23,7 +23,7 @@ void main() {
     });
 
     test('kErrorHintBg is a semi-transparent red', () {
-      expect(kErrorHintBg.alpha, lessThan(255));
+      expect(kErrorHintBg.a, lessThan(1.0));
     });
   });
 
@@ -38,8 +38,11 @@ void main() {
         kFontSizeIcon,
       ];
       for (var i = 0; i < sizes.length - 1; i++) {
-        expect(sizes[i], lessThanOrEqualTo(sizes[i + 1]),
-            reason: 'sizes[$i] <= sizes[${i + 1}]');
+        expect(
+          sizes[i],
+          lessThanOrEqualTo(sizes[i + 1]),
+          reason: 'sizes[$i] <= sizes[${i + 1}]',
+        );
       }
     });
 
