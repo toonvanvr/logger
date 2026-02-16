@@ -16,3 +16,21 @@ export const DEFAULT_TCP_PORT = 8082
 
 /** Default host for all transports */
 export const DEFAULT_HOST = 'localhost'
+
+// ─── Canonical Contract Paths ───────────────────────────────────────
+
+/** API v2 base path */
+export const API_V2_BASE_PATH = '/api/v2'
+
+/** Canonical HTTP and WS route paths for API v2 */
+export const API_PATHS = {
+	HEALTH: `${API_V2_BASE_PATH}/health`,
+	SESSIONS: `${API_V2_BASE_PATH}/sessions`,
+	SESSION: `${API_V2_BASE_PATH}/session`,
+	EVENTS: `${API_V2_BASE_PATH}/events`,
+	DATA: `${API_V2_BASE_PATH}/data`,
+	UPLOAD: `${API_V2_BASE_PATH}/upload`,
+	QUERY: `${API_V2_BASE_PATH}/query`,
+	RPC: `${API_V2_BASE_PATH}/rpc`,
+	STREAM: `${API_V2_BASE_PATH}/stream`,
+} as const

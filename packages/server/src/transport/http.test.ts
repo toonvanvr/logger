@@ -189,6 +189,81 @@ describe('HTTP Transport', () => {
     expect(body.ok).toBe(false)
   })
 
+  it('POST /api/v2/query prefers text over search when both are provided', async () => {
+    await fetch(`${baseUrl}/api/v2/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-query-text', message: 'alpha marker' }),
+    })
+    await fetch(`${baseUrl}/api/v2/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-query-text', message: 'beta marker' }),
+    })
+
+    const res = await fetch(`${baseUrl}/api/v2/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-query-text', text: 'beta', search: 'alpha', limit: 100 }),
+    })
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.ok).toBe(true)
+    expect(body.entries.length).toBeGreaterThan(0)
+    expect(body.entries.every((entry: any) => String(entry.message ?? '').toLowerCase().includes('beta'))).toBe(true)
+  })
+
+  it('POST /api/v2/query keeps session_id/sessionId aliases compatible', async () => {
+    await fetch(`${baseUrl}/api/v2/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-alias-primary', message: 'from-primary' }),
+    })
+    await fetch(`${baseUrl}/api/v2/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-alias-legacy', message: 'from-legacy' }),
+    })
+
+    const legacyAliasRes = await fetch(`${baseUrl}/api/v2/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 'sess-alias-legacy', limit: 100 }),
+    })
+    const legacyAliasBody = await legacyAliasRes.json()
+    expect(legacyAliasRes.status).toBe(200)
+    expect(legacyAliasBody.ok).toBe(true)
+    expect(legacyAliasBody.entries.length).toBeGreaterThan(0)
+    expect(legacyAliasBody.entries.every((entry: any) => entry.session_id === 'sess-alias-legacy')).toBe(true)
+
+    const precedenceRes = await fetch(`${baseUrl}/api/v2/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'sess-alias-primary', sessionId: 'sess-alias-legacy', limit: 100 }),
+    })
+    const precedenceBody = await precedenceRes.json()
+    expect(precedenceRes.status).toBe(200)
+    expect(precedenceBody.ok).toBe(true)
+    expect(precedenceBody.entries.length).toBeGreaterThan(0)
+    expect(precedenceBody.entries.every((entry: any) => entry.session_id === 'sess-alias-primary')).toBe(true)
+  })
+
+  it('POST /api/v2/query rejects invalid payload types consistently', async () => {
+    const res = await fetch(`${baseUrl}/api/v2/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 123, limit: 0 }),
+    })
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body.ok).toBe(false)
+    expect(body.error).toBe('validation_error')
+    expect(typeof body.message).toBe('string')
+    expect(body.message.length).toBeGreaterThan(0)
+  })
+
   // ─── Auth ─────────────────────────────────────────────────────────
 
   it('rejects requests when API key is set but not provided', async () => {

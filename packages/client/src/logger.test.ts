@@ -52,6 +52,8 @@ describe('Logger', () => {
   test('create logger with defaults', () => {
     expect(logger).toBeDefined()
     expect(logger.session.id).toBeTruthy()
+    expect((logger as any).url).toBe('ws://localhost:8080')
+    expect((logger as any).transportType).toBe('auto')
   })
 
   // ─── Session ───────────────────────────────────────────────────

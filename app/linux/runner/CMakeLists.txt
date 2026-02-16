@@ -12,6 +12,10 @@ add_executable(${BINARY_NAME}
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
+set_source_files_properties("my_application.cc" PROPERTIES
+  COMPILE_OPTIONS "$<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wno-error=deprecated-declarations>"
+)
+
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})

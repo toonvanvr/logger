@@ -1,4 +1,5 @@
 import { config, HookManager, RateLimiter } from './core'
+import { API_PATHS } from '@logger/shared'
 import {
   FileStore,
   LokiForwarder,
@@ -97,7 +98,7 @@ const server = Bun.serve({
   websocket: ws.handlers,
   fetch(req) {
     const url = new URL(req.url)
-    if (url.pathname === '/api/v2/stream') {
+    if (url.pathname === API_PATHS.STREAM) {
       if (ws.upgrade(req, server)) return undefined
       return new Response('WebSocket upgrade failed', { status: 400 })
     }

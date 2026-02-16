@@ -35,3 +35,17 @@ Should output `✓ Built build/linux/x64/debug/bundle/app` and launch the app.
 - The WebSocket connection error (`Connection refused, errno = 111, port 34140`) on launch is expected when the logger server is not running.
 - The `Atk-CRITICAL` and `Gdk-CRITICAL` warnings are cosmetic GTK issues, not blockers.
 - This fix survives until mise reinstalls/upgrades clang. Re-run the symlink commands after `mise install clang`.
+
+## Additional Failure Mode: AppIndicator Deprecation + `-Werror`
+
+On newer Linux toolchains (e.g., clang 21 + recent Ayatana headers), `app_indicator_new` can be marked deprecated in system headers. This becomes a hard failure when project CMake sets `-Werror` globally.
+
+**Observed error:**
+`error: 'app_indicator_new' is deprecated [-Werror,-Wdeprecated-declarations]`
+
+**Trigger points in this repo:**
+- `app/linux/CMakeLists.txt` includes `target_compile_options(${TARGET} PRIVATE -Wall -Werror)`
+- `app/linux/runner/my_application.cc` calls `app_indicator_new(...)`
+
+**Implication:**
+`flutter run -d linux` may fail even when Flutter doctor shows Linux toolchain healthy, because this is a project-level native compile policy/API compatibility issue rather than a missing dependency.

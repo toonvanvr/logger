@@ -2,6 +2,9 @@
 
 The Logger protocol uses a unified `StoredEntry` schema for internal storage. Input is split across three endpoint-specific schemas (`EventMessage`, `DataMessage`, `SessionMessage`) that normalize to `StoredEntry`. Schemas are defined in Zod at `packages/shared/src/` — `stored-entry.ts` is the **single source of truth**.
 
+Canonical API/WS route constants are defined in `packages/shared/src/constants.ts` as `API_PATHS`.
+Schema evolution and compatibility classes are defined in [Schema Compatibility Policy](./schema-compatibility.md).
+
 ## StoredEntry Schema
 
 ### Core Fields
@@ -69,6 +72,14 @@ The `message` field supports ANSI escape codes (SGR sequences). The viewer rende
 ## Input Message Types
 
 Three endpoint-specific schemas normalize to `StoredEntry` on the server.
+
+### Query Compatibility Notes (`POST /api/v2/query`)
+
+- Field aliases are accepted during transition windows defined in [Schema Compatibility Policy](./schema-compatibility.md).
+- Precedence is deterministic when both forms are present:
+  - `session_id` overrides `sessionId`
+  - `text` overrides `search`
+- Clients should migrate to canonical names (`session_id`, `text`) before alias removal windows close.
 
 ### EventMessage (`POST /api/v2/events`)
 
@@ -260,10 +271,12 @@ Multiple `EventMessage` entries can be sent in a single request to `POST /api/v2
 | HTTP | `POST /api/v2/upload` | Image file upload |
 | HTTP | `GET /api/v2/health` | Health check |
 | HTTP | `GET /api/v2/sessions` | List active sessions |
-| HTTP | `GET /api/v2/query` | Query stored entries |
+| HTTP | `POST /api/v2/query` | Query stored entries |
 | UDP | Port 8081 | JSON-encoded entry per datagram |
 | TCP | Port 8082 | Newline-delimited JSON entries |
 | WebSocket | `ws://localhost:8080/api/v2/stream` | `ServerBroadcast` / `ViewerCommand` JSON frames |
+
+For `POST /api/v2/query`, both `session_id` and `sessionId` are accepted for backward compatibility. For text filtering, both `text` and legacy `search` are accepted; if both are present, `text` takes precedence.
 
 ## Server Messages (Server → Viewer)
 

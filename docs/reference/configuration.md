@@ -62,8 +62,21 @@ Controls the async batch forwarding of logs to Grafana Loki.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOGGER_API_KEY` | `null` | API key for authenticating log ingestion. When set, clients must send `Authorization: Bearer <key>`. When null (default), no authentication is required. |
+| `LOGGER_API_KEY` | `null` | API key for authenticated API/socket access. When set, protected HTTP routes require `Authorization: Bearer <key>` or `x-api-key: <key>`, and WebSocket/TCP clients must authenticate. When null (default), auth is disabled for local-dev use. |
 | `LOGGER_MAX_TIMESTAMP_SKEW_MS` | `86400000` (24h) | Maximum allowed timestamp skew from server time. Entries outside this window are rejected. |
+
+Auth route behavior:
+- `GET /health` is intentionally unauthenticated for basic liveness checks.
+- `GET /api/v2/health` and other `/api/v2/*` operational routes enforce `LOGGER_API_KEY` when set.
+
+## Operational Self-Logging
+
+The server emits structured internal operational events through the built-in self-logger.
+
+- Session ID: `__system__`
+- Typical startup signals: server bind/start, selected store backend, ring-buffer limits
+- Failure-path signals: upload/storage/Loki forwarding errors are emitted as self-log events
+- Self-log events stay in the in-memory/live viewer path and are not forwarded to external stores by default
 
 ## Images
 

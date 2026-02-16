@@ -196,13 +196,18 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   void _markEntriesReceived() {
-    if (!_hasEverReceivedEntries)
+    if (!_hasEverReceivedEntries) {
       setState(() => _hasEverReceivedEntries = true);
+    }
   }
 
   void _setupQueryStore() {
     final queryStore = context.read<QueryStore>();
     queryStore.onQueryLoaded = (query) {
+      _revealFiltersForProgrammaticActivation(
+        textFilter: query.textFilter,
+        severities: Set.from(query.severities),
+      );
       context.read<FilterService>().loadQuery(
         severities: Set.from(query.severities),
         textFilter: query.textFilter,
@@ -217,10 +222,28 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     UriHandler.handleUri(
       uri,
       connectionManager: context.read<ConnectionManager>(),
-      onFilter: (query) => filterService.setTextFilter(query),
+      onFilter: (query) {
+        _revealFiltersForProgrammaticActivation(textFilter: query);
+        filterService.setTextFilter(query);
+      },
       onTab: (name) => setState(() => _selectedSection = name),
       onClear: () => filterService.clear(),
     );
+  }
+
+  void _revealFiltersForProgrammaticActivation({
+    String textFilter = '',
+    Set<String>? severities,
+  }) {
+    final hasActiveText = textFilter.trim().isNotEmpty;
+    final hasSeverityOverride =
+        severities != null && severities.length != defaultSeverities.length;
+    if (!hasActiveText && !hasSeverityOverride) return;
+
+    final settings = context.read<SettingsService>();
+    if (settings.miniMode) {
+      settings.setMiniMode(false);
+    }
   }
 
   @override

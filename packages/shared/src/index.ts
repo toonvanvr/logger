@@ -47,6 +47,8 @@ export {
 } from './viewer-command'
 
 export {
+    API_PATHS,
+    API_V2_BASE_PATH,
     DEFAULT_HOST,
     DEFAULT_TCP_PORT,
     DEFAULT_UDP_PORT,

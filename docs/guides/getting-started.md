@@ -17,6 +17,17 @@ The quickest way to try Logger — no Docker required.
 cd packages/server && bun install && bun run src/main.ts
 ```
 
+If startup fails with `EADDRINUSE`, another local process is already using one or more default bind ports (`8080`, `8081`, `8082`).
+
+```bash
+ss -ltnp | grep ':8080' || true
+ss -lunp | grep ':8081' || true
+ss -ltnp | grep ':8082' || true
+cd packages/server && LOGGER_PORT=18080 LOGGER_UDP_PORT=18081 LOGGER_TCP_PORT=18082 bun run src/main.ts
+```
+
+When you use a non-default port, set the viewer connection base URL to `ws://127.0.0.1:18080/api/v2/stream`.
+
 ### Build and Run the Viewer
 
 ```bash
@@ -24,7 +35,7 @@ cd app && flutter pub get && flutter run -d linux   # Linux
 cd app && flutter pub get && flutter run -d macos   # macOS
 ```
 
-The viewer auto-connects to `ws://localhost:8080`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
+With default ports, the viewer auto-connects to `ws://localhost:8080`. You'll see server logs in the console — Loki connection warnings are expected and can be ignored.
 
 ### Send Test Logs
 

@@ -91,9 +91,12 @@ class FileTrayPrefsStore implements TrayPrefsStore {
     if (Platform.isLinux) {
       final xdg = Platform.environment['XDG_CONFIG_HOME'];
       final home = Platform.environment['HOME'];
-      if (xdg != null && xdg.isNotEmpty) return Directory('$xdg/logger');
-      if (home != null && home.isNotEmpty)
+      if (xdg != null && xdg.isNotEmpty) {
+        return Directory('$xdg/logger');
+      }
+      if (home != null && home.isNotEmpty) {
         return Directory('$home/.config/logger');
+      }
       return null;
     }
 
@@ -105,11 +108,13 @@ class FileTrayPrefsStore implements TrayPrefsStore {
 
     if (Platform.isWindows) {
       final appData = Platform.environment['APPDATA'];
-      if (appData != null && appData.isNotEmpty)
+      if (appData != null && appData.isNotEmpty) {
         return Directory('$appData\\logger');
+      }
       final home = Platform.environment['USERPROFILE'];
-      if (home != null && home.isNotEmpty)
+      if (home != null && home.isNotEmpty) {
         return Directory('$home\\AppData\\Roaming\\logger');
+      }
       return null;
     }
 

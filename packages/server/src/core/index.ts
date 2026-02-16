@@ -1,4 +1,5 @@
-export { config, Config, ConfigSchema } from './config'
+export { config, ConfigSchema } from './config'
+export type { Config } from './config'
 export { normalizeSession, normalizeEvent, normalizeData } from './normalizer'
 export { HookManager, createRedactHook } from './hooks'
 export type { HookManagerOptions, HookPhase } from './hooks'

@@ -1,4 +1,5 @@
 import {
+  API_PATHS,
     SessionMessage,
 } from '@logger/shared'
 import { z } from 'zod'
@@ -44,6 +45,15 @@ function checkAuth(req: Request, apiKey: string | null): Response | null {
   return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 }
 
+function resolveSessionIdAlias(session_id?: string, sessionId?: string): string | undefined {
+  return session_id ?? sessionId
+}
+
+function resolveQueryText(text?: string, search?: string): string | undefined {
+  if (text !== undefined) return text
+  return search
+}
+
 // ─── Route Setup ─────────────────────────────────────────────────────
 
 export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
@@ -56,7 +66,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
       GET: () => Response.json({ status: 'ok' }),
     },
 
-    '/api/v2/health': {
+    [API_PATHS.HEALTH]: {
       GET: (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -76,7 +86,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Sessions ────────────────────────────────────────────────────
 
-    '/api/v2/sessions': {
+    [API_PATHS.SESSIONS]: {
       GET: (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -87,7 +97,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Upload ──────────────────────────────────────────────────────
 
-    '/api/v2/upload': {
+    [API_PATHS.UPLOAD]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -133,7 +143,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Session Management ──────────────────────────────────────────
 
-    '/api/v2/session': {
+    [API_PATHS.SESSION]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -162,7 +172,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Events ──────────────────────────────────────────────────────
 
-    '/api/v2/events': {
+    [API_PATHS.EVENTS]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -181,7 +191,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Data ────────────────────────────────────────────────────────
 
-    '/api/v2/data': {
+    [API_PATHS.DATA]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -200,7 +210,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Session State ───────────────────────────────────────────────
 
-    '/api/v2/sessions/:id/state': {
+    [`${API_PATHS.SESSIONS}/:id/state`]: {
       GET: (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -231,7 +241,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── Query ───────────────────────────────────────────────────────
 
-    '/api/v2/query': {
+    [API_PATHS.QUERY]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError
@@ -248,11 +258,11 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
         }
 
         const { session_id, sessionId, severity, from, to, limit, text, search } = parsed.data
-        const effectiveSessionId = session_id ?? sessionId
+        const effectiveSessionId = resolveSessionIdAlias(session_id, sessionId)
 
         const result = ringBuffer.query({ sessionId: effectiveSessionId, severity, from, to, limit })
 
-        const textFilter = text ?? search
+        const textFilter = resolveQueryText(text, search)
         if (textFilter) {
           const lower = textFilter.toLowerCase()
           result.entries = result.entries.filter((e) =>
@@ -266,7 +276,7 @@ export function setupHttpRoutes(deps: ServerDeps): Record<string, any> {
 
     // ─── RPC Proxy ───────────────────────────────────────────────────
 
-    '/api/v2/rpc': {
+    [API_PATHS.RPC]: {
       POST: async (req: Request) => {
         const authError = checkAuth(req, config.apiKey)
         if (authError) return authError

@@ -69,5 +69,56 @@ void main() {
 
       expect(find.byType(LogListView), findsOneWidget);
     });
+
+    testWidgets(
+      'stays paused at bottom until explicit resume when unseen logs exist',
+      (tester) async {
+        final store = LogStore();
+        for (var i = 0; i < 120; i++) {
+          store.addEntry(
+            makeTestEntry(
+              id: 'seed-$i',
+              message: 'seed log $i',
+              severity: Severity.info,
+            ),
+          );
+        }
+
+        await tester.pumpWidget(_wrap(logStore: store));
+        await tester.pumpAndSettle();
+
+        // Move away from bottom to enter paused mode.
+        await tester.drag(find.byType(ListView), const Offset(0, 400));
+        await tester.pumpAndSettle();
+
+        // Ingest new logs while paused.
+        for (var i = 0; i < 5; i++) {
+          store.addEntry(
+            makeTestEntry(
+              id: 'new-$i',
+              message: 'new log $i',
+              severity: Severity.info,
+            ),
+          );
+        }
+        await tester.pumpAndSettle();
+
+        expect(find.text('5 new'), findsOneWidget);
+        expect(find.byType(LivePill), findsNothing);
+
+        // Scrolling back to the bottom should not implicitly resume LIVE.
+        await tester.drag(find.byType(ListView), const Offset(0, -10000));
+        await tester.pumpAndSettle();
+
+        expect(find.text('5 new'), findsOneWidget);
+        expect(find.byType(LivePill), findsNothing);
+
+        // Explicit resume should switch to LIVE mode.
+        await tester.tap(find.text('5 new'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(LivePill), findsOneWidget);
+      },
+    );
   });
 }

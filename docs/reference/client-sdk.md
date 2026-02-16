@@ -7,11 +7,14 @@ The Logger client SDK (`@logger/client`) is a lightweight TypeScript library for
 ```typescript
 import { Logger } from "@logger/client";
 
-const logger = new Logger({ url: "http://localhost:8080", app: "my-app" });
+const logger = new Logger({ app: "my-app" });
 logger.info("Application started");
 logger.error(new Error("Something broke"));
+await logger.flush();
 await logger.close();
 ```
+
+With no explicit `url` or `transport`, the SDK defaults to `ws://localhost:8080` and `transport: "auto"` (tries WebSocket first, then falls back to HTTP).
 
 ## Logger Class
 
@@ -23,10 +26,10 @@ new Logger(options?: LoggerOptions)
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `url` | `string` | `ws://localhost:8080` | Server URL. Protocol determines transport. |
+| `url` | `string` | `process.env.LOGGER_URL ?? ws://localhost:8080` | Server URL used by the selected transport. |
 | `app` | `string` | `process.env.npm_package_name` | Application name attached to all entries. |
 | `environment` | `string` | `process.env.LOGGER_ENVIRONMENT ?? "dev"` | Environment label. |
-| `transport` | `TransportType` | `"auto"` | `"auto"` \| `"http"` \| `"ws"` \| `"udp"`. Auto selects from URL scheme. |
+| `transport` | `TransportType` | `"auto"` | `"auto"` \| `"http"` \| `"ws"` \| `"udp"` \| `"tcp"`. |
 | `middleware` | `Middleware[]` | `[]` | Functions that intercept entries before queuing. |
 | `maxQueueSize` | `number` | `8 MB` | Max byte budget for the outgoing queue. |
 | `sessionId` | `string` | Random UUID | Override the session ID. |
@@ -139,13 +142,16 @@ The SDK buffers entries in a `LogQueue` (circular buffer, default 8 MB). A drain
 
 ## Transport Selection
 
+When `transport: "auto"` (default), the SDK tries WebSocket first and falls back to HTTP if WS connection fails.
+
 | URL Scheme | Transport | Behavior |
 |------------|-----------|----------|
-| `http://` / `https://` | HTTP | Batch POST per drain cycle |
-| `ws://` / `wss://` | WebSocket | Persistent connection, supports RPC |
+| `http://` / `https://` | HTTP | Batch POST per drain cycle (`/api/v2/session`, `/api/v2/events`, `/api/v2/data`) |
+| `ws://` / `wss://` | WebSocket | Persistent connection; if path is missing, SDK uses `/api/v2/stream` |
 | `udp://` | UDP | Fire-and-forget datagrams |
+| explicit `transport: "tcp"` | TCP | Newline-delimited JSON over TCP |
 
-WebSocket is the only transport that supports bidirectional RPC.
+RPC registration/response is supported only on WebSocket transport. HTTP/UDP/TCP skip RPC frames.
 
 ## Exports
 

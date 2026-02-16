@@ -46,7 +46,7 @@ mixin _LogListScrollMixin on State<LogListView> {
     if (newFirst != _firstVisibleIndex) {
       setState(() => _firstVisibleIndex = newFirst);
     }
-    if (atBottom && !_isLiveMode) {
+    if (atBottom && !_isLiveMode && _newLogCount == 0) {
       setState(() {
         _isLiveMode = true;
         _newLogCount = 0;
